@@ -18,6 +18,9 @@ namespace KolonyTools
         [KSPField(isPersistant = true)]
         public bool isActive = false;
 
+        [KSPField] 
+        public bool autoActivate;
+
 
         [KSPEvent(guiName = "Engage Dampener", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void EngageDampen()
@@ -84,6 +87,12 @@ namespace KolonyTools
                 else
                 {
                     ToggleEvent("EngageDampen", true);
+                    ToggleEvent("DisengageDampen", false);
+                }
+                if (autoActivate)
+                {
+                    isActive = true;
+                    ToggleEvent("EngageDampen", false);
                     ToggleEvent("DisengageDampen", false);
                 }
             }
