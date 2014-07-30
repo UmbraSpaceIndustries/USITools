@@ -107,6 +107,11 @@ namespace USITools
             Events[eventName].externalToEVAOnly = state;
             Events[eventName].guiActive = state;
             Events[eventName].guiActiveEditor = state;
+            if (inflatedResources != "")
+            {
+                Events[eventName].guiActiveEditor = false;
+            }
+
         }
 
         public override void OnStart(StartState state)
