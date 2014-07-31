@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="InertialDampener.cs" />
     <Compile Include="InflatableStorage.cs" />
+    <Compile Include="USI_ResourceConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
