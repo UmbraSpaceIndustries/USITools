@@ -46,7 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InertialDampener.cs" />
-    <Compile Include="InflatableStorage.cs" />
+    <Compile Include="USIAnimation.cs" />
+    <Compile Include="USI_AnimatedConverter.cs" />
     <Compile Include="USI_ResourceConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -21,6 +21,36 @@ namespace USITools
         [KSPField] 
         public string inflatedResources = "";
 
+
+
+        [KSPAction("Deploy Module")]
+        public void DeployAction(KSPActionParam param)
+        {
+            DeployModule();
+        }
+
+
+        [KSPAction("Retract Module")]
+        public void RetractAction(KSPActionParam param)
+        {
+            RetractModule();
+        }
+
+
+        [KSPAction("Toggle Module")]
+        public void ToggleScoopAction(KSPActionParam param)
+        {
+            if (isDeployed)
+            {
+                RetractModule();
+            }
+            else
+            {
+                DeployModule();
+            }
+        }
+
+
         public Animation DeployAnimation
         {
             get

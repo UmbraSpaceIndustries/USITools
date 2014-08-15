@@ -109,7 +109,6 @@ namespace KolonyTools
                 var maxSpeed = Math.Max(vessel.srfSpeed, vessel.horizontalSrfSpeed);
                 if (maxSpeed > dampenSpeed && maxSpeed < engageSpeed)
                 {
-                    print("Dampening...");
                     foreach (var p in vessel.parts)
                     {
                         p.Rigidbody.angularVelocity *= dampenFactor;
