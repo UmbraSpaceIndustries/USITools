@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using USI;
 
 namespace Karbonite
 {
@@ -11,7 +12,7 @@ namespace Karbonite
         [KSPField] 
         public string convertAnimationName = "Convert";
 
-        private List<USI_ResourceConverter> _converters;
+        private List<USI_Converter> _converters;
  
         private bool _isConverting;
         public Animation ConvertAnimation
@@ -55,19 +56,19 @@ namespace Karbonite
 
         private void FindGenerators()
         {
-            if(_converters == null) _converters = new List<USI_ResourceConverter>();
+            if(_converters == null) _converters = new List<USI_Converter>();
             if (vessel != null)
             {
                 if (part.Modules.Contains("USI_ResourceConverter"))
                 {
-                    _converters = part.Modules.OfType<USI_ResourceConverter>().ToList();
+                    _converters = part.Modules.OfType<USI_Converter>().ToList();
                 } 
             }
         }
 
         private void CheckForConverting()
         {
-            if (_converters.Any(c => c.converterIsActive))
+            if (_converters.Any(c => c.converterEnabled))
             {
                 if (ConvertAnimation != null)
                 {

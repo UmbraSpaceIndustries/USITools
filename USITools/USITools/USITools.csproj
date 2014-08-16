@@ -48,8 +48,13 @@
     <Compile Include="InertialDampener.cs" />
     <Compile Include="USIAnimation.cs" />
     <Compile Include="USI_AnimatedConverter.cs" />
-    <Compile Include="USI_ResourceConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\USI_Converter\USI_Converter\USI_Converter.csproj">
+      <Project>{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}</Project>
+      <Name>USI_Converter</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

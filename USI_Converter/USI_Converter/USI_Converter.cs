@@ -35,10 +35,10 @@ namespace USI
 {
     public class USI_Converter : PartModule
     {
-        private const int SECONDS_PER_DAY = 24 * 60 * 60;
+        private static char[] delimiters = { ' ', ',', '\t', ';' };
 
         [KSPField]
-        public string converterName = "USI Converter";
+        public string converterName = "TAC Generic Converter";
 
         [KSPField(guiActive = true, guiName = "Converter Status")]
         public string converterStatus = "Unknown";
@@ -47,7 +47,16 @@ namespace USI
         public bool converterEnabled = false;
 
         [KSPField]
+        public bool alwaysOn = false;
+
+        [KSPField]
         public float conversionRate = 1.0f;
+
+        [KSPField]
+        public string inputResources = "";
+
+        [KSPField]
+        public string outputResources = "";
 
         [KSPField]
         public bool requiresOxygenAtmo = false;
@@ -56,7 +65,6 @@ namespace USI
 
         private List<ResourceRatio> inputResourceList;
         private List<ResourceRatio> outputResourceList;
-        private ConfigNode _node;
 
         public override void OnAwake()
         {
@@ -74,6 +82,8 @@ namespace USI
             {
                 part.force_activate();
             }
+
+            UpdateEvents();
         }
 
         public override void OnFixedUpdate()
@@ -103,8 +113,8 @@ namespace USI
                     return;
                 }
 
-                double desiredAmount = conversionRate / SECONDS_PER_DAY * deltaTime;
-                double maxElectricityDesired = Math.Min(desiredAmount, conversionRate / SECONDS_PER_DAY * Math.Max(Utilities.ElectricityMaxDeltaTime, Time.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
+                double desiredAmount = conversionRate * deltaTime;
+                double maxElectricityDesired = Math.Min(desiredAmount, conversionRate * Math.Max(Utilities.ElectricityMaxDeltaTime, TimeWarp.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
 
                 // Limit the resource amounts so that we do not produce more than we have room for, nor consume more than is available
                 foreach (ResourceRatio output in outputResourceList)
@@ -206,7 +216,6 @@ namespace USI
             base.OnLoad(node);
             lastUpdateTime = Utilities.GetValue(node, "lastUpdateTime", lastUpdateTime);
 
-            _node = node;
             UpdateResourceLists();
             UpdateEvents();
         }
@@ -220,32 +229,40 @@ namespace USI
         public override string GetInfo()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append(base.GetInfo());
-            sb.Append("\nContains the ");
             sb.Append(converterName);
-            sb.Append(" module\n  Inputs: ");
-            sb.Append(String.Join(", ", inputResourceList.Select(value => value.resource.name + ", " + value.ratio).ToArray()));
-            sb.Append("\n  Outputs: ");
-            sb.Append(String.Join(", ", outputResourceList.Select(value => value.resource.name + ", " + value.ratio).ToArray()));
-            sb.Append("\n  Conversion Rate: ");
-            sb.Append(conversionRate);
+            sb.Append("\n\nInputs:");
+            foreach (var input in inputResourceList)
+            {
+                double ratio = input.ratio * conversionRate;
+                sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
+            }
+            sb.Append("\n\nOutputs: ");
+            foreach (var output in outputResourceList)
+            {
+                double ratio = output.ratio * conversionRate;
+                sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
+            }
+            sb.Append("\n");
             if (requiresOxygenAtmo)
             {
                 sb.Append("\nRequires an atmosphere containing Oxygen.");
             }
-            sb.Append("\n");
+            if (alwaysOn)
+            {
+                sb.Append("\nCannot be turned off.");
+            }
 
             return sb.ToString();
         }
 
-        [KSPEvent(active = false, guiActive = true, guiName = "Activate Converter")]
+        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Activate Converter")]
         public void ActivateConverter()
         {
             converterEnabled = true;
             UpdateEvents();
         }
 
-        [KSPEvent(active = false, guiActive = true, guiName = "Deactivate Converter")]
+        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Deactivate Converter")]
         public void DeactivateConverter()
         {
             converterEnabled = false;
@@ -261,53 +278,91 @@ namespace USI
 
         private void UpdateEvents()
         {
-            Events["ActivateConverter"].active = !converterEnabled;
-            Events["DeactivateConverter"].active = converterEnabled;
-
-            if (!converterEnabled)
+            if (alwaysOn)
             {
-                converterStatus = "Inactive";
+                Events["ActivateConverter"].active = false;
+                Events["DeactivateConverter"].active = false;
+                converterEnabled = true;
+            }
+            else
+            {
+                Events["ActivateConverter"].active = !converterEnabled;
+                Events["DeactivateConverter"].active = converterEnabled;
+
+                if (!converterEnabled)
+                {
+                    converterStatus = "Inactive";
+                }
             }
         }
 
         private void UpdateResourceLists()
         {
-            if (_node != null)
+            if (inputResourceList == null)
             {
                 inputResourceList = new List<ResourceRatio>();
-                outputResourceList = new List<ResourceRatio>();
-
-                foreach (ConfigNode subNode in _node.nodes)
-                {
-                    var res = new ResourceRatio();
-                    switch (subNode.name)
-                    {
-                        case "INPUT_RESOURCE":
-                            res = GetResourceFromNode(subNode);
-                            inputResourceList.Add(res);
-                            break;
-                        case "OUTPUT_RESOURCE":
-                            res = GetResourceFromNode(subNode);
-                            outputResourceList.Add(res);
-                            break;
-                    }
-                }
             }
+            if (outputResourceList == null)
+            {
+                outputResourceList = new List<ResourceRatio>();
+            }
+
+            ParseInputResourceString(inputResources, inputResourceList);
+            ParseOutputResourceString(outputResources, outputResourceList);
+
             Events["ActivateConverter"].guiName = "Activate " + converterName;
             Events["DeactivateConverter"].guiName = "Deactivate " + converterName;
             Actions["ToggleConverter"].guiName = "Toggle " + converterName;
             Fields["converterStatus"].guiName = converterName;
         }
 
-        private ResourceRatio GetResourceFromNode(ConfigNode node)
+        private void ParseInputResourceString(string resourceString, List<ResourceRatio> resources)
         {
-            var rr = new ResourceRatio();
-            var resName = node.GetValue("resource");
-            rr.resource = PartResourceLibrary.Instance.GetDefinition(resName);
-            rr.ratio = Double.Parse(node.GetValue("ratio"));
-            rr.allowExtra = bool.Parse(node.GetValue("dumpExcess"));
+            resources.Clear();
 
-            return rr;
+            string[] tokens = resourceString.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < (tokens.Length - 1); i += 2)
+            {
+                PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(tokens[i]);
+                double ratio;
+                if (resource != null && double.TryParse(tokens[i + 1], out ratio))
+                {
+                    resources.Add(new ResourceRatio(resource, ratio));
+                }
+                else
+                {
+                    this.Log("Cannot parse \"" + resourceString + "\", something went wrong.");
+                }
+            }
+
+            var ratios = resources.Aggregate("", (result, value) => result + value.resource.name + ", " + value.ratio + ", ");
+            this.Log("Input resources parsed: " + ratios + "\nfrom " + resourceString);
+        }
+
+        private void ParseOutputResourceString(string resourceString, List<ResourceRatio> resources)
+        {
+            resources.Clear();
+
+            string[] tokens = resourceString.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+
+            for (int i = 0; i < (tokens.Length - 2); i += 3)
+            {
+                PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(tokens[i]);
+                double ratio;
+                bool allowExtra;
+                if (resource != null && double.TryParse(tokens[i + 1], out ratio) && bool.TryParse(tokens[i + 2], out allowExtra))
+                {
+                    resources.Add(new ResourceRatio(resource, ratio, allowExtra));
+                }
+                else
+                {
+                    this.Log("Cannot parse \"" + resourceString + "\", something went wrong.");
+                }
+            }
+
+            var ratios = resources.Aggregate("", (result, value) => result + value.resource.name + ", " + value.ratio + ", ");
+            this.Log("Output resources parsed: " + ratios + "\nfrom " + resourceString);
         }
     }
 }
