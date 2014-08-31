@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using USI;
 
-namespace USITools
+namespace Karbonite
 {
     public class USI_AnimatedConverter : PartModule
     {
