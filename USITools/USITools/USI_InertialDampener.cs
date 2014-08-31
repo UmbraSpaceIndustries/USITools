@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace KolonyTools
+namespace USITools
 {
-    class InertialDampener : PartModule
+    public class USI_InertialDampener : PartModule
     {
         [KSPField]
         public float dampenFactor = .1f;
