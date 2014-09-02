@@ -29,6 +29,9 @@ namespace ORSExtensions
         [KSPField(isPersistant = false, guiActive = true, guiName = "Flow")]
         public string resflow;
 
+        [KSPField(isPersistant = false)]
+        public float altitudeBonus = 0f;
+
         protected float resflowf = 0;
         private double lastUpdateTime = 0.0f;
 
@@ -133,7 +136,8 @@ namespace ORSExtensions
                 if (atmospheric_resource_name != null)
                 {
                     //range is 10% of the atmosphere
-                    var range = ORSHelper.getMaxAtmosphericAltitude(vessel.mainBody) * 1.1;
+                    var range = (ORSHelper.getMaxAtmosphericAltitude(vessel.mainBody) * 1.1);
+                    range += altitudeBonus;
                     double resourcedensity = PartResourceLibrary.Instance.GetDefinition(atmospheric_resource_name).density;
                     double respcent = ORSAtmosphericResourceHandler.getAtmosphericResourceContent(vessel.mainBody.flightGlobalsIndex, currentresource);
 
@@ -142,6 +146,7 @@ namespace ORSExtensions
                         && respcent > 0 
                         && vessel.altitude >= ORSHelper.getMaxAtmosphericAltitude(vessel.mainBody))
                     {
+                        print("[ORS] PASS ");
                         /** RAILS **/
                         if (Time.timeSinceLevelLoad < 1.0f || !FlightGlobals.ready)
                         {

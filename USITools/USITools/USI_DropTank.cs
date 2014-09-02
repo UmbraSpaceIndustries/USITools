@@ -16,7 +16,7 @@ namespace USITools
                 bool drop = true;
                 foreach (var res in part.Resources.list)
                 {
-                    if (res.amount > 0)
+                    if (res.amount > 0.001)
                     {
                         drop = false;
                     }
