@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "USITools", "USITools.csproj", "{8699BBCB-15F3-40C6-A001-46E08886360C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "USI_Converter", "..\..\USI_Converter\USI_Converter\USI_Converter.csproj", "{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "USITools", "USITools\USITools.csproj", "{8699BBCB-15F3-40C6-A001-46E08886360C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{8699BBCB-15F3-40C6-A001-46E08886360C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8699BBCB-15F3-40C6-A001-46E08886360C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8699BBCB-15F3-40C6-A001-46E08886360C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC8CF34A-3E1E-4465-B79B-9CEBDE801099}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
