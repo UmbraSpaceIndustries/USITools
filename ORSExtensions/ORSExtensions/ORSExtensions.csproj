@@ -35,7 +35,7 @@
       <HintPath>..\..\..\..\..\..\..\KSP_DEV\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenResourceSystem_1_2_0">
+    <Reference Include="OpenResourceSystem_1_2_0, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\LIB\OpenResourceSystem_1_2_0.dll</HintPath>
       <Private>False</Private>
     </Reference>
