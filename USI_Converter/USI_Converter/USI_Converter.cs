@@ -35,31 +35,31 @@ namespace USI
 {
     public class USI_Converter : PartModule
     {
-        private static char[] delimiters = { ' ', ',', '\t', ';' };
+        private static char[] delimiters = {' ', ',', '\t', ';'};
 
-        [KSPField]
-        public string converterName = "TAC Generic Converter";
+        [KSPField] public string converterName = "TAC Generic Converter";
 
-        [KSPField(guiActive = true, guiName = "Converter Status")]
-        public string converterStatus = "Unknown";
+        [KSPField(guiActive = true, guiName = "Converter Status")] public string converterStatus = "Unknown";
 
-        [KSPField(isPersistant = true)]
-        public bool converterEnabled = false;
+        [KSPField(isPersistant = true)] public bool converterEnabled = false;
 
-        [KSPField]
-        public bool alwaysOn = false;
+        [KSPField] public bool alwaysOn = false;
 
-        [KSPField]
-        public float conversionRate = 1.0f;
+        [KSPField] public float conversionRate = 1.0f;
 
-        [KSPField]
-        public string inputResources = "";
+        [KSPField] public string inputResources = "";
 
-        [KSPField]
-        public string outputResources = "";
+        [KSPField] public string outputResources = "";
 
-        [KSPField]
-        public bool requiresOxygenAtmo = false;
+        [KSPField] public bool requiresOxygenAtmo = false;
+
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string RemainingTimeDisplay;
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string ConstraintDisplay;
+        private const string NotAvailable = "n.a.";
+        internal Guid ID;
+        private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
+        internal const short SlowConstraintInfoUpdate = 30;
+        internal const short FastConstraintInfoUpdate = 5;
 
         private double lastUpdateTime = 0.0f;
 
@@ -81,14 +81,20 @@ namespace USI
             if (state != StartState.Editor)
             {
                 part.force_activate();
+                ID = Guid.NewGuid();
             }
 
             UpdateEvents();
+
+            ConstraintDisplay = NotAvailable;
+            RemainingTimeDisplay = NotAvailable;
         }
 
         public override void OnFixedUpdate()
         {
             base.OnFixedUpdate();
+
+            this.CollectResourceConstraintData();
 
             if (Time.timeSinceLevelLoad < 1.0f || !FlightGlobals.ready)
             {
@@ -113,8 +119,8 @@ namespace USI
                     return;
                 }
 
-                double desiredAmount = conversionRate * deltaTime;
-                double maxElectricityDesired = Math.Min(desiredAmount, conversionRate * Math.Max(Utilities.ElectricityMaxDeltaTime, TimeWarp.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
+                double desiredAmount = conversionRate*deltaTime;
+                double maxElectricityDesired = Math.Min(desiredAmount, conversionRate*Math.Max(Utilities.ElectricityMaxDeltaTime, TimeWarp.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
 
                 // Limit the resource amounts so that we do not produce more than we have room for, nor consume more than is available
                 foreach (ResourceRatio output in outputResourceList)
@@ -124,16 +130,15 @@ namespace USI
                         if (output.resource.id == Utilities.ElectricityId && desiredAmount > maxElectricityDesired)
                         {
                             // Special handling for electricity
-                            double desiredElectricity = maxElectricityDesired * output.ratio;
+                            double desiredElectricity = maxElectricityDesired*output.ratio;
                             double availableSpace = -part.IsResourceAvailable(output.resource, -desiredElectricity);
-                            desiredAmount = desiredAmount * (availableSpace / desiredElectricity);
+                            desiredAmount = desiredAmount*(availableSpace/desiredElectricity);
                         }
                         else
                         {
-                            double availableSpace = -part.IsResourceAvailable(output.resource, -desiredAmount * output.ratio);
-                            desiredAmount = availableSpace / output.ratio;
+                            double availableSpace = -part.IsResourceAvailable(output.resource, -desiredAmount*output.ratio);
+                            desiredAmount = availableSpace/output.ratio;
                         }
-
                         if (desiredAmount <= 0.000000001)
                         {
                             // Out of space, so no need to run
@@ -148,16 +153,15 @@ namespace USI
                     if (input.resource.id == Utilities.ElectricityId && desiredAmount > maxElectricityDesired)
                     {
                         // Special handling for electricity
-                        double desiredElectricity = maxElectricityDesired * input.ratio;
+                        double desiredElectricity = maxElectricityDesired*input.ratio;
                         double amountAvailable = part.IsResourceAvailable(input.resource, desiredElectricity);
-                        desiredAmount = desiredAmount * (amountAvailable / desiredElectricity);
+                        desiredAmount = desiredAmount*(amountAvailable/desiredElectricity);
                     }
                     else
                     {
-                        double amountAvailable = part.IsResourceAvailable(input.resource, desiredAmount * input.ratio);
-                        desiredAmount = amountAvailable / input.ratio;
+                        double amountAvailable = part.IsResourceAvailable(input.resource, desiredAmount*input.ratio);
+                        desiredAmount = amountAvailable/input.ratio;
                     }
-
                     if (desiredAmount <= 0.000000001)
                     {
                         // Not enough input resources
@@ -171,16 +175,16 @@ namespace USI
                     double desired;
                     if (input.resource.id == Utilities.ElectricityId)
                     {
-                        desired = Math.Min(desiredAmount, maxElectricityDesired) * input.ratio;
+                        desired = Math.Min(desiredAmount, maxElectricityDesired)*input.ratio;
                     }
                     else
                     {
-                        desired = desiredAmount * input.ratio;
+                        desired = desiredAmount*input.ratio;
                     }
 
                     double actual = part.TakeResource(input.resource, desired);
 
-                    if (actual < (desired * 0.999))
+                    if (actual < (desired*0.999))
                     {
                         this.LogWarning("OnFixedUpdate: obtained less " + input.resource.name + " than expected: " + desired.ToString("0.000000000") + "/" + actual.ToString("0.000000000"));
                     }
@@ -191,16 +195,16 @@ namespace USI
                     double desired;
                     if (output.resource.id == Utilities.ElectricityId)
                     {
-                        desired = Math.Min(desiredAmount, maxElectricityDesired) * output.ratio;
+                        desired = Math.Min(desiredAmount, maxElectricityDesired)*output.ratio;
                     }
                     else
                     {
-                        desired = desiredAmount * output.ratio;
+                        desired = desiredAmount*output.ratio;
                     }
 
                     double actual = -part.TakeResource(output.resource.id, -desired);
 
-                    if (actual < (desired * 0.999) && !output.allowExtra)
+                    if (actual < (desired*0.999) && !output.allowExtra)
                     {
                         this.LogWarning("OnFixedUpdate: put less " + output.resource.name + " than expected: " + desired.ToString("0.000000000") + "/" + actual.ToString("0.000000000"));
                     }
@@ -233,13 +237,13 @@ namespace USI
             sb.Append("\n\nInputs:");
             foreach (var input in inputResourceList)
             {
-                double ratio = input.ratio * conversionRate;
+                double ratio = input.ratio*conversionRate;
                 sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
             }
             sb.Append("\n\nOutputs: ");
             foreach (var output in outputResourceList)
             {
-                double ratio = output.ratio * conversionRate;
+                double ratio = output.ratio*conversionRate;
                 sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
             }
             sb.Append("\n");
@@ -363,6 +367,189 @@ namespace USI
 
             var ratios = resources.Aggregate("", (result, value) => result + value.resource.name + ", " + value.ratio + ", ");
             this.Log("Output resources parsed: " + ratios + "\nfrom " + resourceString);
+        }
+
+        internal void CollectResourceConstraintData()
+        {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                if (_constraintUpdateCounter > 0)
+                {
+                    _constraintUpdateCounter--;
+                    return;
+                }
+                this._constraintUpdateCounter = SlowConstraintInfoUpdate;
+            }
+            var constraintData = new ResourceConstraintData();
+            var cnt = 0;
+            foreach (var output in outputResourceList.Where(r => !r.allowExtra))
+            {
+                var amounts = this._getResourceAmounts(output.resource.name);
+                constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate));
+                cnt++;
+            }
+            foreach (var input in inputResourceList)
+            {
+                var amounts = this._getResourceAmounts(input.resource.name);
+                constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate));
+                cnt++;
+            }
+            this._processResourceConstraintData(cnt > 0 ? constraintData : null);
+        }
+
+        private void _processResourceConstraintData(ResourceConstraintData data = null)
+        {
+            if (data == null)
+            {
+                RemainingTimeDisplay = NotAvailable;
+                ConstraintDisplay = NotAvailable;
+                return;
+            }
+            var info = data.GetConstraintInfo(ref _constraintUpdateCounter);
+            RemainingTimeDisplay = info[0];
+            ConstraintDisplay = info[1];
+        }
+
+        private class ResourceConstraintData
+        {
+            private readonly List<ResourceConstraint> _constraints;
+
+            internal ResourceConstraintData()
+            {
+                this._constraints = new List<ResourceConstraint>();
+            }
+
+            internal void AddConstraint(ResourceConstraint constraint)
+            {
+                this._constraints.Add(constraint);
+            }
+
+            internal string[] GetConstraintInfo(ref short counter)
+            {
+                var earliestConstraint = _findEarliestConstraint();
+                if (earliestConstraint != null)
+                {
+                    return new[]
+                           {
+                               _convertRemainingToDisplayText(earliestConstraint.RemainingSeconds, earliestConstraint.RemainingPercentage, ref counter),
+                               earliestConstraint.ResourceName + (earliestConstraint.OutputResource ? " full" : " depleted")
+                           };
+                }
+                return new[] {NotAvailable, NotAvailable};
+            }
+
+            private static string _convertRemainingToDisplayText(double remainingSeconds, double remainingPercent, ref short counter)
+            {
+                string displayText;
+                var days = remainingSeconds/21600;
+                if (days > 1)
+                {
+                    displayText = string.Format("{0:#0.#} days", days);
+                }
+                else
+                {
+                    var timespan = TimeSpan.FromSeconds(remainingSeconds);
+                    displayText = string.Format("{0:D2}:{1:D2}:{2:D2}", timespan.Hours, timespan.Minutes, timespan.Seconds);
+                    counter = FastConstraintInfoUpdate;
+                }
+                return displayText + string.Format(" ({0:P2})", remainingPercent);
+            }
+
+            private ResourceConstraint _findEarliestConstraint()
+            {
+                var lowestRemaining = double.MaxValue;
+                ResourceConstraint nearestConstraint = null;
+                foreach (var constraint in this._constraints)
+                {
+                    var remSec = constraint.RemainingSeconds;
+                    if (!(remSec < lowestRemaining))
+                    {
+                        continue;
+                    }
+                    nearestConstraint = constraint;
+                    lowestRemaining = remSec;
+                }
+                return nearestConstraint;
+            }
+        }
+
+        private class ResourceConstraint
+        {
+            internal string ResourceName { get; private set; }
+            internal bool OutputResource { get; private set; }
+            private double MaxAmount { get; set; }
+            private double Amount { get; set; }
+            private double RatePerSecond { get; set; }
+
+            internal ResourceConstraint(string name, bool output, double max, double avail, double rate)
+            {
+                this.ResourceName = name;
+                this.OutputResource = output;
+                this.MaxAmount = max;
+                this.Amount = avail;
+                this.RatePerSecond = rate;
+            }
+
+            internal double RemainingSeconds
+            {
+                get
+                {
+                    var remAmount = OutputResource ? MaxAmount - Amount : Amount;
+                    return remAmount/RatePerSecond;
+                }
+            }
+
+            internal double RemainingPercentage
+            {
+                get
+                {
+                    var percent = 0d;
+                    if (MaxAmount > 0)
+                    {
+                        percent = Amount/MaxAmount;
+                    }
+                    return OutputResource ? 1d - percent : percent;
+                }
+            }
+        }
+
+        private double[] _getResourceAmounts(String resourceName)
+        {
+            var resources = this._getConnectedResources(resourceName).ToList();
+            var amount = resources.Sum(r => r.amount);
+            var maxAmount = resources.Sum(r => r.maxAmount);
+            return new[] {amount, maxAmount};
+        }
+
+        private IEnumerable<PartResource> _getConnectedResources(String resourceName)
+        {
+            var resources = new List<PartResource>();
+            var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            if (resDef != null)
+            {
+                if (HighLogic.LoadedSceneIsEditor)
+                {
+                    if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
+                    {
+                        if (this.part.Resources.Contains(resourceName))
+                        {
+                            resources.Add(this.part.Resources[resourceName]);
+                        }
+                    }
+                    else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
+                    {
+                        var eParts = EditorLogic.fetch.ship.Parts;
+                        resources.AddRange(from ePart in eParts
+                                           where ePart.Resources.Contains(resourceName)
+                                           select ePart.Resources[resourceName]);
+                    }
+                }
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
+                }
+            }
+            return resources;
         }
     }
 }
