@@ -53,8 +53,9 @@ namespace USI
 
         [KSPField] public bool requiresOxygenAtmo = false;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string RemainingTimeDisplay;
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string ConstraintDisplay;
+        [KSPField] public bool showRemainingTime = true;
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string remainingTimeDisplay;
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
         private const string NotAvailable = "n.a.";
         internal Guid ID;
         private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
@@ -84,10 +85,17 @@ namespace USI
                 ID = Guid.NewGuid();
             }
 
+            if (!showRemainingTime)
+            {
+                var remTimeDisp = this.Fields["remainingTimeDisplay"];
+                var constDisp = this.Fields["constraintDisplay"];
+                remTimeDisp.guiActive = remTimeDisp.guiActiveEditor = constDisp.guiActive = constDisp.guiActiveEditor = false;
+            }
+
             UpdateEvents();
 
-            ConstraintDisplay = NotAvailable;
-            RemainingTimeDisplay = NotAvailable;
+            this.constraintDisplay = NotAvailable;
+            this.remainingTimeDisplay = NotAvailable;
         }
 
         public override void OnFixedUpdate()
@@ -371,6 +379,10 @@ namespace USI
 
         internal void CollectResourceConstraintData()
         {
+            if (!showRemainingTime)
+            {
+                return;
+            }
             if (HighLogic.LoadedSceneIsFlight)
             {
                 if (_constraintUpdateCounter > 0)
@@ -401,13 +413,13 @@ namespace USI
         {
             if (data == null)
             {
-                RemainingTimeDisplay = NotAvailable;
-                ConstraintDisplay = NotAvailable;
+                this.remainingTimeDisplay = NotAvailable;
+                this.constraintDisplay = NotAvailable;
                 return;
             }
             var info = data.GetConstraintInfo(ref _constraintUpdateCounter);
-            RemainingTimeDisplay = info[0];
-            ConstraintDisplay = info[1];
+            this.remainingTimeDisplay = info[0];
+            this.constraintDisplay = info[1];
         }
 
         private class ResourceConstraintData
