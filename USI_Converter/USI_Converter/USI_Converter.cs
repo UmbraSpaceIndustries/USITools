@@ -53,6 +53,8 @@ namespace USI
 
         [KSPField] public bool requiresOxygenAtmo = false;
 
+        [KSPField] public bool shutdownIfAllOutputFull = false;
+
         [KSPField] public bool showRemainingTime = true;
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string remainingTimeDisplay;
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
@@ -130,30 +132,43 @@ namespace USI
                 double desiredAmount = conversionRate*deltaTime;
                 double maxElectricityDesired = Math.Min(desiredAmount, conversionRate*Math.Max(Utilities.ElectricityMaxDeltaTime, TimeWarp.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
 
+                bool hasSpace = false;
+
                 // Limit the resource amounts so that we do not produce more than we have room for, nor consume more than is available
                 foreach (ResourceRatio output in outputResourceList)
                 {
-                    if (!output.allowExtra)
+                    if (!output.allowExtra || this.shutdownIfAllOutputFull)
                     {
+                        double availableSpace;
                         if (output.resource.id == Utilities.ElectricityId && desiredAmount > maxElectricityDesired)
                         {
                             // Special handling for electricity
                             double desiredElectricity = maxElectricityDesired*output.ratio;
-                            double availableSpace = -part.IsResourceAvailable(output.resource, -desiredElectricity);
+                            availableSpace = -part.IsResourceAvailable(output.resource, -desiredElectricity);
                             desiredAmount = desiredAmount*(availableSpace/desiredElectricity);
                         }
                         else
                         {
-                            double availableSpace = -part.IsResourceAvailable(output.resource, -desiredAmount*output.ratio);
+                            availableSpace = -part.IsResourceAvailable(output.resource, -desiredAmount*output.ratio);
                             desiredAmount = availableSpace/output.ratio;
                         }
-                        if (desiredAmount <= 0.000000001)
+                        if (availableSpace > 0.000000001)
+                        {
+                            hasSpace = true;
+                        }
+                        if (desiredAmount <= 0.000000001 && !output.allowExtra)
                         {
                             // Out of space, so no need to run
                             converterStatus = "No space for more " + output.resource.name;
                             return;
                         }
                     }
+                }
+
+                if (this.shutdownIfAllOutputFull && !hasSpace)
+                {
+                    converterStatus = "No space for any output";
+                    return;
                 }
 
                 foreach (ResourceRatio input in inputResourceList)
