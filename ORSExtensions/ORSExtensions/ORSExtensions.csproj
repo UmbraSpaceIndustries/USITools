@@ -51,6 +51,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ORSAnimatedExtractor.cs" />
     <Compile Include="ORSModuleAirIntake.cs" />
     <Compile Include="ORSModuleAirScoop.cs" />
     <Compile Include="ORSModuleParticleCollector.cs" />
