@@ -61,6 +61,11 @@ namespace ORSExtensions
             IsEnabled = false;
         }
 
+        public void ResetLastUpdateTime()
+        {
+            this.lastUpdateTime = 0f;
+        }
+
         public override void OnStart(PartModule.StartState state)
         {
 
