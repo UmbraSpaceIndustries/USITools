@@ -4,7 +4,7 @@
 	 "DOWNLOAD":"https://github.com/BobPalmer/UmbraSpaceIndustries/releases"
      "GITHUB":{
          "USERNAME":"BobPalmer",
-         "REPOSITORY":"FTT",
+         "REPOSITORY":"UmbraSpaceIndustries",
          "ALLOW_PRE_RELEASE":false,
      },
      "VERSION":{
