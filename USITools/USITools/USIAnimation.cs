@@ -82,13 +82,13 @@ namespace USITools
             if (!isDeployed)
             {
                 PlayDeployAnimation();
-                isDeployed = true;
                 ToggleEvent("DeployModule", false);
                 ToggleEvent("RetractModule", true);
                 if (inflatable && inflatedResources != "")
                 {
                     ExpandResourceCapacity();
                 }
+                isDeployed = true;
             }
         }
 
@@ -97,8 +97,8 @@ namespace USITools
         {
             if (isDeployed)
             {
-                ReverseDeployAnimation();
                 isDeployed = false;
+                ReverseDeployAnimation();
                 ToggleEvent("DeployModule", true);
                 ToggleEvent("RetractModule", false);
                 if (inflatable && inflatedResources != "")
@@ -112,12 +112,6 @@ namespace USITools
         {
             DeployAnimation[deployAnimationName].speed = speed;
             DeployAnimation.Play(deployAnimationName);
-            if (secondaryAnimationName != "")
-            {
-                SecondaryAnimation[secondaryAnimationName].speed = 1;
-                SecondaryAnimation.wrapMode = WrapMode.Loop;
-                SecondaryAnimation.Play(secondaryAnimationName);
-            }
         }
 
         public void ReverseDeployAnimation(int speed = -1)
@@ -235,6 +229,29 @@ namespace USITools
             {
                 print("Error in CompressResourceCapacity - " + ex.Message);
             }
+        }
+
+        public override void OnUpdate()
+        {
+            if (vessel != null)
+            {
+                if (isDeployed && secondaryAnimationName != "")
+                {
+                    try
+                    {
+                        if (!SecondaryAnimation.isPlaying && !DeployAnimation.isPlaying)
+                        {
+                            SecondaryAnimation[secondaryAnimationName].speed = 1;
+                            SecondaryAnimation.Play(secondaryAnimationName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        print("Error in OnUpdate - USI Animation - " + ex.Message);
+                    }
+                }
+            }
+            base.OnUpdate();
         }
     }
 }
