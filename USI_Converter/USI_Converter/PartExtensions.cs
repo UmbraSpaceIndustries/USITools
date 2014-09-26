@@ -60,13 +60,13 @@ namespace USI
             {
                 case ResourceFlowMode.NO_FLOW:
                     return TakeResource_NoFlow(part, resource, demand);
-                case ResourceFlowMode.ALL_VESSEL:
+                default: 
                     return TakeResource_AllVessel(part, resource, demand);
-                case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                    return TakeResource_StackPriority(part, resource, demand);
-                default:
-                    Debug.LogWarning("USI.PartExtensions.TakeResource: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
-                    return part.RequestResource(resource.id, demand);
+                //case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                //    return TakeResource_StackPriority(part, resource, demand);
+                //default:
+                //    Debug.LogWarning("USI.PartExtensions.TakeResource: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
+                //    return part.RequestResource(resource.id, demand);
             }
         }
 
@@ -94,13 +94,13 @@ namespace USI
             {
                 case ResourceFlowMode.NO_FLOW:
                     return IsResourceAvailable_NoFlow(part, resource, demand);
-                case ResourceFlowMode.ALL_VESSEL:
-                    return IsResourceAvailable_AllVessel(part, resource, demand);
-                case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                    return IsResourceAvailable_StackPriority(part, resource, demand);
                 default:
-                    Debug.LogWarning("USI.PartExtensions.IsResourceAvailable: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
                     return IsResourceAvailable_AllVessel(part, resource, demand);
+                //case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                //    return IsResourceAvailable_StackPriority(part, resource, demand);
+                //default:
+                //    Debug.LogWarning("USI.PartExtensions.IsResourceAvailable: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
+                //    return IsResourceAvailable_AllVessel(part, resource, demand);
             }
         }
 
@@ -216,8 +216,65 @@ namespace USI
 
         private static double TakeResource_StackPriority(Part part, PartResourceDefinition resource, double demand)
         {
-            // FIXME finish implementing
-            return part.RequestResource(resource.id, demand);
+            // ignoring PartResourceDefinition.ResourceTransferMode
+
+            var allPartResources = part.vessel.parts.Where(p => p.Resources.Contains(resource.id) &&
+                                                                p.Resources.Get(resource.id).flowState == true &&
+                                                                p.Resources.Get(resource.id).flowMode != PartResource.FlowMode.None &&
+                                                                p.inStageIndex == part.inStageIndex
+                                                          ).Select(p => p.Resources.Get(resource.id));
+
+            if (demand >= 0.0)
+            {
+                double leftOver = demand;
+
+                // Takes an equal percentage from each part (rather than an equal amount from each part)
+                var allNonEmptyPartResources = allPartResources.Where(p => p.amount > 0.0 && p.flowMode != PartResource.FlowMode.In);
+                double totalAmount = 0.0;
+                foreach (PartResource partResource in allNonEmptyPartResources)
+                {
+                    totalAmount += partResource.amount;
+                }
+
+                if (totalAmount > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalAmount, 1.0);
+
+                    foreach (PartResource partResource in allNonEmptyPartResources)
+                    {
+                        double taken = partResource.amount * percentage;
+                        partResource.amount -= taken;
+                        leftOver -= taken;
+                    }
+                }
+
+                return demand - leftOver;
+            }
+            else
+            {
+                double leftOver = -demand;
+
+                var allNonFullPartResources = allPartResources.Where(p => (p.maxAmount - p.amount) > 0.0 && p.flowMode != PartResource.FlowMode.Out);
+                double totalSpace = 0.0;
+                foreach (PartResource partResource in allNonFullPartResources)
+                {
+                    totalSpace += partResource.maxAmount - partResource.amount;
+                }
+
+                if (totalSpace > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalSpace, 1.0);
+
+                    foreach (PartResource partResource in allNonFullPartResources)
+                    {
+                        double given = (partResource.maxAmount - partResource.amount) * percentage;
+                        partResource.amount += given;
+                        leftOver -= given;
+                    }
+                }
+
+                return demand + leftOver;
+            }
         }
 
         private static double IsResourceAvailable_NoFlow(Part part, PartResourceDefinition resource, double demand)
