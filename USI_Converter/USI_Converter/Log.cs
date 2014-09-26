@@ -25,32 +25,13 @@
  *  Any similarity to a real entity is purely coincidental.
  */
 
-using KSP.IO;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace USI
 {
     public static class Logging
     {
-        public static void Log(this UnityEngine.Object obj, String message)
-        {
-            Debug.Log(obj.GetType().FullName + "[" + obj.GetInstanceID().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void LogWarning(this UnityEngine.Object obj, String message)
-        {
-            Debug.LogWarning(obj.GetType().FullName + "[" + obj.GetInstanceID().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void LogError(this UnityEngine.Object obj, String message)
-        {
-            Debug.LogError(obj.GetType().FullName + "[" + obj.GetInstanceID().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
         public static void Log(this System.Object obj, String message)
         {
             Debug.Log(obj.GetType().FullName + "[" + obj.GetHashCode().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
@@ -59,26 +40,6 @@ namespace USI
         public static void LogWarning(this System.Object obj, String message)
         {
             Debug.LogWarning(obj.GetType().FullName + "[" + obj.GetHashCode().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void LogError(this System.Object obj, String message)
-        {
-            Debug.LogError(obj.GetType().FullName + "[" + obj.GetHashCode().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void Log(string context, string message)
-        {
-            Debug.Log(context + "[][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void LogWarning(string context, string message)
-        {
-            Debug.LogWarning(context + "[][" + Time.time.ToString("0.00") + "]: " + message);
-        }
-
-        public static void LogError(string context, string message)
-        {
-            Debug.LogError(context + "[][" + Time.time.ToString("0.00") + "]: " + message);
         }
     }
 }

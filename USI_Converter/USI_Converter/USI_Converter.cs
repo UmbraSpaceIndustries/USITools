@@ -35,246 +35,112 @@ namespace USI
 {
     public class USI_Converter : PartModule
     {
-        private static char[] delimiters = {' ', ',', '\t', ';'};
+        private const string NotAvailable = "n.a.";
+        internal const short SlowConstraintInfoUpdate = 30;
+        internal const short FastConstraintInfoUpdate = 5;
+        private const double DemandActualDifferenceWarnLevel = 0.000000001;
+        private static readonly char[] Delimiters = {' ', ',', '\t', ';'};
+        [KSPField] public bool HumanReadableInfoValues = true;
+        internal Guid ID;
+        private ConstraintInfo _constraintInfo;
+        private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
 
+        [KSPField] public bool alwaysOn = false;
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
+
+        [KSPField] public float conversionRate = 1.0f;
+        [KSPField(isPersistant = true)] public bool converterEnabled = false;
         [KSPField] public string converterName = "TAC Generic Converter";
 
         [KSPField(guiActive = true, guiName = "Converter Status")] public string converterStatus = "Unknown";
-
-        [KSPField(isPersistant = true)] public bool converterEnabled = false;
-
-        [KSPField] public bool alwaysOn = false;
-
-        [KSPField] public float conversionRate = 1.0f;
+        private List<ResourceRatio> inputResourceList;
 
         [KSPField] public string inputResources = "";
+        private double lastUpdateTime;
+        private List<ResourceRatio> outputResourceList;
 
         [KSPField] public string outputResources = "";
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string remainingTimeDisplay;
 
         [KSPField] public bool requiresOxygenAtmo = false;
 
+        [KSPField] public bool showRemainingTime = true;
         [KSPField] public bool shutdownIfAllOutputFull = false;
 
-        [KSPField] public bool showRemainingTime = true;
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Remaining")] public string remainingTimeDisplay;
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
-        private const string NotAvailable = "n.a.";
-        internal Guid ID;
-        private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
-        internal const short SlowConstraintInfoUpdate = 30;
-        internal const short FastConstraintInfoUpdate = 5;
-
-        private double lastUpdateTime = 0.0f;
-
-        private List<ResourceRatio> inputResourceList;
-        private List<ResourceRatio> outputResourceList;
-
-        public override void OnAwake()
+        internal bool ElectricityAffected
         {
-            this.Log("OnAwake");
-            base.OnAwake();
-            UpdateResourceLists();
+            get
+            {
+                return this.outputResourceList.Any(or => or.resource.name == Utilities.Electricity)
+                       || this.inputResourceList.Any(ir => ir.resource.name == Utilities.Electricity);
+            }
         }
 
-        public override void OnStart(PartModule.StartState state)
+        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Activate Converter")]
+        public void ActivateConverter()
         {
-            this.Log("OnStart: " + state);
-            base.OnStart(state);
-
-            if (state != StartState.Editor)
-            {
-                part.force_activate();
-                ID = Guid.NewGuid();
-            }
-
-            if (!showRemainingTime)
-            {
-                var remTimeDisp = this.Fields["remainingTimeDisplay"];
-                var constDisp = this.Fields["constraintDisplay"];
-                remTimeDisp.guiActive = remTimeDisp.guiActiveEditor = constDisp.guiActive = constDisp.guiActiveEditor = false;
-            }
-
-            UpdateEvents();
-
-            this.constraintDisplay = NotAvailable;
-            this.remainingTimeDisplay = NotAvailable;
+            this.converterEnabled = true;
+            this.UpdateEvents();
         }
 
-        public override void OnFixedUpdate()
+        internal void CollectResourceConstraintData(bool convEnabled, double deltaTime)
         {
-            base.OnFixedUpdate();
-
-            this.CollectResourceConstraintData();
-
-            if (Time.timeSinceLevelLoad < 1.0f || !FlightGlobals.ready)
+            if (!this.showRemainingTime && !convEnabled)
             {
                 return;
             }
-
-            if (lastUpdateTime == 0.0f)
+            if (this._constraintUpdateCounter > 0 && !convEnabled)
             {
-                // Just started running
-                lastUpdateTime = Planetarium.GetUniversalTime();
+                this._constraintUpdateCounter--;
                 return;
             }
-
-            double deltaTime = Math.Min(Planetarium.GetUniversalTime() - lastUpdateTime, Utilities.MaxDeltaTime);
-            lastUpdateTime += deltaTime;
-
-            if (converterEnabled)
+            this._constraintUpdateCounter = SlowConstraintInfoUpdate;
+            var constraintData = new ResourceConstraintData();
+            var cnt = 0;
+            foreach (var output in this.outputResourceList)
             {
-                if (requiresOxygenAtmo && !vessel.mainBody.atmosphereContainsOxygen)
-                {
-                    converterStatus = "Atmo lacks oxygen.";
-                    return;
-                }
-
-                double desiredAmount = conversionRate*deltaTime;
-                double maxElectricityDesired = Math.Min(desiredAmount, conversionRate*Math.Max(Utilities.ElectricityMaxDeltaTime, TimeWarp.fixedDeltaTime)); // Limit the max electricity consumed when reloading a vessel
-
-                bool hasSpace = false;
-
-                // Limit the resource amounts so that we do not produce more than we have room for, nor consume more than is available
-                foreach (ResourceRatio output in outputResourceList)
-                {
-                    if (!output.allowExtra || this.shutdownIfAllOutputFull)
-                    {
-                        double availableSpace;
-                        if (output.resource.id == Utilities.ElectricityId && desiredAmount > maxElectricityDesired)
-                        {
-                            // Special handling for electricity
-                            double desiredElectricity = maxElectricityDesired*output.ratio;
-                            availableSpace = -part.IsResourceAvailable(output.resource, -desiredElectricity);
-                            desiredAmount = desiredAmount*(availableSpace/desiredElectricity);
-                        }
-                        else
-                        {
-                            availableSpace = -part.IsResourceAvailable(output.resource, -desiredAmount*output.ratio);
-                            desiredAmount = availableSpace/output.ratio;
-                        }
-                        if (availableSpace > 0.000000001)
-                        {
-                            hasSpace = true;
-                        }
-                        if (desiredAmount <= 0.000000001 && !output.allowExtra)
-                        {
-                            // Out of space, so no need to run
-                            converterStatus = "No space for more " + output.resource.name;
-                            return;
-                        }
-                    }
-                }
-
-                if (this.shutdownIfAllOutputFull && !hasSpace)
-                {
-                    converterStatus = "No space for any output";
-                    return;
-                }
-
-                foreach (ResourceRatio input in inputResourceList)
-                {
-                    if (input.resource.id == Utilities.ElectricityId && desiredAmount > maxElectricityDesired)
-                    {
-                        // Special handling for electricity
-                        double desiredElectricity = maxElectricityDesired*input.ratio;
-                        double amountAvailable = part.IsResourceAvailable(input.resource, desiredElectricity);
-                        desiredAmount = desiredAmount*(amountAvailable/desiredElectricity);
-                    }
-                    else
-                    {
-                        double amountAvailable = part.IsResourceAvailable(input.resource, desiredAmount*input.ratio);
-                        desiredAmount = amountAvailable/input.ratio;
-                    }
-                    if (desiredAmount <= 0.000000001)
-                    {
-                        // Not enough input resources
-                        converterStatus = "Not enough " + input.resource.name;
-                        return;
-                    }
-                }
-
-                foreach (ResourceRatio input in inputResourceList)
-                {
-                    double desired;
-                    if (input.resource.id == Utilities.ElectricityId)
-                    {
-                        desired = Math.Min(desiredAmount, maxElectricityDesired)*input.ratio;
-                    }
-                    else
-                    {
-                        desired = desiredAmount*input.ratio;
-                    }
-
-                    double actual = part.TakeResource(input.resource, desired);
-
-                    if (actual < (desired*0.999))
-                    {
-                        this.LogWarning("OnFixedUpdate: obtained less " + input.resource.name + " than expected: " + desired.ToString("0.000000000") + "/" + actual.ToString("0.000000000"));
-                    }
-                }
-
-                foreach (ResourceRatio output in outputResourceList)
-                {
-                    double desired;
-                    if (output.resource.id == Utilities.ElectricityId)
-                    {
-                        desired = Math.Min(desiredAmount, maxElectricityDesired)*output.ratio;
-                    }
-                    else
-                    {
-                        desired = desiredAmount*output.ratio;
-                    }
-
-                    double actual = -part.TakeResource(output.resource.id, -desired);
-
-                    if (actual < (desired*0.999) && !output.allowExtra)
-                    {
-                        this.LogWarning("OnFixedUpdate: put less " + output.resource.name + " than expected: " + desired.ToString("0.000000000") + "/" + actual.ToString("0.000000000"));
-                    }
-                }
-
-                converterStatus = "Running";
+                var amounts = this._getResourceAmounts(output.resource.name);
+                constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate, output.allowExtra));
+                cnt++;
             }
+            foreach (var input in this.inputResourceList)
+            {
+                var amounts = this._getResourceAmounts(input.resource.name);
+                constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate, false));
+                cnt++;
+            }
+            this._processResourceConstraintData(deltaTime, cnt > 0 ? constraintData : null);
         }
 
-        public override void OnLoad(ConfigNode node)
+        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Deactivate Converter")]
+        public void DeactivateConverter()
         {
-            this.Log("OnLoad: " + node);
-            base.OnLoad(node);
-            lastUpdateTime = Utilities.GetValue(node, "lastUpdateTime", lastUpdateTime);
-
-            UpdateResourceLists();
-            UpdateEvents();
-        }
-
-        public override void OnSave(ConfigNode node)
-        {
-            node.AddValue("lastUpdateTime", lastUpdateTime);
-            this.Log("OnSave: " + node);
+            this.converterEnabled = false;
+            this.UpdateEvents();
         }
 
         public override string GetInfo()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append(converterName);
+            var sb = new StringBuilder();
+            sb.Append(this.converterName);
             sb.Append("\n\nInputs:");
-            foreach (var input in inputResourceList)
+            foreach (var input in this.inputResourceList)
             {
-                double ratio = input.ratio*conversionRate;
-                sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
+                double ratio = input.ratio*this.conversionRate;
+                sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
             }
             sb.Append("\n\nOutputs: ");
-            foreach (var output in outputResourceList)
+            foreach (var output in this.outputResourceList)
             {
-                double ratio = output.ratio*conversionRate;
-                sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 3)).Append("U/sec");
+                double ratio = output.ratio*this.conversionRate;
+                sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
             }
             sb.Append("\n");
-            if (requiresOxygenAtmo)
+            if (this.requiresOxygenAtmo)
             {
                 sb.Append("\nRequires an atmosphere containing Oxygen.");
             }
-            if (alwaysOn)
+            if (this.alwaysOn)
             {
                 sb.Append("\nCannot be turned off.");
             }
@@ -282,72 +148,114 @@ namespace USI
             return sb.ToString();
         }
 
-        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Activate Converter")]
-        public void ActivateConverter()
+        public override void OnAwake()
         {
-            converterEnabled = true;
-            UpdateEvents();
+            this.Log("OnAwake");
+            base.OnAwake();
+            this.UpdateResourceLists();
         }
 
-        [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Deactivate Converter")]
-        public void DeactivateConverter()
+        public void FixedUpdate()
         {
-            converterEnabled = false;
-            UpdateEvents();
-        }
-
-        [KSPAction("Toggle Converter")]
-        public void ToggleConverter(KSPActionParam param)
-        {
-            converterEnabled = !converterEnabled;
-            UpdateEvents();
-        }
-
-        private void UpdateEvents()
-        {
-            if (alwaysOn)
+            base.OnFixedUpdate();
+            if (Time.timeSinceLevelLoad < 1.0f || (!HighLogic.LoadedSceneIsEditor && !FlightGlobals.ready))
             {
-                Events["ActivateConverter"].active = false;
-                Events["DeactivateConverter"].active = false;
-                converterEnabled = true;
+                return;
+            }
+            if (!HighLogic.LoadedSceneHasPlanetarium)
+            {
+                this.CollectResourceConstraintData(this.converterEnabled, 1d);
+                return;
+            }
+            if (Math.Abs(this.lastUpdateTime) <= double.Epsilon)
+            {
+                // Just started running
+                this.lastUpdateTime = Planetarium.GetUniversalTime();
+                return;
+            }
+            var deltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime,
+                                     this.ElectricityAffected
+                                         ? Utilities.ElectricityMaxDeltaTime
+                                         : Utilities.MaxDeltaTime);
+            this.lastUpdateTime += deltaTime;
+            this.CollectResourceConstraintData(this.converterEnabled, deltaTime);
+            if (!this.converterEnabled)
+            {
+                return;
+            }
+            if (this.requiresOxygenAtmo && !this.vessel.mainBody.atmosphereContainsOxygen)
+            {
+                this.converterStatus = "No Oxygen";
+                return;
+            }
+            if (this._constraintInfo.Convert)
+            {
+                foreach (var resourceConstraint in this._constraintInfo.Constraints)
+                {
+                    var demand = resourceConstraint.RateThisFrame(deltaTime);
+                    if (resourceConstraint.OutputResource)
+                    {
+                        demand *= -1;
+                    }
+                    var actual = this.part.RequestResource(resourceConstraint.ResourceName, demand);
+                    if (Math.Abs(actual - demand) > DemandActualDifferenceWarnLevel)
+                    {
+                        this.LogWarning(resourceConstraint.ResourceName + " demand = " + demand + " but " + actual + " transferred");
+                    }
+                }
+                this.converterStatus = "Running";
             }
             else
             {
-                Events["ActivateConverter"].active = !converterEnabled;
-                Events["DeactivateConverter"].active = converterEnabled;
-
-                if (!converterEnabled)
-                {
-                    converterStatus = "Inactive";
-                }
+                this.converterStatus = "Standby";
             }
         }
 
-        private void UpdateResourceLists()
+        public override void OnLoad(ConfigNode node)
         {
-            if (inputResourceList == null)
+            this.Log("OnLoad: " + node);
+            base.OnLoad(node);
+            this.lastUpdateTime = Utilities.GetValue(node, "lastUpdateTime", this.lastUpdateTime);
+
+            this.UpdateResourceLists();
+            this.UpdateEvents();
+        }
+
+        public override void OnSave(ConfigNode node)
+        {
+            node.AddValue("lastUpdateTime", this.lastUpdateTime);
+            this.Log("OnSave: " + node);
+        }
+
+        public override void OnStart(StartState state)
+        {
+            this.Log("OnStart: " + state);
+            base.OnStart(state);
+
+            if (state != StartState.Editor)
             {
-                inputResourceList = new List<ResourceRatio>();
-            }
-            if (outputResourceList == null)
-            {
-                outputResourceList = new List<ResourceRatio>();
+                this.part.force_activate();
+                this.ID = Guid.NewGuid();
             }
 
-            ParseInputResourceString(inputResources, inputResourceList);
-            ParseOutputResourceString(outputResources, outputResourceList);
+            if (!this.showRemainingTime)
+            {
+                var remTimeDisp = this.Fields["remainingTimeDisplay"];
+                var constDisp = this.Fields["constraintDisplay"];
+                remTimeDisp.guiActive = remTimeDisp.guiActiveEditor = constDisp.guiActive = constDisp.guiActiveEditor = false;
+            }
 
-            Events["ActivateConverter"].guiName = "Activate " + converterName;
-            Events["DeactivateConverter"].guiName = "Deactivate " + converterName;
-            Actions["ToggleConverter"].guiName = "Toggle " + converterName;
-            Fields["converterStatus"].guiName = converterName;
+            this.UpdateEvents();
+
+            this.constraintDisplay = NotAvailable;
+            this.remainingTimeDisplay = NotAvailable;
         }
 
         private void ParseInputResourceString(string resourceString, List<ResourceRatio> resources)
         {
             resources.Clear();
 
-            string[] tokens = resourceString.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+            string[] tokens = resourceString.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
 
             for (int i = 0; i < (tokens.Length - 1); i += 2)
             {
@@ -371,7 +279,7 @@ namespace USI
         {
             resources.Clear();
 
-            string[] tokens = resourceString.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+            string[] tokens = resourceString.Split(Delimiters, StringSplitOptions.RemoveEmptyEntries);
 
             for (int i = 0; i < (tokens.Length - 2); i += 3)
             {
@@ -392,39 +300,93 @@ namespace USI
             this.Log("Output resources parsed: " + ratios + "\nfrom " + resourceString);
         }
 
-        internal void CollectResourceConstraintData()
+        [KSPAction("Toggle Converter")]
+        public void ToggleConverter(KSPActionParam param)
         {
-            if (!showRemainingTime)
-            {
-                return;
-            }
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                if (_constraintUpdateCounter > 0)
-                {
-                    _constraintUpdateCounter--;
-                    return;
-                }
-                this._constraintUpdateCounter = SlowConstraintInfoUpdate;
-            }
-            var constraintData = new ResourceConstraintData();
-            var cnt = 0;
-            foreach (var output in outputResourceList.Where(r => !r.allowExtra))
-            {
-                var amounts = this._getResourceAmounts(output.resource.name);
-                constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate));
-                cnt++;
-            }
-            foreach (var input in inputResourceList)
-            {
-                var amounts = this._getResourceAmounts(input.resource.name);
-                constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate));
-                cnt++;
-            }
-            this._processResourceConstraintData(cnt > 0 ? constraintData : null);
+            this.converterEnabled = !this.converterEnabled;
+            this.UpdateEvents();
         }
 
-        private void _processResourceConstraintData(ResourceConstraintData data = null)
+        private void UpdateEvents()
+        {
+            if (this.alwaysOn)
+            {
+                this.Events["ActivateConverter"].active = false;
+                this.Events["DeactivateConverter"].active = false;
+                this.converterEnabled = true;
+            }
+            else
+            {
+                this.Events["ActivateConverter"].active = !this.converterEnabled;
+                this.Events["DeactivateConverter"].active = this.converterEnabled;
+
+                if (!this.converterEnabled)
+                {
+                    this.converterStatus = "Inactive";
+                }
+            }
+        }
+
+        private void UpdateResourceLists()
+        {
+            if (this.inputResourceList == null)
+            {
+                this.inputResourceList = new List<ResourceRatio>();
+            }
+            if (this.outputResourceList == null)
+            {
+                this.outputResourceList = new List<ResourceRatio>();
+            }
+
+            this.ParseInputResourceString(this.inputResources, this.inputResourceList);
+            this.ParseOutputResourceString(this.outputResources, this.outputResourceList);
+
+            this.Events["ActivateConverter"].guiName = "Activate " + this.converterName;
+            this.Events["DeactivateConverter"].guiName = "Deactivate " + this.converterName;
+            this.Actions["ToggleConverter"].guiName = "Toggle " + this.converterName;
+            this.Fields["converterStatus"].guiName = this.converterName;
+        }
+
+        private IEnumerable<PartResource> _getConnectedResources(String resourceName)
+        {
+            var resources = new List<PartResource>();
+            var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            if (resDef != null)
+            {
+                if (HighLogic.LoadedSceneIsEditor)
+                {
+                    if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
+                    {
+                        if (this.part.Resources.Contains(resourceName))
+                        {
+                            resources.Add(this.part.Resources[resourceName]);
+                        }
+                    }
+                    else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
+                    {
+                        var eParts = EditorLogic.fetch.ship.Parts;
+                        resources.AddRange(from ePart in eParts
+                                           where ePart.Resources.Contains(resourceName)
+                                           select ePart.Resources[resourceName]);
+                    }
+                }
+                if (HighLogic.LoadedSceneIsFlight)
+                {
+                    this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
+                }
+            }
+            return resources;
+        }
+
+        private double[] _getResourceAmounts(String resourceName)
+        {
+            var resources = this._getConnectedResources(resourceName).ToList();
+            var amount = resources.Sum(r => r.amount);
+            var maxAmount = resources.Sum(r => r.maxAmount);
+            return new[] {amount, maxAmount};
+        }
+
+        private void _processResourceConstraintData(double deltaTime, ResourceConstraintData data = null)
         {
             if (data == null)
             {
@@ -432,9 +394,75 @@ namespace USI
                 this.constraintDisplay = NotAvailable;
                 return;
             }
-            var info = data.GetConstraintInfo(ref _constraintUpdateCounter);
-            this.remainingTimeDisplay = info[0];
-            this.constraintDisplay = info[1];
+            var info = data.GetConstraintInfo(ref this._constraintUpdateCounter, deltaTime);
+            this.remainingTimeDisplay = info.InfoTexts[0];
+            this.constraintDisplay = info.InfoTexts[1];
+            this._constraintInfo = info;
+        }
+
+        private class ConstraintInfo
+        {
+            internal List<ResourceConstraint> Constraints { get; private set; }
+            internal bool Convert { get; private set; }
+            internal ResourceConstraint EarliestConstraint { get; private set; }
+            internal string[] InfoTexts { get; private set; }
+
+            internal ConstraintInfo(string remainingTime, string earliestConstraint, bool convert, ResourceConstraint earliest, List<ResourceConstraint> constraints)
+            {
+                this.Convert = convert;
+                this.Constraints = constraints;
+                this.InfoTexts = new[] {remainingTime, earliestConstraint};
+                this.EarliestConstraint = earliest;
+            }
+        }
+
+        private class ResourceConstraint
+        {
+            private bool AllowsOverflow { get; set; }
+            private double Amount { get; set; }
+            private double MaxAmount { get; set; }
+            internal bool OutputResource { get; private set; }
+            private double RatePerSecond { get; set; }
+
+            private double RemainingAmount
+            {
+                get { return this.OutputResource ? (this.AllowsOverflow ? double.MaxValue : this.MaxAmount - this.Amount) : this.Amount; }
+            }
+
+            internal double RemainingPercentage
+            {
+                get
+                {
+                    var percent = 0d;
+                    if (this.MaxAmount > 0)
+                    {
+                        percent = this.Amount/this.MaxAmount;
+                    }
+                    return this.OutputResource ? 1d - percent : percent;
+                }
+            }
+
+            internal double RemainingSeconds
+            {
+                get { return this.RemainingAmount/this.RatePerSecond; }
+            }
+
+            internal string ResourceName { get; private set; }
+
+            internal ResourceConstraint(string name, bool output, double max, double avail, double rate, bool allowsOverflow)
+            {
+                this.ResourceName = name;
+                this.OutputResource = output;
+                this.MaxAmount = max;
+                this.Amount = avail;
+                this.RatePerSecond = rate;
+                this.AllowsOverflow = allowsOverflow;
+            }
+
+            internal double RateThisFrame(double deltaTime)
+            {
+                return Math.Min(this.RatePerSecond*deltaTime, this.RemainingAmount);
+            }
         }
 
         private class ResourceConstraintData
@@ -451,18 +479,22 @@ namespace USI
                 this._constraints.Add(constraint);
             }
 
-            internal string[] GetConstraintInfo(ref short counter)
+            internal ConstraintInfo GetConstraintInfo(ref short counter, double deltaTime)
             {
-                var earliestConstraint = _findEarliestConstraint();
+                var earliestConstraint = this._findEarliestConstraint();
                 if (earliestConstraint != null)
                 {
-                    return new[]
-                           {
-                               _convertRemainingToDisplayText(earliestConstraint.RemainingSeconds, earliestConstraint.RemainingPercentage, ref counter),
-                               earliestConstraint.ResourceName + (earliestConstraint.OutputResource ? " full" : " depleted")
-                           };
+                    var convInfos = _checkIfConvertingPossible(earliestConstraint, deltaTime);
+                    return new ConstraintInfo(_convertRemainingToDisplayText(earliestConstraint.RemainingSeconds, earliestConstraint.RemainingPercentage, ref counter),
+                                              earliestConstraint.ResourceName + (earliestConstraint.OutputResource ? " full" : " depleted"), convInfos, earliestConstraint, this._constraints);
                 }
-                return new[] {NotAvailable, NotAvailable};
+                return new ConstraintInfo(NotAvailable, NotAvailable, false, null, this._constraints);
+            }
+
+            private static bool _checkIfConvertingPossible(ResourceConstraint earliestConstraint, double deltaTime)
+            {
+                var rate = earliestConstraint.RateThisFrame(deltaTime);
+                return rate > DemandActualDifferenceWarnLevel;
             }
 
             private static string _convertRemainingToDisplayText(double remainingSeconds, double remainingPercent, ref short counter)
@@ -498,85 +530,6 @@ namespace USI
                 }
                 return nearestConstraint;
             }
-        }
-
-        private class ResourceConstraint
-        {
-            internal string ResourceName { get; private set; }
-            internal bool OutputResource { get; private set; }
-            private double MaxAmount { get; set; }
-            private double Amount { get; set; }
-            private double RatePerSecond { get; set; }
-
-            internal ResourceConstraint(string name, bool output, double max, double avail, double rate)
-            {
-                this.ResourceName = name;
-                this.OutputResource = output;
-                this.MaxAmount = max;
-                this.Amount = avail;
-                this.RatePerSecond = rate;
-            }
-
-            internal double RemainingSeconds
-            {
-                get
-                {
-                    var remAmount = OutputResource ? MaxAmount - Amount : Amount;
-                    return remAmount/RatePerSecond;
-                }
-            }
-
-            internal double RemainingPercentage
-            {
-                get
-                {
-                    var percent = 0d;
-                    if (MaxAmount > 0)
-                    {
-                        percent = Amount/MaxAmount;
-                    }
-                    return OutputResource ? 1d - percent : percent;
-                }
-            }
-        }
-
-        private double[] _getResourceAmounts(String resourceName)
-        {
-            var resources = this._getConnectedResources(resourceName).ToList();
-            var amount = resources.Sum(r => r.amount);
-            var maxAmount = resources.Sum(r => r.maxAmount);
-            return new[] {amount, maxAmount};
-        }
-
-        private IEnumerable<PartResource> _getConnectedResources(String resourceName)
-        {
-            var resources = new List<PartResource>();
-            var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
-            if (resDef != null)
-            {
-                if (HighLogic.LoadedSceneIsEditor)
-                {
-                    if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
-                    {
-                        if (this.part.Resources.Contains(resourceName))
-                        {
-                            resources.Add(this.part.Resources[resourceName]);
-                        }
-                    }
-                    else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
-                    {
-                        var eParts = EditorLogic.fetch.ship.Parts;
-                        resources.AddRange(from ePart in eParts
-                                           where ePart.Resources.Contains(resourceName)
-                                           select ePart.Resources[resourceName]);
-                    }
-                }
-                if (HighLogic.LoadedSceneIsFlight)
-                {
-                    this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
-                }
-            }
-            return resources;
         }
     }
 }
