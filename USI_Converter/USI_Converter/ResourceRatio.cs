@@ -2,9 +2,9 @@
 {
     public class ResourceRatio
     {
-        public PartResourceDefinition resource;
-        public double ratio;
         public bool allowExtra;
+        public double ratio;
+        public PartResourceDefinition resource;
 
         public ResourceRatio(PartResourceDefinition resource, double ratio, bool allowExtra = false)
         {

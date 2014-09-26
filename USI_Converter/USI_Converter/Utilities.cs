@@ -25,38 +25,91 @@
  *  Any similarity to a real entity is purely coincidental.
  */
 
-using KSP.IO;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+using System.Globalization;
 
 namespace USI
 {
+    internal class Tuple<T1, T2>
+    {
+        internal T1 Item1 { get; set; }
+        internal T2 Item2 { get; set; }
+
+        internal Tuple(T1 item1, T2 item2)
+        {
+            this.Item1 = item1;
+            this.Item2 = item2;
+        }
+
+        public Tuple()
+        {
+        }
+    }
+
+    internal class Tuple<T1, T2, T3> : Tuple<T1, T2>
+    {
+        internal T3 Item3 { get; set; }
+
+        internal Tuple(T1 item1, T2 item2, T3 item3) : base(item1, item2)
+        {
+            this.Item3 = item3;
+        }
+
+        public Tuple()
+        {
+        }
+    }
+
     public static class Utilities
     {
-        const int SECONDS_PER_MINUTE = 60;
-        const int SECONDS_PER_HOUR = 3600;
-        const int SECONDS_PER_DAY = 6 * SECONDS_PER_HOUR;
+        private const int SecondsPerMinute = 60;
+        private const int SecondsPerHour = 60*SecondsPerMinute;
+        private const int SecondsPerDay = 6*SecondsPerHour;
+        private const string ElectricChargeResName = "ElectricCharge";
 
-        public static int MaxDeltaTime 
-        { 
-            get { return SECONDS_PER_DAY; }
-        }
-        public static int ElectricityMaxDeltaTime 
-        { 
-            get { return 1; } 
-        }
-
-        public static string Electricity { get { return "ElectricCharge"; } }
-
-        public static int ElectricityId
+        public static string Electricity
         {
-            get
+            get { return ElectricChargeResName; }
+        }
+
+        public static double ElectricityMaxDeltaTime
+        {
+            get { return 1d*(1/TimeWarp.fixedDeltaTime); }
+        }
+
+        public static double MaxDeltaTime
+        {
+            get { return SecondsPerHour*(1/TimeWarp.fixedDeltaTime); }
+        }
+
+        public static string FormatValue(double ratio, int p, bool humanReadable)
+        {
+            const string unitPerSec = " U/sec";
+            var digits = p;
+            if (humanReadable)
             {
-                return PartResourceLibrary.Instance.GetDefinition(Electricity).id;
+                if (ratio >= 1)
+                {
+                    return Math.Round(ratio, digits).ToString(CultureInfo.CurrentCulture) + unitPerSec;
+                }
+                var minRatio = ratio*SecondsPerMinute;
+                if (minRatio >= 1)
+                {
+                    return string.Format("{0:F2} U/min", Math.Round(minRatio, digits));
+                }
+                var hourRatio = ratio*SecondsPerHour;
+                if (hourRatio >= 1)
+                {
+                    return string.Format("{0:F2} U/hour", Math.Round(hourRatio, digits));
+                }
+                var dayRatio = ratio*SecondsPerDay;
+                return string.Format("{0:F2} U/day", Math.Round(dayRatio, digits));
             }
+            while (digits < 14 && (int) Math.Floor(ratio*Math.Pow(10, digits)) == 0)
+            {
+                digits++;
+            }
+            return Math.Round(ratio, digits).ToString(CultureInfo.CurrentCulture) + unitPerSec;
         }
 
         public static double GetValue(ConfigNode config, string name, double currentValue)
@@ -66,48 +119,7 @@ namespace USI
             {
                 return newValue;
             }
-            else
-            {
-                return currentValue;
-            }
-        }
-
-
-        public static string FormatTime(double time)
-        {
-            time = (int)time;
-
-            string result = "";
-            if (time < 0)
-            {
-                result += "-";
-                time = -time;
-            }
-
-            int days = (int)(time / SECONDS_PER_DAY);
-            time -= days * SECONDS_PER_DAY;
-
-            int hours = (int)(time / SECONDS_PER_HOUR);
-            time -= hours * SECONDS_PER_HOUR;
-
-            int minutes = (int)(time / SECONDS_PER_MINUTE);
-            time -= minutes * SECONDS_PER_MINUTE;
-
-            int seconds = (int)time;
-
-            if (days > 0)
-            {
-                result += days.ToString("#0") + ":";
-            }
-            result += hours.ToString("00") + ":" + minutes.ToString("00") + ":" + seconds.ToString("00");
-            return result;
-        }
-
-
-        public static string FormatValue(double ratio, int p)
-        {
-            //???
-            return Math.Round(ratio, p).ToString();
+            return currentValue;
         }
     }
 }
