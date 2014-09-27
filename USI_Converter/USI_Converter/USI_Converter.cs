@@ -37,6 +37,7 @@ namespace USI
     {
         private const string NotAvailable = "n.a.";
         internal const short SlowConstraintInfoUpdate = 30;
+        internal const short EditorConstraintInfoUpdate = 90;
         internal const short FastConstraintInfoUpdate = 5;
         private const double DemandActualDifferenceWarnLevel = 0.000000001;
         private static readonly char[] Delimiters = {' ', ',', '\t', ';'};
@@ -94,18 +95,18 @@ namespace USI
                 this._constraintUpdateCounter--;
                 return;
             }
-            this._constraintUpdateCounter = SlowConstraintInfoUpdate;
+            this._constraintUpdateCounter = HighLogic.LoadedSceneIsEditor ? EditorConstraintInfoUpdate : SlowConstraintInfoUpdate;
             var constraintData = new ResourceConstraintData();
             var cnt = 0;
             foreach (var output in this.outputResourceList)
             {
-                var amounts = this._getResourceAmounts(output.resource.name);
+                var amounts = this._getResourceAmounts(output.resource.name, true);
                 constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate, output.allowExtra));
                 cnt++;
             }
             foreach (var input in this.inputResourceList)
             {
-                var amounts = this._getResourceAmounts(input.resource.name);
+                var amounts = this._getResourceAmounts(input.resource.name, false);
                 constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate, false));
                 cnt++;
             }
@@ -117,42 +118,6 @@ namespace USI
         {
             this.converterEnabled = false;
             this.UpdateEvents();
-        }
-
-        public override string GetInfo()
-        {
-            var sb = new StringBuilder();
-            sb.Append(this.converterName);
-            sb.Append("\n\nInputs:");
-            foreach (var input in this.inputResourceList)
-            {
-                double ratio = input.ratio*this.conversionRate;
-                sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
-            }
-            sb.Append("\n\nOutputs: ");
-            foreach (var output in this.outputResourceList)
-            {
-                double ratio = output.ratio*this.conversionRate;
-                sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
-            }
-            sb.Append("\n");
-            if (this.requiresOxygenAtmo)
-            {
-                sb.Append("\nRequires an atmosphere containing Oxygen.");
-            }
-            if (this.alwaysOn)
-            {
-                sb.Append("\nCannot be turned off.");
-            }
-
-            return sb.ToString();
-        }
-
-        public override void OnAwake()
-        {
-            this.Log("OnAwake");
-            base.OnAwake();
-            this.UpdateResourceLists();
         }
 
         public void FixedUpdate()
@@ -209,6 +174,42 @@ namespace USI
             {
                 this.converterStatus = "Standby";
             }
+        }
+
+        public override string GetInfo()
+        {
+            var sb = new StringBuilder();
+            sb.Append(this.converterName);
+            sb.Append("\n\nInputs:");
+            foreach (var input in this.inputResourceList)
+            {
+                double ratio = input.ratio*this.conversionRate;
+                sb.Append("\n - ").Append(input.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
+            }
+            sb.Append("\n\nOutputs: ");
+            foreach (var output in this.outputResourceList)
+            {
+                double ratio = output.ratio*this.conversionRate;
+                sb.Append("\n - ").Append(output.resource.name).Append(": ").Append(Utilities.FormatValue(ratio, 2, this.HumanReadableInfoValues));
+            }
+            sb.Append("\n");
+            if (this.requiresOxygenAtmo)
+            {
+                sb.Append("\nRequires an atmosphere containing Oxygen.");
+            }
+            if (this.alwaysOn)
+            {
+                sb.Append("\nCannot be turned off.");
+            }
+
+            return sb.ToString();
+        }
+
+        public override void OnAwake()
+        {
+            this.Log("OnAwake");
+            base.OnAwake();
+            this.UpdateResourceLists();
         }
 
         public override void OnLoad(ConfigNode node)
@@ -378,11 +379,64 @@ namespace USI
             return resources;
         }
 
-        private double[] _getResourceAmounts(String resourceName)
+        private double[] _getResourceAmounts(string resourceName, bool outRes)
         {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                return this._getResourceAmountsInEditor(resourceName, outRes);
+            }
             var resources = this._getConnectedResources(resourceName).ToList();
             var amount = resources.Sum(r => r.amount);
             var maxAmount = resources.Sum(r => r.maxAmount);
+            return new[] {amount, maxAmount};
+        }
+
+        private double[] _getResourceAmountsInEditor(string resourceName, bool outRes)
+        {
+            const string warnMsg = "[USI_Converter] unabled to retrieve resource amounts in editor";
+            var amount = 0d;
+            var maxAmount = 0d;
+            var sourceParts = new List<Part>();
+            try
+            {
+                var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
+                var allParts = EditorLogic.fetch.ship.Parts;
+                switch (resDef.resourceFlowMode)
+                {
+                    case ResourceFlowMode.NO_FLOW:
+                        sourceParts.Add(this.part);
+                        break;
+                    case ResourceFlowMode.ALL_VESSEL:
+                        sourceParts.AddRange(allParts);
+                        break;
+                    case ResourceFlowMode.STAGE_PRIORITY_FLOW:
+                        sourceParts.AddRange(this.part.FindPartsInSameStage(allParts, outRes));
+                        break;
+                    case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                        sourceParts.AddRange(this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), outRes));
+                        break;
+                }
+                foreach (var partRes in sourceParts
+                    .Where(sp => sp.Resources.Contains(resDef.name))
+                    .Select(sourcePart => sourcePart.Resources[resDef.name])
+                    .Where(partRes => partRes != null && partRes.flowState))
+                {
+                    amount += partRes.amount;
+                    maxAmount += partRes.maxAmount;
+                }
+            }
+            catch (NullReferenceException)
+            {
+                Debug.LogWarning(warnMsg);
+            }
+            catch (ArgumentException)
+            {
+                Debug.LogWarning(warnMsg);
+            }
+            catch (StackOverflowException)
+            {
+                Debug.LogWarning(warnMsg);
+            }
             return new[] {amount, maxAmount};
         }
 
