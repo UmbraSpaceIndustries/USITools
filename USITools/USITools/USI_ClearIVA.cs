@@ -39,6 +39,8 @@ namespace USITools
         isActive = vessel.isActiveVessel;
     }
 
+
+
     public override void OnUpdate()
     {
         base.OnUpdate();
@@ -138,6 +140,7 @@ namespace USITools
                 }
             }
         }
+              
         try
         {
             if (FindCamera("InternalCamera") && part.vessel.isActiveVessel)
