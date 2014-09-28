@@ -27,17 +27,18 @@
 
 using System;
 using UnityEngine;
+using Object = System.Object;
 
 namespace USI
 {
     public static class Logging
     {
-        public static void Log(this System.Object obj, String message)
+        public static void Log(this Object obj, String message)
         {
             Debug.Log(obj.GetType().FullName + "[" + obj.GetHashCode().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
         }
 
-        public static void LogWarning(this System.Object obj, String message)
+        public static void LogWarning(this Object obj, String message)
         {
             Debug.LogWarning(obj.GetType().FullName + "[" + obj.GetHashCode().ToString("X") + "][" + Time.time.ToString("0.00") + "]: " + message);
         }
