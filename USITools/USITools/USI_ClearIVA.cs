@@ -51,50 +51,52 @@ namespace USITools
             part.vessel.SetActiveInternalPart(part);
             kspParent = InternalCamera.Instance.transform.parent;
             if (part.internalModel)
-            { 
+            {
                 part.internalModel.SetVisible(true);
-                part.internalModel.transform.parent = part.transform;
-                part.internalModel.transform.localRotation = (new Quaternion(0.0f, 0.7f, -0.7f, 0.0f));
-                part.internalModel.transform.localPosition = Vector3.zero;
-                if (part.protoModuleCrew.Any())
+            }
+            part.internalModel.transform.parent = part.transform;
+            part.internalModel.transform.localRotation = (new Quaternion(0.0f, 0.7f, -0.7f, 0.0f));
+            part.internalModel.transform.localPosition = Vector3.zero;
+            if (part.protoModuleCrew.Any())
+            {
+                part.internalModel.Initialize(part);
+                part.internalModel.enabled = true;
+                using (var mCrew = part.protoModuleCrew.GetEnumerator())
                 {
-                    part.internalModel.Initialize(part);
-                    part.internalModel.enabled = true;
-                    using (var mCrew = part.protoModuleCrew.GetEnumerator())
+                    while (mCrew.MoveNext())
                     {
-                        while (mCrew.MoveNext())
+                        var current = mCrew.Current;
+                        if (current == null) continue;
+                        if (current.seat && !part.vessel.packed)
                         {
-                            var current = mCrew.Current;
-                            if (current == null) continue;
-                            if (current.seat && !part.vessel.packed)
-                            {
-                                current.seat.enabled = true;
-                                current.seat.SpawnCrew();
-                            }
-                            if (!current.KerbalRef) continue;
-                            current.KerbalRef.enabled = true;
-                            current.KerbalRef.kerbalCam.cullingMask = 1;
+                            current.seat.enabled = true;
+                            current.seat.SpawnCrew();
                         }
+                        if (!current.KerbalRef) continue;
+                        current.KerbalRef.enabled = true;
+                        current.KerbalRef.kerbalCam.cullingMask = 1;
                     }
-                    using (var mSeat = part.internalModel.seats.GetEnumerator())
+                }
+                using (var mSeat = part.internalModel.seats.GetEnumerator())
+                {
+                    while (mSeat.MoveNext())
                     {
-                        while (mSeat.MoveNext())
-                        {
-                            var current = mSeat.Current;
-                            if (current == null) continue;
-                            if (current.kerbalRef)
-                                current.SpawnCrew();
-                            if (current.portraitCamera != null)
-                                current.portraitCamera.cullingMask = 65537;
-                        }
+                        var current = mSeat.Current;
+                        if (current == null) continue;
+                        if (current.kerbalRef)
+                            current.SpawnCrew();
+                        if (current.portraitCamera != null)
+                            current.portraitCamera.cullingMask = 65537;
                     }
                 }
             }
+            
         }
 
-        isActive = part.vessel.isActiveVessel;
+
         if (isActive  && !packed)
         {
+            isActive = part.vessel.isActiveVessel;
             if (part.internalModel && part.protoModuleCrew.Any())
             {
                 part.vessel.SetActiveInternalPart(part);
