@@ -74,12 +74,12 @@ namespace USI
 
         public static double ElectricityMaxDeltaTime
         {
-            get { return 1d*(1/TimeWarp.fixedDeltaTime); }
+            get { return 1d; } // *(1/TimeWarp.fixedDeltaTime); }
         }
 
         public static double MaxDeltaTime
         {
-            get { return SecondsPerHour*(1/TimeWarp.fixedDeltaTime); }
+            get { return SecondsPerDay; } //*(1/TimeWarp.fixedDeltaTime); }
         }
 
         public static string FormatValue(double ratio, int p, bool humanReadable)

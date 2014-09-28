@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngineInternal;
 
 namespace USI
 {
@@ -39,19 +40,20 @@ namespace USI
         internal const short SlowConstraintInfoUpdate = 30;
         internal const short EditorConstraintInfoUpdate = 90;
         internal const short FastConstraintInfoUpdate = 5;
-        private const double DemandActualDifferenceWarnLevel = 0.000000001;
+        private const double DemandActualDifferenceWarnLevel = 0.00000001;
         private static readonly char[] Delimiters = {' ', ',', '\t', ';'};
         [KSPField] public bool HumanReadableInfoValues = true;
         internal Guid ID;
         private ConstraintInfo _constraintInfo;
         private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
+        private ConnectedPartCollection _connectedParts;
 
         [KSPField] public bool alwaysOn = false;
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
 
         [KSPField] public float conversionRate = 1.0f;
         [KSPField(isPersistant = true)] public bool converterEnabled = false;
-        [KSPField] public string converterName = "TAC Generic Converter";
+        [KSPField] public string converterName = "USI_Converter";
 
         [KSPField(guiActive = true, guiName = "Converter Status")] public string converterStatus = "Unknown";
         private List<ResourceRatio> inputResourceList;
@@ -95,22 +97,37 @@ namespace USI
                 this._constraintUpdateCounter--;
                 return;
             }
+            this._connectedParts = _findConnectedParts();
             this._constraintUpdateCounter = HighLogic.LoadedSceneIsEditor ? EditorConstraintInfoUpdate : SlowConstraintInfoUpdate;
             var constraintData = new ResourceConstraintData();
             var cnt = 0;
             foreach (var output in this.outputResourceList)
             {
-                var amounts = this._getResourceAmounts(output.resource.name, true);
-                constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate, output.allowExtra));
+                var resParts = new List<PartResource>();
+                var amounts = this._getResourceAmounts(output.resource.name, true, out resParts);
+                constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate, output.allowExtra, resParts));
                 cnt++;
             }
             foreach (var input in this.inputResourceList)
             {
-                var amounts = this._getResourceAmounts(input.resource.name, false);
-                constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate, false));
+                var resParts = new List<PartResource>();
+                var amounts = this._getResourceAmounts(input.resource.name, false, out resParts);
+                constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate, false, resParts));
                 cnt++;
             }
             this._processResourceConstraintData(deltaTime, cnt > 0 ? constraintData : null);
+        }
+
+        private ConnectedPartCollection _findConnectedParts()
+        {
+            var allParts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.Parts : this.part.vessel.Parts;
+            var allVessel = allParts;
+            var noFlow = new List<Part> {this.part};
+            var stagePrioIn = this.part.FindPartsInSameStage(allParts, false);
+            var stagePrioOut = this.part.FindPartsInSameStage(allParts, true);
+            var stackPrioIn = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), false);
+            var stackPrioOut = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), true);
+            return new ConnectedPartCollection(allVessel, noFlow, stagePrioIn, stagePrioOut, stackPrioIn, stackPrioOut, this.part);
         }
 
         [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Deactivate Converter")]
@@ -122,7 +139,7 @@ namespace USI
 
         public void FixedUpdate()
         {
-            base.OnFixedUpdate();
+            //base.OnFixedUpdate();
             if (Time.timeSinceLevelLoad < 1.0f || (!HighLogic.LoadedSceneIsEditor && !FlightGlobals.ready))
             {
                 return;
@@ -138,10 +155,10 @@ namespace USI
                 this.lastUpdateTime = Planetarium.GetUniversalTime();
                 return;
             }
-            var deltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime,
-                                     this.ElectricityAffected
-                                         ? Utilities.ElectricityMaxDeltaTime
-                                         : Utilities.MaxDeltaTime);
+            var deltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime, Utilities.MaxDeltaTime);
+            //this.ElectricityAffected
+            //    ? Utilities.ElectricityMaxDeltaTime
+            //    : Utilities.MaxDeltaTime);
             this.lastUpdateTime += deltaTime;
             this.CollectResourceConstraintData(this.converterEnabled, deltaTime);
             if (!this.converterEnabled)
@@ -155,18 +172,26 @@ namespace USI
             }
             if (this._constraintInfo.Convert)
             {
-                foreach (var resourceConstraint in this._constraintInfo.Constraints)
+                foreach (var resourceConstraint in this._constraintInfo.Constraints.OrderBy(c => c.OutputResource))
                 {
-                    var demand = resourceConstraint.RateThisFrame(deltaTime);
-                    if (resourceConstraint.OutputResource)
+                    var demand = resourceConstraint.RateThisFrame(
+                                                                  resourceConstraint.ResourceName == Utilities.Electricity
+                                                                      ? Math.Min(Utilities.ElectricityMaxDeltaTime, deltaTime)
+                                                                      : deltaTime
+                        );
+                    //if (resourceConstraint.OutputResource)
+                    //{
+                    //    demand *= -1;
+                    //}
+                    //var actual = this.part.RequestResource(resourceConstraint.ResourceName, demand);
+                    var actual = resourceConstraint.RequestResource(demand);
+                    //if (!resourceConstraint.OutputResource || (resourceConstraint.OutputResource && !resourceConstraint.AllowsOverflow))
+                    //{
+                    if (Math.Abs(actual - demand) > (resourceConstraint.ResourceName == Utilities.Electricity ? 1d : DemandActualDifferenceWarnLevel))
                     {
-                        demand *= -1;
+                        this.LogWarning(resourceConstraint.ResourceName + " demand = " + demand + " but " + actual + " transferred (rem. res. amount = " + resourceConstraint.RemainingAmount + ")");
                     }
-                    var actual = this.part.RequestResource(resourceConstraint.ResourceName, demand);
-                    if (Math.Abs(actual - demand) > DemandActualDifferenceWarnLevel)
-                    {
-                        this.LogWarning(resourceConstraint.ResourceName + " demand = " + demand + " but " + actual + " transferred");
-                    }
+                    //}
                 }
                 this.converterStatus = "Running";
             }
@@ -348,82 +373,123 @@ namespace USI
             this.Fields["converterStatus"].guiName = this.converterName;
         }
 
-        private IEnumerable<PartResource> _getConnectedResources(String resourceName)
+        //private IEnumerable<PartResource> _getConnectedResources(String resourceName)
+        //{
+        //    var resources = new List<PartResource>();
+        //    var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
+        //    if (resDef != null)
+        //    {
+        //        if (HighLogic.LoadedSceneIsEditor)
+        //        {
+        //            if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
+        //            {
+        //                if (this.part.Resources.Contains(resourceName))
+        //                {
+        //                    resources.Add(this.part.Resources[resourceName]);
+        //                }
+        //            }
+        //            else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
+        //            {
+        //                var eParts = EditorLogic.fetch.ship.Parts;
+        //                resources.AddRange(from ePart in eParts
+        //                                   where ePart.Resources.Contains(resourceName)
+        //                                   select ePart.Resources[resourceName]);
+        //            }
+        //        }
+        //        if (HighLogic.LoadedSceneIsFlight)
+        //        {
+        //            this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
+        //        }
+        //    }
+        //    return resources;
+        //}
+
+        //private double[] _getResourceAmounts(string resourceName, bool outRes, out List<PartResource> partRes)
+        //{
+        //    //if (HighLogic.LoadedSceneIsEditor)
+        //    //{
+        //    return this._getResourceAmountsInEditor(resourceName, outRes, out partRes);
+        //    //}
+        //    //var resources = this._getConnectedResources(resourceName).ToList();
+        //    //var amount = resources.Sum(r => r.amount);
+        //    //var maxAmount = resources.Sum(r => r.maxAmount);
+        //    //return new[] {amount, maxAmount};
+        //}
+
+        private class ConnectedPartCollection
         {
-            var resources = new List<PartResource>();
-            var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
-            if (resDef != null)
+            internal List<Part> AllVessel { get; private set; }
+            internal List<Part> NoFlow { get; private set; }
+            internal List<Part> StagePrioOutRes { get; private set; }
+            internal List<Part> StagePrioInRes { get; private set; }
+            internal List<Part> StackPrioOutRes { get; private set; }
+            internal List<Part> StackPrioInRes { get; private set; }
+
+            internal ConnectedPartCollection(List<Part> allVessel, List<Part> noFlow, List<Part> stagePrioIn, List<Part> stagePrioOut, List<Part> stackPrioIn, List<Part> stackPrioOut, Part convPart)
             {
-                if (HighLogic.LoadedSceneIsEditor)
+                this.AllVessel = _sortByDistance(allVessel, convPart);
+                this.NoFlow = _sortByDistance(noFlow, convPart);
+                this.StackPrioInRes = _sortByDistance(stackPrioIn, convPart);
+                this.StackPrioOutRes = _sortByDistance(stackPrioOut, convPart);
+                this.StagePrioInRes = _sortByDistance(stagePrioIn, convPart);
+                this.StagePrioOutRes = _sortByDistance(stagePrioOut, convPart);
+            }
+
+            private static List<Part> _sortByDistance(List<Part> startList, Part convPart)
+            {
+                var wrapperList = new List<PartDistanceWrapper>(startList.Count);
+                wrapperList.AddRange(startList.Select(startPart => new PartDistanceWrapper(startPart, Vector3.Distance(startPart.transform.position, convPart.transform.position))));
+                return wrapperList.OrderBy(i => i.Distance).Select(w => w.Part).ToList();
+            }
+
+            private struct PartDistanceWrapper
+            {
+                internal Part Part { get; private set; }
+                internal float Distance { get; private set; }
+
+                public PartDistanceWrapper(Part part, float dist) : this()
                 {
-                    if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
-                    {
-                        if (this.part.Resources.Contains(resourceName))
-                        {
-                            resources.Add(this.part.Resources[resourceName]);
-                        }
-                    }
-                    else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
-                    {
-                        var eParts = EditorLogic.fetch.ship.Parts;
-                        resources.AddRange(from ePart in eParts
-                                           where ePart.Resources.Contains(resourceName)
-                                           select ePart.Resources[resourceName]);
-                    }
-                }
-                if (HighLogic.LoadedSceneIsFlight)
-                {
-                    this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
+                    this.Part = part;
+                    this.Distance = dist;
                 }
             }
-            return resources;
         }
 
-        private double[] _getResourceAmounts(string resourceName, bool outRes)
-        {
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                return this._getResourceAmountsInEditor(resourceName, outRes);
-            }
-            var resources = this._getConnectedResources(resourceName).ToList();
-            var amount = resources.Sum(r => r.amount);
-            var maxAmount = resources.Sum(r => r.maxAmount);
-            return new[] {amount, maxAmount};
-        }
-
-        private double[] _getResourceAmountsInEditor(string resourceName, bool outRes)
+        private double[] _getResourceAmounts(string resourceName, bool outRes, out List<PartResource> pRes)
         {
             const string warnMsg = "[USI_Converter] unabled to retrieve resource amounts in editor";
             var amount = 0d;
             var maxAmount = 0d;
             var sourceParts = new List<Part>();
+            pRes = new List<PartResource>();
             try
             {
                 var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
-                var allParts = EditorLogic.fetch.ship.Parts;
                 switch (resDef.resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
-                        sourceParts.Add(this.part);
+                        sourceParts = _connectedParts.NoFlow;
                         break;
                     case ResourceFlowMode.ALL_VESSEL:
-                        sourceParts.AddRange(allParts);
+                        sourceParts = _connectedParts.AllVessel;
                         break;
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW:
-                        sourceParts.AddRange(this.part.FindPartsInSameStage(allParts, outRes));
+                        sourceParts = outRes ? _connectedParts.StagePrioOutRes : _connectedParts.StagePrioInRes;
                         break;
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        sourceParts.AddRange(this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), outRes));
+                        sourceParts = outRes ? _connectedParts.StackPrioOutRes : _connectedParts.StackPrioInRes;
                         break;
                 }
-                foreach (var partRes in sourceParts
+                var filtered = sourceParts
                     .Where(sp => sp.Resources.Contains(resDef.name))
                     .Select(sourcePart => sourcePart.Resources[resDef.name])
-                    .Where(partRes => partRes != null && partRes.flowState))
+                    .Where(partRes => partRes != null && partRes.flowState).ToList();
+                foreach (var partRes in filtered)
                 {
                     amount += partRes.amount;
                     maxAmount += partRes.maxAmount;
                 }
+                pRes = filtered;
             }
             catch (NullReferenceException)
             {
@@ -472,13 +538,14 @@ namespace USI
 
         private class ResourceConstraint
         {
-            private bool AllowsOverflow { get; set; }
+            internal bool AllowsOverflow { get; private set; }
             private double Amount { get; set; }
             private double MaxAmount { get; set; }
             internal bool OutputResource { get; private set; }
             private double RatePerSecond { get; set; }
+            private List<PartResource> PartResources { get; set; }
 
-            private double RemainingAmount
+            internal double RemainingAmount
             {
                 get { return this.OutputResource ? (this.AllowsOverflow ? double.MaxValue : this.MaxAmount - this.Amount) : this.Amount; }
             }
@@ -503,7 +570,7 @@ namespace USI
 
             internal string ResourceName { get; private set; }
 
-            internal ResourceConstraint(string name, bool output, double max, double avail, double rate, bool allowsOverflow)
+            internal ResourceConstraint(string name, bool output, double max, double avail, double rate, bool allowsOverflow, List<PartResource> partResources)
             {
                 this.ResourceName = name;
                 this.OutputResource = output;
@@ -511,11 +578,38 @@ namespace USI
                 this.Amount = avail;
                 this.RatePerSecond = rate;
                 this.AllowsOverflow = allowsOverflow;
+                this.PartResources = partResources;
             }
 
             internal double RateThisFrame(double deltaTime)
             {
                 return Math.Min(this.RatePerSecond*deltaTime, this.RemainingAmount);
+            }
+
+            //internal double RemainingFramesThisFrame(double deltaTime)
+            //{
+            //    return this.RemainingAmount/this.RateThisFrame(deltaTime);
+            //}
+
+            internal double RequestResource(double demand)
+            {
+                var collected = 0d;
+                foreach (var partResource in PartResources)
+                {
+                    if (collected >= demand)
+                    {
+                        break;
+                    }
+                    var avail = this.OutputResource ? partResource.maxAmount - partResource.amount : partResource.amount;
+                    var transf = Math.Min(avail, demand - collected);
+                    collected += transf;
+                    if (!this.OutputResource)
+                    {
+                        transf *= -1;
+                    }
+                    partResource.amount += transf;
+                }
+                return collected;
             }
         }
 
@@ -535,7 +629,7 @@ namespace USI
 
             internal ConstraintInfo GetConstraintInfo(ref short counter, double deltaTime)
             {
-                var earliestConstraint = this._findEarliestConstraint();
+                var earliestConstraint = this._findEarliestConstraint(deltaTime);
                 if (earliestConstraint != null)
                 {
                     var convInfos = _checkIfConvertingPossible(earliestConstraint, deltaTime);
@@ -568,13 +662,14 @@ namespace USI
                 return displayText + string.Format(" ({0:P2})", remainingPercent);
             }
 
-            private ResourceConstraint _findEarliestConstraint()
+            private ResourceConstraint _findEarliestConstraint(double deltaTime)
             {
                 var lowestRemaining = double.MaxValue;
                 ResourceConstraint nearestConstraint = null;
                 foreach (var constraint in this._constraints)
                 {
                     var remSec = constraint.RemainingSeconds;
+                    //var remFrames = constraint.RemainingFramesThisFrame(deltaTime);
                     if (!(remSec < lowestRemaining))
                     {
                         continue;
