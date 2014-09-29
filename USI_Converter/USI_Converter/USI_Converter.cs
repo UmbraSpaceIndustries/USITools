@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using UnityEngineInternal;
 
 namespace USI
 {
@@ -40,13 +39,13 @@ namespace USI
         internal const short SlowConstraintInfoUpdate = 30;
         internal const short EditorConstraintInfoUpdate = 90;
         internal const short FastConstraintInfoUpdate = 5;
-        private const double DemandActualDifferenceWarnLevel = 0.00000001;
+        private const double DemandActualDifferenceWarnLevel = 0.000000001;
         private static readonly char[] Delimiters = {' ', ',', '\t', ';'};
         [KSPField] public bool HumanReadableInfoValues = true;
         internal Guid ID;
+        private ConnectedPartCollection _connectedParts;
         private ConstraintInfo _constraintInfo;
         private short _constraintUpdateCounter = SlowConstraintInfoUpdate;
-        private ConnectedPartCollection _connectedParts;
 
         [KSPField] public bool alwaysOn = false;
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Const.")] public string constraintDisplay;
@@ -97,37 +96,25 @@ namespace USI
                 this._constraintUpdateCounter--;
                 return;
             }
-            this._connectedParts = _findConnectedParts();
+            this._connectedParts = this._findConnectedParts();
             this._constraintUpdateCounter = HighLogic.LoadedSceneIsEditor ? EditorConstraintInfoUpdate : SlowConstraintInfoUpdate;
             var constraintData = new ResourceConstraintData();
             var cnt = 0;
             foreach (var output in this.outputResourceList)
             {
-                var resParts = new List<PartResource>();
+                List<PartResource> resParts;
                 var amounts = this._getResourceAmounts(output.resource.name, true, out resParts);
                 constraintData.AddConstraint(new ResourceConstraint(output.resource.name, true, amounts[1], amounts[0], output.ratio*this.conversionRate, output.allowExtra, resParts));
                 cnt++;
             }
             foreach (var input in this.inputResourceList)
             {
-                var resParts = new List<PartResource>();
+                List<PartResource> resParts;
                 var amounts = this._getResourceAmounts(input.resource.name, false, out resParts);
                 constraintData.AddConstraint(new ResourceConstraint(input.resource.name, false, amounts[1], amounts[0], input.ratio*this.conversionRate, false, resParts));
                 cnt++;
             }
             this._processResourceConstraintData(deltaTime, cnt > 0 ? constraintData : null);
-        }
-
-        private ConnectedPartCollection _findConnectedParts()
-        {
-            var allParts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.Parts : this.part.vessel.Parts;
-            var allVessel = allParts;
-            var noFlow = new List<Part> {this.part};
-            var stagePrioIn = this.part.FindPartsInSameStage(allParts, false);
-            var stagePrioOut = this.part.FindPartsInSameStage(allParts, true);
-            var stackPrioIn = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), false);
-            var stackPrioOut = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), true);
-            return new ConnectedPartCollection(allVessel, noFlow, stagePrioIn, stagePrioOut, stackPrioIn, stackPrioOut, this.part);
         }
 
         [KSPEvent(active = false, guiActive = true, guiActiveEditor = true, guiName = "Deactivate Converter")]
@@ -139,7 +126,6 @@ namespace USI
 
         public void FixedUpdate()
         {
-            //base.OnFixedUpdate();
             if (Time.timeSinceLevelLoad < 1.0f || (!HighLogic.LoadedSceneIsEditor && !FlightGlobals.ready))
             {
                 return;
@@ -156,9 +142,6 @@ namespace USI
                 return;
             }
             var deltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime, Utilities.MaxDeltaTime);
-            //this.ElectricityAffected
-            //    ? Utilities.ElectricityMaxDeltaTime
-            //    : Utilities.MaxDeltaTime);
             this.lastUpdateTime += deltaTime;
             this.CollectResourceConstraintData(this.converterEnabled, deltaTime);
             if (!this.converterEnabled)
@@ -172,26 +155,15 @@ namespace USI
             }
             if (this._constraintInfo.Convert)
             {
+                var ratio = this._constraintInfo.EarliestConstraint.RateThisFrame(deltaTime)/this._constraintInfo.EarliestConstraint.RatePerSecond;
                 foreach (var resourceConstraint in this._constraintInfo.Constraints.OrderBy(c => c.OutputResource))
                 {
-                    var demand = resourceConstraint.RateThisFrame(
-                                                                  resourceConstraint.ResourceName == Utilities.Electricity
-                                                                      ? Math.Min(Utilities.ElectricityMaxDeltaTime, deltaTime)
-                                                                      : deltaTime
-                        );
-                    //if (resourceConstraint.OutputResource)
-                    //{
-                    //    demand *= -1;
-                    //}
-                    //var actual = this.part.RequestResource(resourceConstraint.ResourceName, demand);
+                    var demand = resourceConstraint.RatePerSecond*ratio;
                     var actual = resourceConstraint.RequestResource(demand);
-                    //if (!resourceConstraint.OutputResource || (resourceConstraint.OutputResource && !resourceConstraint.AllowsOverflow))
-                    //{
-                    if (Math.Abs(actual - demand) > (resourceConstraint.ResourceName == Utilities.Electricity ? 1d : DemandActualDifferenceWarnLevel))
+                    if (Math.Abs(actual - demand) > (resourceConstraint.ResourceName == Utilities.Electricity ? 1d : DemandActualDifferenceWarnLevel*1000))
                     {
                         this.LogWarning(resourceConstraint.ResourceName + " demand = " + demand + " but " + actual + " transferred (rem. res. amount = " + resourceConstraint.RemainingAmount + ")");
                     }
-                    //}
                 }
                 this.converterStatus = "Running";
             }
@@ -373,86 +345,16 @@ namespace USI
             this.Fields["converterStatus"].guiName = this.converterName;
         }
 
-        //private IEnumerable<PartResource> _getConnectedResources(String resourceName)
-        //{
-        //    var resources = new List<PartResource>();
-        //    var resDef = PartResourceLibrary.Instance.GetDefinition(resourceName);
-        //    if (resDef != null)
-        //    {
-        //        if (HighLogic.LoadedSceneIsEditor)
-        //        {
-        //            if (resDef.resourceFlowMode == ResourceFlowMode.NO_FLOW)
-        //            {
-        //                if (this.part.Resources.Contains(resourceName))
-        //                {
-        //                    resources.Add(this.part.Resources[resourceName]);
-        //                }
-        //            }
-        //            else if (resDef.resourceFlowMode != ResourceFlowMode.NULL)
-        //            {
-        //                var eParts = EditorLogic.fetch.ship.Parts;
-        //                resources.AddRange(from ePart in eParts
-        //                                   where ePart.Resources.Contains(resourceName)
-        //                                   select ePart.Resources[resourceName]);
-        //            }
-        //        }
-        //        if (HighLogic.LoadedSceneIsFlight)
-        //        {
-        //            this.part.GetConnectedResources(resDef.id, resDef.resourceFlowMode, resources);
-        //        }
-        //    }
-        //    return resources;
-        //}
-
-        //private double[] _getResourceAmounts(string resourceName, bool outRes, out List<PartResource> partRes)
-        //{
-        //    //if (HighLogic.LoadedSceneIsEditor)
-        //    //{
-        //    return this._getResourceAmountsInEditor(resourceName, outRes, out partRes);
-        //    //}
-        //    //var resources = this._getConnectedResources(resourceName).ToList();
-        //    //var amount = resources.Sum(r => r.amount);
-        //    //var maxAmount = resources.Sum(r => r.maxAmount);
-        //    //return new[] {amount, maxAmount};
-        //}
-
-        private class ConnectedPartCollection
+        private ConnectedPartCollection _findConnectedParts()
         {
-            internal List<Part> AllVessel { get; private set; }
-            internal List<Part> NoFlow { get; private set; }
-            internal List<Part> StagePrioOutRes { get; private set; }
-            internal List<Part> StagePrioInRes { get; private set; }
-            internal List<Part> StackPrioOutRes { get; private set; }
-            internal List<Part> StackPrioInRes { get; private set; }
-
-            internal ConnectedPartCollection(List<Part> allVessel, List<Part> noFlow, List<Part> stagePrioIn, List<Part> stagePrioOut, List<Part> stackPrioIn, List<Part> stackPrioOut, Part convPart)
-            {
-                this.AllVessel = _sortByDistance(allVessel, convPart);
-                this.NoFlow = _sortByDistance(noFlow, convPart);
-                this.StackPrioInRes = _sortByDistance(stackPrioIn, convPart);
-                this.StackPrioOutRes = _sortByDistance(stackPrioOut, convPart);
-                this.StagePrioInRes = _sortByDistance(stagePrioIn, convPart);
-                this.StagePrioOutRes = _sortByDistance(stagePrioOut, convPart);
-            }
-
-            private static List<Part> _sortByDistance(List<Part> startList, Part convPart)
-            {
-                var wrapperList = new List<PartDistanceWrapper>(startList.Count);
-                wrapperList.AddRange(startList.Select(startPart => new PartDistanceWrapper(startPart, Vector3.Distance(startPart.transform.position, convPart.transform.position))));
-                return wrapperList.OrderBy(i => i.Distance).Select(w => w.Part).ToList();
-            }
-
-            private struct PartDistanceWrapper
-            {
-                internal Part Part { get; private set; }
-                internal float Distance { get; private set; }
-
-                public PartDistanceWrapper(Part part, float dist) : this()
-                {
-                    this.Part = part;
-                    this.Distance = dist;
-                }
-            }
+            var allParts = HighLogic.LoadedSceneIsEditor ? EditorLogic.fetch.ship.Parts : this.part.vessel.Parts;
+            var allVessel = allParts;
+            var noFlow = new List<Part> {this.part};
+            var stagePrioIn = this.part.FindPartsInSameStage(allParts, false);
+            var stagePrioOut = this.part.FindPartsInSameStage(allParts, true);
+            var stackPrioIn = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), false);
+            var stackPrioOut = this.part.FindPartsInSameResStack(allParts, new HashSet<Part>(), true);
+            return new ConnectedPartCollection(allVessel, noFlow, stagePrioIn, stagePrioOut, stackPrioIn, stackPrioOut, this.part);
         }
 
         private double[] _getResourceAmounts(string resourceName, bool outRes, out List<PartResource> pRes)
@@ -468,16 +370,16 @@ namespace USI
                 switch (resDef.resourceFlowMode)
                 {
                     case ResourceFlowMode.NO_FLOW:
-                        sourceParts = _connectedParts.NoFlow;
+                        sourceParts = this._connectedParts.NoFlow;
                         break;
                     case ResourceFlowMode.ALL_VESSEL:
-                        sourceParts = _connectedParts.AllVessel;
+                        sourceParts = this._connectedParts.AllVessel;
                         break;
                     case ResourceFlowMode.STAGE_PRIORITY_FLOW:
-                        sourceParts = outRes ? _connectedParts.StagePrioOutRes : _connectedParts.StagePrioInRes;
+                        sourceParts = outRes ? this._connectedParts.StagePrioOutRes : this._connectedParts.StagePrioInRes;
                         break;
                     case ResourceFlowMode.STACK_PRIORITY_SEARCH:
-                        sourceParts = outRes ? _connectedParts.StackPrioOutRes : _connectedParts.StackPrioInRes;
+                        sourceParts = outRes ? this._connectedParts.StackPrioOutRes : this._connectedParts.StackPrioInRes;
                         break;
                 }
                 var filtered = sourceParts
@@ -520,6 +422,45 @@ namespace USI
             this._constraintInfo = info;
         }
 
+        private class ConnectedPartCollection
+        {
+            internal List<Part> AllVessel { get; private set; }
+            internal List<Part> NoFlow { get; private set; }
+            internal List<Part> StackPrioInRes { get; private set; }
+            internal List<Part> StackPrioOutRes { get; private set; }
+            internal List<Part> StagePrioInRes { get; private set; }
+            internal List<Part> StagePrioOutRes { get; private set; }
+
+            internal ConnectedPartCollection(List<Part> allVessel, List<Part> noFlow, List<Part> stagePrioIn, List<Part> stagePrioOut, List<Part> stackPrioIn, List<Part> stackPrioOut, Part convPart)
+            {
+                this.AllVessel = _sortByDistance(allVessel, convPart, true);
+                this.NoFlow = _sortByDistance(noFlow, convPart, true);
+                this.StackPrioInRes = _sortByDistance(stackPrioIn, convPart, false);
+                this.StackPrioOutRes = _sortByDistance(stackPrioOut, convPart, true);
+                this.StagePrioInRes = _sortByDistance(stagePrioIn, convPart, false);
+                this.StagePrioOutRes = _sortByDistance(stagePrioOut, convPart, true);
+            }
+
+            private static List<Part> _sortByDistance(List<Part> startList, Part convPart, bool startClose)
+            {
+                var wrapperList = new List<PartDistanceWrapper>(startList.Count);
+                wrapperList.AddRange(startList.Select(startPart => new PartDistanceWrapper(startPart, Vector3.Distance(startPart.transform.position, convPart.transform.position))));
+                return (startClose ? wrapperList.OrderBy(i => i.Distance) : wrapperList.OrderByDescending(i => i.Distance)).Select(w => w.Part).ToList();
+            }
+
+            private struct PartDistanceWrapper
+            {
+                internal float Distance { get; private set; }
+                internal Part Part { get; private set; }
+
+                public PartDistanceWrapper(Part part, float dist) : this()
+                {
+                    this.Part = part;
+                    this.Distance = dist;
+                }
+            }
+        }
+
         private class ConstraintInfo
         {
             internal List<ResourceConstraint> Constraints { get; private set; }
@@ -542,8 +483,8 @@ namespace USI
             private double Amount { get; set; }
             private double MaxAmount { get; set; }
             internal bool OutputResource { get; private set; }
-            private double RatePerSecond { get; set; }
             private List<PartResource> PartResources { get; set; }
+            internal double RatePerSecond { get; private set; }
 
             internal double RemainingAmount
             {
@@ -586,15 +527,10 @@ namespace USI
                 return Math.Min(this.RatePerSecond*deltaTime, this.RemainingAmount);
             }
 
-            //internal double RemainingFramesThisFrame(double deltaTime)
-            //{
-            //    return this.RemainingAmount/this.RateThisFrame(deltaTime);
-            //}
-
             internal double RequestResource(double demand)
             {
                 var collected = 0d;
-                foreach (var partResource in PartResources)
+                foreach (var partResource in this.PartResources)
                 {
                     if (collected >= demand)
                     {
@@ -608,6 +544,21 @@ namespace USI
                         transf *= -1;
                     }
                     partResource.amount += transf;
+                    if (partResource.amount < 0)
+                    {
+                        partResource.amount = 0;
+                    }
+                    if (partResource.amount > partResource.maxAmount)
+                    {
+                        partResource.amount = partResource.maxAmount;
+                    }
+                }
+                if (this.AllowsOverflow)
+                {
+                    if (collected < demand)
+                    {
+                        collected = demand;
+                    }
                 }
                 return collected;
             }
@@ -669,7 +620,6 @@ namespace USI
                 foreach (var constraint in this._constraints)
                 {
                     var remSec = constraint.RemainingSeconds;
-                    //var remFrames = constraint.RemainingFramesThisFrame(deltaTime);
                     if (!(remSec < lowestRemaining))
                     {
                         continue;
