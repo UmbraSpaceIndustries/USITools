@@ -39,7 +39,7 @@ namespace USI
         internal const short SlowConstraintInfoUpdate = 30;
         internal const short EditorConstraintInfoUpdate = 90;
         internal const short FastConstraintInfoUpdate = 5;
-        private const double DemandActualDifferenceWarnLevel = 0.000000001;
+        private const double DemandActualDifferenceWarnLevel = 0.0000000001;
         private static readonly char[] Delimiters = {' ', ',', '\t', ';'};
         [KSPField] public bool HumanReadableInfoValues = true;
         internal Guid ID;
@@ -130,35 +130,57 @@ namespace USI
             {
                 return;
             }
+
             if (!HighLogic.LoadedSceneHasPlanetarium)
             {
                 this.CollectResourceConstraintData(this.converterEnabled, 1d);
                 return;
             }
+
             if (Math.Abs(this.lastUpdateTime) <= double.Epsilon)
             {
                 // Just started running
                 this.lastUpdateTime = Planetarium.GetUniversalTime();
                 return;
             }
+
             var deltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime, Utilities.MaxDeltaTime);
-            this.lastUpdateTime += deltaTime;
-            this.CollectResourceConstraintData(this.converterEnabled, deltaTime);
-            if (!this.converterEnabled)
+            var eDeltaTime = Math.Min(Planetarium.GetUniversalTime() - this.lastUpdateTime, Utilities.ElectricityMaxDeltaTime);
+
+            if (deltaTime < Utilities.MaxDeltaTime)
             {
                 return;
             }
+
+            this.lastUpdateTime += deltaTime;
+            this.CollectResourceConstraintData(this.converterEnabled, deltaTime);
+
             if (this.requiresOxygenAtmo && !this.vessel.mainBody.atmosphereContainsOxygen)
             {
                 this.converterStatus = "No Oxygen";
                 return;
             }
+
+            if (!this.converterEnabled)
+            {
+                return;
+            }
+
+            
             if (this._constraintInfo.Convert)
             {
                 var ratio = this._constraintInfo.EarliestConstraint.RateThisFrame(deltaTime)/this._constraintInfo.EarliestConstraint.RatePerSecond;
+                var eRatio = this._constraintInfo.EarliestConstraint.RateThisFrame(eDeltaTime) / this._constraintInfo.EarliestConstraint.RatePerSecond; 
                 foreach (var resourceConstraint in this._constraintInfo.Constraints.OrderBy(c => c.OutputResource))
                 {
-                    var demand = resourceConstraint.RatePerSecond*ratio;
+                    var demand = resourceConstraint.RatePerSecond * ratio;
+                    //For EC we go with the EC ratio - what this means is that as we warp up, EC usage is going to drop as our
+                    //time diffrence is greater than the max elec delta time.  The downside is that we use less EC.  The upside is that
+                    //we do not kill batteries.  
+                    if (resourceConstraint.ResourceName == Utilities.Electricity)
+                    {
+                        demand = resourceConstraint.RatePerSecond * eRatio;
+                    }
                     var actual = resourceConstraint.RequestResource(demand);
                     if (Math.Abs(actual - demand) > (resourceConstraint.ResourceName == Utilities.Electricity ? 1d : DemandActualDifferenceWarnLevel*1000))
                     {
@@ -312,6 +334,8 @@ namespace USI
                 this.Events["ActivateConverter"].active = false;
                 this.Events["DeactivateConverter"].active = false;
                 this.converterEnabled = true;
+                //BP - When we turn it on, let's also reset the time counter.
+                this.lastUpdateTime = Planetarium.GetUniversalTime();
             }
             else
             {
