@@ -25,40 +25,334 @@
  *  Any similarity to a real entity is purely coincidental.
  */
 
+using KSP.IO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using UnityEngine;
 
 namespace USI
 {
     public static class PartExtensions
     {
-        private static IEnumerable<Part> FindAllFuelLineConnectedSourceParts(this Part refPart, List<Part> allParts, bool outRes)
+        public static double TakeResource(this Part part, string resourceName, double demand)
         {
-            return allParts.OfType<FuelLine>()
-                           .Where(fl => fl.target != null && fl.parent != null && outRes ? fl.parent == refPart : fl.target == refPart)
-                           .Select(fl => outRes ? fl.target : fl.parent);
+            PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            return TakeResource(part, resource, demand);
         }
 
-        public static List<Part> FindPartsInSameResStack(this Part refPart, List<Part> allParts, HashSet<Part> searchedParts, bool outRes)
+        public static double TakeResource(this Part part, int resourceId, double demand)
         {
-            var partList = new List<Part> {refPart};
-            searchedParts.Add(refPart);
-            foreach (var attachNode in refPart.attachNodes.Where(an => an.attachedPart != null && !searchedParts.Contains(an.attachedPart) && an.attachedPart.fuelCrossFeed && an.nodeType == AttachNode.NodeType.Stack))
-            {
-                partList.AddRange(attachNode.attachedPart.FindPartsInSameResStack(allParts, searchedParts, outRes));
-            }
-            foreach (var fuelLinePart in refPart.FindAllFuelLineConnectedSourceParts(allParts, outRes).Where(flp => !searchedParts.Contains(flp)))
-            {
-                partList.AddRange(fuelLinePart.FindPartsInSameResStack(allParts, searchedParts, outRes));
-            }
-            return partList;
+            PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(resourceId);
+            return TakeResource(part, resource, demand);
         }
 
-        public static List<Part> FindPartsInSameStage(this Part refPart, List<Part> allParts, bool outRes)
+        public static double TakeResource(this Part part, PartResourceDefinition resource, double demand)
         {
-            var partList = allParts.Where(vPart => vPart.inverseStage == refPart.inverseStage).ToList();
-            partList.AddRange(refPart.FindAllFuelLineConnectedSourceParts(allParts, outRes));
-            return partList;
+            if (resource == null)
+            {
+                Debug.LogError("USI.PartExtensions.TakeResource: resource is null");
+                return 0.0;
+            }
+
+            switch (resource.resourceFlowMode)
+            {
+                case ResourceFlowMode.NO_FLOW:
+                    return TakeResource_NoFlow(part, resource, demand);
+                default: 
+                    return TakeResource_AllVessel(part, resource, demand);
+                //case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                //    return TakeResource_StackPriority(part, resource, demand);
+                //default:
+                //    Debug.LogWarning("USI.PartExtensions.TakeResource: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
+                //    return part.RequestResource(resource.id, demand);
+            }
+        }
+
+        public static double IsResourceAvailable(this Part part, string resourceName, double demand)
+        {
+            PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(resourceName);
+            return IsResourceAvailable(part, resource, demand);
+        }
+
+        public static double IsResourceAvailable(this Part part, int resourceId, double demand)
+        {
+            PartResourceDefinition resource = PartResourceLibrary.Instance.GetDefinition(resourceId);
+            return IsResourceAvailable(part, resource, demand);
+        }
+
+        public static double IsResourceAvailable(this Part part, PartResourceDefinition resource, double demand)
+        {
+            if (resource == null)
+            {
+                Debug.LogError("USI.PartExtensions.IsResourceAvailable: resource is null");
+                return 0.0;
+            }
+
+            switch (resource.resourceFlowMode)
+            {
+                case ResourceFlowMode.NO_FLOW:
+                    return IsResourceAvailable_NoFlow(part, resource, demand);
+                default:
+                    return IsResourceAvailable_AllVessel(part, resource, demand);
+                //case ResourceFlowMode.STACK_PRIORITY_SEARCH:
+                //    return IsResourceAvailable_StackPriority(part, resource, demand);
+                //default:
+                //    Debug.LogWarning("USI.PartExtensions.IsResourceAvailable: Unknown ResourceFlowMode = " + resource.resourceFlowMode.ToString());
+                //    return IsResourceAvailable_AllVessel(part, resource, demand);
+            }
+        }
+
+        private static double TakeResource_NoFlow(Part part, PartResourceDefinition resource, double demand)
+        {
+            // ignoring PartResourceDefinition.ResourceTransferMode
+
+            if (part.Resources.Contains(resource.id))
+            {
+                PartResource partResource = part.Resources.Get(resource.id);
+                if (partResource.flowMode == PartResource.FlowMode.None)
+                {
+                    Debug.LogWarning("USU.PartExtensions.TakeResource_NoFlow: cannot take resource from a part where FlowMode is None.");
+                    return 0.0;
+                }
+                else if (!partResource.flowState)
+                {
+                    // Resource flow was shut off -- no warning needed
+                    return 0.0;
+                }
+                else if (demand >= 0.0)
+                {
+                    if (partResource.flowMode == PartResource.FlowMode.In)
+                    {
+                        Debug.LogWarning("USI.PartExtensions.TakeResource_NoFlow: cannot take resource from a part where FlowMode is In.");
+                        return 0.0;
+                    }
+
+                    double taken = Math.Min(partResource.amount, demand);
+                    partResource.amount -= taken;
+                    return taken;
+                }
+                else
+                {
+                    if (partResource.flowMode == PartResource.FlowMode.Out)
+                    {
+                        Debug.LogWarning("USI.PartExtensions.TakeResource_NoFlow: cannot give resource to a part where FlowMode is Out.");
+                        return 0.0;
+                    }
+
+                    double given = Math.Min(partResource.maxAmount - partResource.amount, -demand);
+                    partResource.amount += given;
+                    return -given;
+                }
+            }
+            else
+            {
+                return 0.0;
+            }
+        }
+
+        private static double TakeResource_AllVessel(Part part, PartResourceDefinition resource, double demand)
+        {
+            // ignoring PartResourceDefinition.ResourceTransferMode
+
+            var allPartResources = part.vessel.parts.Where(p => p.Resources.Contains(resource.id) &&
+                                                                p.Resources.Get(resource.id).flowState == true &&
+                                                                p.Resources.Get(resource.id).flowMode != PartResource.FlowMode.None
+                                                          ).Select(p => p.Resources.Get(resource.id));
+
+            if (demand >= 0.0)
+            {
+                double leftOver = demand;
+
+                // Takes an equal percentage from each part (rather than an equal amount from each part)
+                var allNonEmptyPartResources = allPartResources.Where(p => p.amount > 0.0 && p.flowMode != PartResource.FlowMode.In);
+                double totalAmount = 0.0;
+                foreach (PartResource partResource in allNonEmptyPartResources)
+                {
+                    totalAmount += partResource.amount;
+                }
+
+                if (totalAmount > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalAmount, 1.0);
+
+                    foreach (PartResource partResource in allNonEmptyPartResources)
+                    {
+                        double taken = partResource.amount * percentage;
+                        partResource.amount -= taken;
+                        leftOver -= taken;
+                    }
+                }
+
+                return demand - leftOver;
+            }
+            else
+            {
+                double leftOver = -demand;
+
+                var allNonFullPartResources = allPartResources.Where(p => (p.maxAmount - p.amount) > 0.0 && p.flowMode != PartResource.FlowMode.Out);
+                double totalSpace = 0.0;
+                foreach (PartResource partResource in allNonFullPartResources)
+                {
+                    totalSpace += partResource.maxAmount - partResource.amount;
+                }
+
+                if (totalSpace > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalSpace, 1.0);
+
+                    foreach (PartResource partResource in allNonFullPartResources)
+                    {
+                        double given = (partResource.maxAmount - partResource.amount) * percentage;
+                        partResource.amount += given;
+                        leftOver -= given;
+                    }
+                }
+
+                return demand + leftOver;
+            }
+        }
+
+        private static double TakeResource_StackPriority(Part part, PartResourceDefinition resource, double demand)
+        {
+            // ignoring PartResourceDefinition.ResourceTransferMode
+
+            var allPartResources = part.vessel.parts.Where(p => p.Resources.Contains(resource.id) &&
+                                                                p.Resources.Get(resource.id).flowState == true &&
+                                                                p.Resources.Get(resource.id).flowMode != PartResource.FlowMode.None &&
+                                                                p.inStageIndex == part.inStageIndex
+                                                          ).Select(p => p.Resources.Get(resource.id));
+
+            if (demand >= 0.0)
+            {
+                double leftOver = demand;
+
+                // Takes an equal percentage from each part (rather than an equal amount from each part)
+                var allNonEmptyPartResources = allPartResources.Where(p => p.amount > 0.0 && p.flowMode != PartResource.FlowMode.In);
+                double totalAmount = 0.0;
+                foreach (PartResource partResource in allNonEmptyPartResources)
+                {
+                    totalAmount += partResource.amount;
+                }
+
+                if (totalAmount > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalAmount, 1.0);
+
+                    foreach (PartResource partResource in allNonEmptyPartResources)
+                    {
+                        double taken = partResource.amount * percentage;
+                        partResource.amount -= taken;
+                        leftOver -= taken;
+                    }
+                }
+
+                return demand - leftOver;
+            }
+            else
+            {
+                double leftOver = -demand;
+
+                var allNonFullPartResources = allPartResources.Where(p => (p.maxAmount - p.amount) > 0.0 && p.flowMode != PartResource.FlowMode.Out);
+                double totalSpace = 0.0;
+                foreach (PartResource partResource in allNonFullPartResources)
+                {
+                    totalSpace += partResource.maxAmount - partResource.amount;
+                }
+
+                if (totalSpace > 0.0)
+                {
+                    double percentage = Math.Min(leftOver / totalSpace, 1.0);
+
+                    foreach (PartResource partResource in allNonFullPartResources)
+                    {
+                        double given = (partResource.maxAmount - partResource.amount) * percentage;
+                        partResource.amount += given;
+                        leftOver -= given;
+                    }
+                }
+
+                return demand + leftOver;
+            }
+        }
+
+        private static double IsResourceAvailable_NoFlow(Part part, PartResourceDefinition resource, double demand)
+        {
+            if (part.Resources.Contains(resource.id))
+            {
+                PartResource partResource = part.Resources.Get(resource.id);
+
+                if (partResource.flowMode == PartResource.FlowMode.None || partResource.flowState == false)
+                {
+                    return 0.0;
+                }
+                else if (demand > 0.0)
+                {
+                    if (partResource.flowMode != PartResource.FlowMode.In)
+                    {
+                        return Math.Min(partResource.amount, demand);
+                    }
+                }
+                else
+                {
+                    if (partResource.flowMode != PartResource.FlowMode.Out)
+                    {
+                        return -Math.Min((partResource.maxAmount - partResource.amount), -demand);
+                    }
+                }
+            }
+
+            return 0.0;
+        }
+
+        private static double IsResourceAvailable_AllVessel(Part part, PartResourceDefinition resource, double demand)
+        {
+            var allPartResources = part.vessel.parts.Where(p => p.Resources.Contains(resource.id) &&
+                                                                p.Resources.Get(resource.id).flowState == true &&
+                                                                p.Resources.Get(resource.id).flowMode != PartResource.FlowMode.None
+                                                          ).Select(p => p.Resources.Get(resource.id));
+
+            if (demand >= 0.0)
+            {
+                double amountAvailable = 0.0;
+
+                var allNonInPartResources = allPartResources.Where(p => p.flowMode != PartResource.FlowMode.In);
+                foreach (PartResource partResource in allNonInPartResources)
+                {
+                    amountAvailable += partResource.amount;
+
+                    if (amountAvailable >= demand)
+                    {
+                        return demand;
+                    }
+                }
+
+                return amountAvailable;
+            }
+            else
+            {
+                double availableSpace = 0.0;
+
+                var allNonOutPartResources = allPartResources.Where(p => p.flowMode != PartResource.FlowMode.Out);
+                foreach (PartResource partResource in allNonOutPartResources)
+                {
+                    availableSpace += (partResource.maxAmount - partResource.amount);
+
+                    if (availableSpace >= -demand)
+                    {
+                        return demand;
+                    }
+                }
+
+                return -availableSpace;
+            }
+        }
+
+        private static double IsResourceAvailable_StackPriority(Part part, PartResourceDefinition resource, double demand)
+        {
+            // FIXME finish implementing
+            return IsResourceAvailable_AllVessel(part, resource, demand);
         }
     }
 }
