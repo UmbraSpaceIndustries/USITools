@@ -19,9 +19,7 @@ namespace USITools
         public bool inflatable = false;
 
         [KSPField] 
-        public string inflatedResources = "";
-
-
+        public float inflatedMultiplier = -1;
 
         [KSPAction("Deploy Module")]
         public void DeployAction(KSPActionParam param)
@@ -84,7 +82,7 @@ namespace USITools
                 PlayDeployAnimation();
                 ToggleEvent("DeployModule", false);
                 ToggleEvent("RetractModule", true);
-                if (inflatable && inflatedResources != "")
+                if (inflatable && inflatedMultiplier > 0)
                 {
                     ExpandResourceCapacity();
                 }
@@ -101,7 +99,7 @@ namespace USITools
                 ReverseDeployAnimation();
                 ToggleEvent("DeployModule", true);
                 ToggleEvent("RetractModule", false);
-                if (inflatable && inflatedResources != "")
+                if (inflatable && inflatedMultiplier > 0)
                 {
                     CompressResourceCapacity();
                 }
@@ -131,7 +129,7 @@ namespace USITools
             Events[eventName].externalToEVAOnly = state;
             Events[eventName].guiActive = state;
             Events[eventName].guiActiveEditor = state;
-            if (inflatedResources != "")
+            if (inflatedMultiplier > 0)
             {
                 Events[eventName].guiActiveEditor = false;
             }
@@ -188,19 +186,10 @@ namespace USITools
         {
             try
             {
-                var res = inflatedResources.Split(',');
-                for (int i = 0; i < res.Count(); i += 2)
+                foreach (var res in part.Resources.list)
                 {
-                    var resName = res[i];
-                    var resQty = 0m;
-                    if (Decimal.TryParse(res[i + 1], out resQty))
-                    {
-                        if (part.Resources.Contains(resName))
-                        {
-                            var r = part.Resources[resName];
-                            r.maxAmount = (double) resQty;
-                        }
-                    }
+                    if(res.maxAmount < inflatedMultiplier)
+                        res.maxAmount *= inflatedMultiplier;
                 }
             }
             catch (Exception ex)
@@ -213,16 +202,12 @@ namespace USITools
         {
             try
             {
-                var res = inflatedResources.Split(',');
-                for (int i = 0; i < res.Count(); i += 2)
+                foreach (var res in part.Resources.list)
                 {
-                    var resName = res[i];
-                    if (part.Resources.Contains(resName))
-                    {
-                        var r = part.Resources[resName];
-                        r.maxAmount = 1;
-                        if (r.amount > 1) r.amount = 1;
-                    }
+                    if (res.maxAmount > inflatedMultiplier)
+                        res.maxAmount /= inflatedMultiplier;
+                    if (res.amount > res.maxAmount)
+                        res.amount = res.maxAmount;
                 }
             }
             catch (Exception ex)
