@@ -73,7 +73,6 @@ namespace USITools
             }
         }
 
-        
         [KSPEvent(guiName = "Deploy", guiActive = true, externalToEVAOnly = true, guiActiveEditor = true, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void DeployModule()
         {
@@ -182,14 +181,15 @@ namespace USITools
             }
         }
 
+
+
         private void ExpandResourceCapacity()
         {
             try
             {
                 foreach (var res in part.Resources.list)
                 {
-                    if(res.maxAmount < inflatedMultiplier)
-                        res.maxAmount *= inflatedMultiplier;
+                    res.maxAmount *= inflatedMultiplier;
                 }
             }
             catch (Exception ex)
@@ -204,8 +204,7 @@ namespace USITools
             {
                 foreach (var res in part.Resources.list)
                 {
-                    if (res.maxAmount > inflatedMultiplier)
-                        res.maxAmount /= inflatedMultiplier;
+                    res.maxAmount /= inflatedMultiplier;
                     if (res.amount > res.maxAmount)
                         res.amount = res.maxAmount;
                 }
@@ -216,10 +215,28 @@ namespace USITools
             }
         }
 
+
+        private void CheckForQuantityUpdates()
+        {
+            if (inflatedMultiplier > 0)
+            {
+                var isSquished = part.Resources.list.Any(p => p.maxAmount < inflatedMultiplier);
+                if (isSquished && isDeployed)
+                {
+                    ExpandResourceCapacity();
+                }
+                else if (!isDeployed && !isSquished)
+                {
+                    CompressResourceCapacity();
+                }
+            }
+        }
+
         public override void OnUpdate()
         {
             if (vessel != null)
             {
+                CheckForQuantityUpdates();
                 if (isDeployed && secondaryAnimationName != "")
                 {
                     try
