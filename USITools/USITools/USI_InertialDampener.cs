@@ -106,13 +106,16 @@ namespace USITools
         {
             try
             {
-                var maxSpeed = Math.Max(vessel.srfSpeed, vessel.horizontalSrfSpeed);
-                if (maxSpeed > dampenSpeed && maxSpeed < engageSpeed)
+                if (vessel != FlightGlobals.ActiveVessel)
                 {
-                    foreach (var p in vessel.parts)
+                    var maxSpeed = Math.Max(vessel.srfSpeed, vessel.horizontalSrfSpeed);
+                    if (maxSpeed > dampenSpeed && maxSpeed < engageSpeed)
                     {
-                        p.Rigidbody.angularVelocity *= dampenFactor;
-                        p.Rigidbody.velocity *= dampenFactor;
+                        foreach (var p in vessel.parts)
+                        {
+                            p.Rigidbody.angularVelocity *= dampenFactor;
+                            p.Rigidbody.velocity *= dampenFactor;
+                        }
                     }
                 }
             }

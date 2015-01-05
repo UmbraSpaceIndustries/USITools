@@ -47,6 +47,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="USI_Balloon.cs" />
     <Compile Include="USI_DropTank.cs" />
     <Compile Include="USI_InertialDampener.cs" />
     <Compile Include="USIAnimation.cs" />
