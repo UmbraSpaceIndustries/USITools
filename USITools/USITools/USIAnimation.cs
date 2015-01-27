@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace USITools
 {
-    public class USIAnimation : PartModule
+    public class USIAnimation : PartModule, IPartCostModifier
     {
         [KSPField]
         public string deployAnimationName = "Deploy";
@@ -14,6 +14,9 @@ namespace USITools
 
         [KSPField(isPersistant = true)]
         public bool isDeployed = false;
+
+        [KSPField(isPersistant = true)]
+        public float inflatedCost = 0;
 
         [KSPField]
         public bool inflatable = false;
@@ -47,7 +50,6 @@ namespace USITools
                 DeployModule();
             }
         }
-
 
         public Animation DeployAnimation
         {
@@ -189,7 +191,9 @@ namespace USITools
             {
                 foreach (var res in part.Resources.list)
                 {
+                    double oldMaxAmount = res.maxAmount;
                     res.maxAmount *= inflatedMultiplier;
+                    inflatedCost += (float)((res.maxAmount - oldMaxAmount) * res.info.unitCost);
                 }
             }
             catch (Exception ex)
@@ -208,6 +212,7 @@ namespace USITools
                     if (res.amount > res.maxAmount)
                         res.amount = res.maxAmount;
                 }
+                inflatedCost = 0.0f;
             }
             catch (Exception ex)
             {
@@ -237,6 +242,11 @@ namespace USITools
                 }
             }
             base.OnUpdate();
+        }
+
+        float IPartCostModifier.GetModuleCost(float defaultCost)
+        {
+            return inflatedCost;
         }
     }
 }
