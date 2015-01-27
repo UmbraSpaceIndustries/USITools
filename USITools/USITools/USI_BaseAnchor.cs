@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 
 namespace USITools
@@ -75,6 +76,11 @@ namespace USITools
             part.mass -= anchorWeight;
             if (part.mass < 0) part.mass = 0.0001f;
             part.CoMOffset = new Vector3(0, 0, 0);
+            foreach (var p in vessel.parts)
+            {
+                p.rigidbody.isKinematic = false;
+            }
+
         }
 
         private void AnchorModule()
@@ -84,6 +90,12 @@ namespace USITools
                 part.mass += anchorWeight;
             }
             part.CoMOffset = new Vector3(0,offset,0);
+            foreach (var p in vessel.parts.Where(pt=>pt != part))
+            {
+                p.rigidbody.isKinematic = true;
+            }
+            
+
         }
     }
 }

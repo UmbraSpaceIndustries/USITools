@@ -5,6 +5,7 @@ using System.Text;
 
 namespace USITools
 {
+    
     public class USI_InertialDampener : PartModule
     {
         [KSPField]
@@ -20,7 +21,6 @@ namespace USITools
 
         [KSPField] 
         public bool autoActivate;
-
 
         [KSPEvent(guiName = "Engage Dampener", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void EngageDampen()
@@ -106,7 +106,7 @@ namespace USITools
         {
             try
             {
-                if (vessel != FlightGlobals.ActiveVessel)
+                if (vessel.isActiveVessel)
                 {
                     var maxSpeed = Math.Max(vessel.srfSpeed, vessel.horizontalSrfSpeed);
                     if (maxSpeed > dampenSpeed && maxSpeed < engageSpeed)

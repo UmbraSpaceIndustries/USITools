@@ -216,27 +216,10 @@ namespace USITools
         }
 
 
-        private void CheckForQuantityUpdates()
-        {
-            if (inflatedMultiplier > 0)
-            {
-                var isSquished = part.Resources.list.Any(p => p.maxAmount < inflatedMultiplier);
-                if (isSquished && isDeployed)
-                {
-                    ExpandResourceCapacity();
-                }
-                else if (!isDeployed && !isSquished)
-                {
-                    CompressResourceCapacity();
-                }
-            }
-        }
-
         public override void OnUpdate()
         {
             if (vessel != null)
             {
-                CheckForQuantityUpdates();
                 if (isDeployed && secondaryAnimationName != "")
                 {
                     try
