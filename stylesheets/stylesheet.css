@@ -345,6 +345,23 @@ Full-Width Styles
   background: url(../images/sprite_download.png) no-repeat top right;
 }
 
+.donate {
+	background: #ffae00;
+}
+
+.donate_para
+{
+	color: #ff6600;
+}
+
+.donate_inner
+{
+	margin-left: auto;
+	margin-right: auto;
+	width: 20em;
+}
+
+
 #main_content_wrap {
   background: #f2f2f2;
   border-top: 1px solid #111;
