@@ -163,7 +163,7 @@ namespace USITools
                 return 0;
             var airDensity = vessel.atmDensity;
             var mass = vessel.GetTotalMass();
-            var drag = (part.maximum_drag*FlightGlobals.DragMultiplier*airDensity);
+            var drag = part.maximum_drag*airDensity; //*FlightGlobals.DragMultiplier*airDensity);
             var termVel = Math.Sqrt(2 * FlightGlobals.getGeeForceAtPosition(vessel.CoM).magnitude * mass / drag);
             //print(String.Format("D:{0} DM:{1}", part.maximum_drag, FlightGlobals.DragMultiplier));
             //print(String.Format("A:{0} M:{1} D:{2} TV:{3}", airDensity, mass, drag, termVel));
