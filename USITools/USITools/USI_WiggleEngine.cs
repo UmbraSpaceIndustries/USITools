@@ -12,34 +12,21 @@ namespace USITools
         [KSPField] 
         public int vectorAdjustment = 0;
 
-        [KSPField] 
-        public int thrustAdjustment = 0;
-
-
         public override void OnFixedUpdate()
         {
-            //We will adjust two things - the thrust limiter, and add some random force to the part.
+            //add some random force to the part.
             var r = new Random();
-            float t = ((float)r.Next(-thrustAdjustment, thrustAdjustment)) / 100f;
             float eThrust = 0;
 
             var modE = part.FindModuleImplementing<ModuleEngines>();
             if (modE != null && modE.EngineIgnited)
             {
-                var adj = modE.thrustPercentage + (t * modE.thrustPercentage);
-                if (adj > 100) adj = 100;
-                if (adj < 0) adj = 0;
-                modE.thrustPercentage += adj;
                 eThrust = modE.finalThrust;
             }
 
             var modFx = part.FindModuleImplementing<ModuleEngines>();
             if (modFx != null && modFx.EngineIgnited)
             {
-                var adj = modFx.thrustPercentage + (t * modFx.thrustPercentage);
-                if (adj > 100) adj = 100;
-                if (adj < 0) adj = 0;
-                modFx.thrustPercentage += adj;
                 eThrust = modFx.finalThrust;
             }
 
