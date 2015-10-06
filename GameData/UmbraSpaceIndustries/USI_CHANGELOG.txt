@@ -1,0 +1,6 @@
+0.0.5 - 2015.10.06
+------------------
+Merged nuke reactors and kontainers into the core USI mod
+Increased LH2 amnount in all containers
+Added containers for Karborundum, Xenon, and Argon
+Increased nuke output and mass
