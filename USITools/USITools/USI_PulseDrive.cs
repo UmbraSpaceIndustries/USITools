@@ -57,6 +57,8 @@ namespace USITools
         [KSPField(guiActive = true)]
         public string Thrust = "none";
 
+        private float lastThrottle;
+
         [KSPEvent(guiActive = true, active = true, guiName = "Previous Fuel")]
         public void PrevFuel()
         {
@@ -137,20 +139,13 @@ namespace USITools
             if (!Deployed()) //For variants like the Medusa
                 return;
 
-            var eng = part.FindModuleImplementing<ModuleEngines>();
-            if (eng.currentThrottle < 0.01 || !eng.isActiveAndEnabled)
-            {
-                ToggleEmmitters(false);
-                return;
-            }
-
             //Setup
             Transform t = part.FindModelTransform(transformName);
             if (lastCheck < ResourceUtilities.FLOAT_TOLERANCE)
                 lastCheck = Planetarium.GetUniversalTime();
 
             var currentThrust = GetPulseThrust();
-            var pulseInterval = GetPulseInterval(eng.currentThrottle);
+            var pulseInterval = GetPulseInterval(lastThrottle);
 
             //Check Emitters - turn them off if it's time.
             if (Planetarium.GetUniversalTime() > lastParticleCheck + particleLife)
@@ -161,8 +156,15 @@ namespace USITools
                 return;
 
             //See if it's time to fire.
+            var eng = part.FindModuleImplementing<ModuleEngines>();
             if (Planetarium.GetUniversalTime() > lastCheck + pulseInterval)
             {
+                lastThrottle = eng.currentThrottle;
+                if (!eng.isActiveAndEnabled || lastThrottle < 0.01)
+                {
+                    ToggleEmmitters(false);
+                    return;
+                }
                 ConsumeFuel();
                 lastCheck = Planetarium.GetUniversalTime();
                 lastParticleCheck = lastCheck;
