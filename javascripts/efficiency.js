@@ -42,7 +42,7 @@ app.controller('InputCtrl', function($scope,sharedVars) {
     };
 
     $scope.addModule = function(moduleType) {
-    	$scope.model.base.modules.push(newModule(moduleType));
+    	$scope.model.base.modules.unshift(newModule(moduleType));
         $scope.change();
     };
 
@@ -69,7 +69,7 @@ function newModule(moduleType) {
 function initCrew(profession) {
 	return { 
 		'profession' : profession,
-		'val' : [0,1,0,0,0,0]
+		'val' : [0,0,0,0,0,0]
 		 };
 }
 

@@ -5,9 +5,9 @@
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-	<script src="javascripts/angular.min.js"></script> <!-- 1.4.5 -->
-    <script src="javascripts/ui-bootstrap-0.13.4.min.js"></script>
-    <link href="css/bootstrap.min.css" rel="stylesheet" /> <!-- 3.1.1 -->
+    <script src="http://code.angularjs.org/1.4.5/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.css">
 
     <link href = "css/styles.css" rel = "stylesheet"/> 
     <script src= "javascripts/modulesConstants.js"> </script>
@@ -39,8 +39,16 @@
 	        		Capacity = {{ model.base.crewCapacity }} <br/>
 	        		Workspace = {{ model.base.workSpace }} <br/>
 	        		Livingspace = {{ model.base.livingSpace }} <br/>
-	        		Effectiveness = {{ model.base.effectiveness }} (is it meaningfull?)  <br/>
+	        		Effectiveness = {{ model.base.effectiveness }}  <br/>
 			</div>
+
+			<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+				Add another module: 
+				<select ng-model="type"
+        			ng-change="addModule(type.code)"
+        			ng-options="type as type.title for (val,type) in model.base.mm">
+        		</select>
+        	</div>
 
 			<!-- Each module prints its own stats -->
 			<div class = "stats col-sm-12 col-md-12 col-xs-12 col-lg-12" ng-repeat='module in model.base.modules'>
@@ -66,10 +74,7 @@
 			</div>
 		</div>
 
-		<select ng-model="type"
-        		ng-change="addModule(type.code)"
-        		ng-options="type as type.title for (val,type) in model.base.mm">
-        </select>
+
 	</div> 
 
 </body>
