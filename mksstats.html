@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html ng-app="EffectivenessApp">
+<head>
+	<title>MKS efficiency</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+	<script src="http://code.angularjs.org/1.4.5/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.14.2/ui-bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.css">
+
+    <link href = "css/styles.css" rel = "stylesheet"/> 
+    <script src= "javascripts/modulesConstants.js"> </script>
+    <script src= "javascripts/efficiency.js"> </script>
+
+</head>
+
+<body>
+
+<div ng-controller="InputCtrl" >
+
+		<div class='container'>
+			<div ng-repeat='module in model.base.mm'>
+				<div class="col-sm-12 col-xs-12 col-md-6 col-lg-6 stats" > 
+					
+					<b>{{ module.title }}</b> <br/> 
+					Internal code = {{ module.code }} <br/>
+	        		Workspace = {{ module.workSpace }} <br/>
+	        		Livingspace = {{ module.livingSpace }} <br/>
+	        		Capacity = {{ module.crewCapacity }} <br/>
+
+	        	</div>
+	        </div>
+		</div>
+</div>
+
+</body>
+</html>
