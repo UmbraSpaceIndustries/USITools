@@ -45,11 +45,13 @@
       <HintPath>..\..\..\..\KSP_DEV\KSP_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="USITools">
-      <HintPath>..\..\..\..\KSP_DEV\GameData\000_USITools\USITools.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ModuleAquaticEngine.cs" />
+    <Compile Include="ModuleAquaticIntake.cs" />
+    <Compile Include="ModuleAquaticRCS.cs" />
+    <Compile Include="ModuleAquaticSAS.cs" />
+    <Compile Include="ModuleBallast.cs" />
     <Compile Include="PartCatalog.cs" />
     <Compile Include="USI_Balloon.cs" />
     <Compile Include="USI_DropTank.cs" />
