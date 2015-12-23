@@ -22,7 +22,6 @@ namespace USITools
             vessel.checkSplashed();
             if (!vessel.Splashed)
             {
-                ballastPercent = 0f;
                 res.amount = 0f;
                 return;
             }
