@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\KSP_MODELING\GameData\000_USITools\</OutputPath>
+    <OutputPath>..\..\..\..\KSP_DEV\GameData\000_USITools\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -54,6 +54,7 @@
     <Compile Include="ModuleAquaticSAS.cs" />
     <Compile Include="ModuleBallast.cs" />
     <Compile Include="PartCatalog.cs" />
+    <Compile Include="USIAnimatedFuelTank.cs" />
     <Compile Include="USI_Balloon.cs" />
     <Compile Include="USI_ClearIVA.cs" />
     <Compile Include="USI_DropTank.cs" />

@@ -250,3 +250,8 @@ namespace USITools
         }
     }
 }
+
+
+namespace USITools
+{
+}

@@ -177,11 +177,14 @@ namespace USITools
             pulseCurve.Add(0, (1 - powerCurve) / 2);
             pulseCurve.Add(0.5f,  powerCurve);
             pulseCurve.Add(1, (1 - powerCurve) / 2);
-            var curveTime = (float)(Planetarium.GetUniversalTime() - lastCheck) / (float)pulseInterval;
-            var thrustAmount = (float)(currentThrust * pulseCurve.Evaluate(curveTime));
 
-            part.rigidbody.AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
-            part.AddThermalFlux(thrustAmount * heatMultiplier);
+            if(Planetarium.GetUniversalTime() - lastCheck < minPulseTime)
+            {
+                var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
+                var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime));
+                part.rigidbody.AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
+                part.AddThermalFlux(thrustAmount * heatMultiplier);
+            }
         }
 
         private double GetPulseInterval(float throttle)
