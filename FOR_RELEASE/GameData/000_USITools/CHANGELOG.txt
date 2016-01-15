@@ -1,3 +1,8 @@
+0.5.5 - 2016.01.15
+------------------
+Inflatable fuel tank module
+Tweaks to the pulse engine module
+
 0.5.4 - 2015.12.08
 ------------------
 New modules for aquatic stuff (Ballast, RCS, SAS, engines, and Intake)
