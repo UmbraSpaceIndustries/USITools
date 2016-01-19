@@ -1,11 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
+using System.Security.AccessControl;
 using UnityEngine;
 
 namespace USITools
 {
     public class USIAnimation : PartModule, IPartCostModifier
     {
+        [KSPField] 
+        public int CrewCapacity = 0;
+
         [KSPField]
         public string deployAnimationName = "Deploy";
 
@@ -80,15 +85,32 @@ namespace USITools
         {
             if (!isDeployed)
             {
-                PlayDeployAnimation();
-                ToggleEvent("DeployModule", false);
-                ToggleEvent("RetractModule", true);
-                if (inflatable && inflatedMultiplier > 0)
+                if (CheckDeployConditions())
                 {
-                    ExpandResourceCapacity();
+                    PlayDeployAnimation();
+                    ToggleEvent("DeployModule", false);
+                    ToggleEvent("RetractModule", true);
+                    CheckDeployConditions();
+                    isDeployed = true;
                 }
-                isDeployed = true;
             }
+        }
+
+        private bool CheckDeployConditions()
+        {
+            if(inflatable)
+            { 
+                if (inflatedMultiplier > 0)
+                    ExpandResourceCapacity();
+                if (CrewCapacity > 0)
+                    part.CrewCapacity = CrewCapacity;
+                foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
+                {
+                    m.EnableModule();
+                }
+                MonoUtilities.RefreshContextWindows(part);
+            }
+            return true;
         }
 
         [KSPEvent(guiName = "Retract", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
@@ -96,15 +118,55 @@ namespace USITools
         {
             if (isDeployed)
             {
-                isDeployed = false;
-                ReverseDeployAnimation();
-                ToggleEvent("DeployModule", true);
-                ToggleEvent("RetractModule", false);
-                if (inflatable && inflatedMultiplier > 0)
+                if(CheckRetractConditions())
                 {
-                    CompressResourceCapacity();
+                    isDeployed = false;
+                    ReverseDeployAnimation();
+                    ToggleEvent("DeployModule", true);
+                    ToggleEvent("RetractModule", false);
                 }
             }
+        }
+
+        private bool CheckRetractConditions()
+        {
+            var canRetract = true;
+            if (inflatable)
+            {
+                if (part.protoModuleCrew.Count > 0)
+                {
+                    var msg = string.Format("Unable to deflate {0} as it still contains crew members.", part.partInfo.title);
+                    ScreenMessages.PostScreenMessage(msg, 5f, ScreenMessageStyle.UPPER_CENTER);
+                    canRetract = false;
+                }
+                if (canRetract)
+                {
+                    part.CrewCapacity = 0;
+                    if (inflatedMultiplier > 0)
+                        CompressResourceCapacity();
+                    var modList = GetAffectedMods();
+                    foreach (var m in modList)
+                    {
+                        m.DisableModule();
+                    }
+                    MonoUtilities.RefreshContextWindows(part);
+                }
+            }
+            return canRetract;
+        }
+
+        public List<ModuleResourceConverter> GetAffectedMods()
+        {
+            var modList = new List<ModuleResourceConverter>();
+            var modNames = new List<string> 
+                {"ModuleResourceConverter", "ModuleLifeSupportRecycler"};
+
+            for(int i = 0; i < part.Modules.Count; i++)
+            {
+                if(modNames.Contains(part.Modules[i].moduleName))
+                    modList.Add((ModuleResourceConverter)part.Modules[i]);
+            }
+            return modList;
         }
 
         private void PlayDeployAnimation(int speed = 1)
@@ -174,6 +236,7 @@ namespace USITools
                 ToggleEvent("DeployModule", false);
                 ToggleEvent("RetractModule", true);
                 PlayDeployAnimation(1000);
+                CheckDeployConditions();
             }
             else
             {
@@ -191,9 +254,12 @@ namespace USITools
             {
                 foreach (var res in part.Resources.list)
                 {
-                    double oldMaxAmount = res.maxAmount;
-                    res.maxAmount *= inflatedMultiplier;
-                    inflatedCost += (float)((res.maxAmount - oldMaxAmount) * res.info.unitCost);
+                    if (res.maxAmount < inflatedMultiplier)
+                    {
+                        double oldMaxAmount = res.maxAmount;
+                        res.maxAmount *= inflatedMultiplier;
+                        inflatedCost += (float) ((res.maxAmount - oldMaxAmount)*res.info.unitCost);
+                    }
                 }
             }
             catch (Exception ex)
@@ -208,9 +274,12 @@ namespace USITools
             {
                 foreach (var res in part.Resources.list)
                 {
-                    res.maxAmount /= inflatedMultiplier;
-                    if (res.amount > res.maxAmount)
-                        res.amount = res.maxAmount;
+                    if (res.maxAmount > inflatedMultiplier)
+                    {
+                        res.maxAmount /= inflatedMultiplier;
+                        if (res.amount > res.maxAmount)
+                            res.amount = res.maxAmount;
+                    }
                 }
                 inflatedCost = 0.0f;
             }

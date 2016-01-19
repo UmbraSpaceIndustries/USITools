@@ -125,6 +125,10 @@ namespace USITools
         void Awake()
         {
             kolonyParts.Clear();
+            //Suppress if we have any UKS parts handy
+            if (PartLoader.LoadedPartsList.Any(p => p.manufacturer == "USI - Kolonization Division"))
+                return;
+
             foreach (AvailablePart avPart in PartLoader.LoadedPartsList)
             {
                 if (!avPart.partPrefab) continue;
@@ -164,7 +168,6 @@ namespace USITools
             button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED);
         }
     }
-
 
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class USI_RoverFilter : MonoBehaviour
