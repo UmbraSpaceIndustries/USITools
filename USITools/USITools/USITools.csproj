@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\KSP_MODELING\GameData\000_USITools\</OutputPath>
+    <OutputPath>..\..\..\..\KSP_DEV\GameData\000_USITools\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -47,22 +47,37 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ModuleAquaticEmitter.cs" />
-    <Compile Include="ModuleAquaticEngine.cs" />
-    <Compile Include="ModuleAquaticIntake.cs" />
-    <Compile Include="ModuleAquaticRCS.cs" />
-    <Compile Include="ModuleAquaticSAS.cs" />
-    <Compile Include="ModuleBallast.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticEmitter.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticEngine.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticIntake.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
+    <Compile Include="AquaticModules\ModuleBallast.cs" />
+    <Compile Include="Logistics\LogisticsConfig.cs" />
+    <Compile Include="Logistics\LogisticsSetup.cs" />
+    <Compile Include="Logistics\ModuleDistributedWarehouse.cs" />
+    <Compile Include="Logistics\ModuleLogisticsConsumer.cs" />
+    <Compile Include="Logistics\ModulePowerCoupler.cs" />
+    <Compile Include="Logistics\ModulePowerDistributor.cs" />
+    <Compile Include="Logistics\ModuleResourceDistributor.cs" />
+    <Compile Include="Logistics\LogisticsTools.cs" />
+    <Compile Include="Logistics\USI_ModuleCleaningBin.cs" />
+    <Compile Include="Logistics\USI_ModuleDemolition.cs" />
+    <Compile Include="Logistics\USI_ModuleFieldRepair.cs" />
+    <Compile Include="Logistics\USI_ModuleRecycleablePart.cs" />
+    <Compile Include="Logistics\USI_ModuleRecycleBin.cs" />
+    <Compile Include="Logistics\USI_ModuleResourceWarehouse.cs" />
     <Compile Include="PartCatalog.cs" />
+    <Compile Include="EnginesAndTanks\USIAnimatedFuelTank.cs" />
     <Compile Include="USI_Balloon.cs" />
     <Compile Include="USI_ClearIVA.cs" />
-    <Compile Include="USI_DropTank.cs" />
+    <Compile Include="EnginesAndTanks\USI_DropTank.cs" />
     <Compile Include="USI_InertialDampener.cs" />
     <Compile Include="USIAnimation.cs" />
     <Compile Include="USI_BaseAnchor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="USI_PulseDrive.cs" />
-    <Compile Include="USI_WiggleEngine.cs" />
+    <Compile Include="EnginesAndTanks\USI_PulseDrive.cs" />
+    <Compile Include="EnginesAndTanks\USI_WiggleEngine.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
