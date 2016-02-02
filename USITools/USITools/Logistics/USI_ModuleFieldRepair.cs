@@ -31,19 +31,25 @@ namespace KolonyTools
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
-            ScreenMessages.PostScreenMessage("You perform routine maintenance...", 5f, ScreenMessageStyle.UPPER_CENTER);
+
+            FinalizeMaintenance("You perform routine maintenance...");
+        }
+
+        public void FinalizeMaintenance(string msg)
+        {
+            ScreenMessages.PostScreenMessage(msg, 5f, ScreenMessageStyle.UPPER_CENTER);
             var PullList = PullResourceList.Split(',');
             var PushList = PushResourceList.Split(',');
 
             foreach (var r in PullList)
             {
                 if (!String.IsNullOrEmpty(r))
-                    GrabResources(r);    
+                    GrabResources(r);
             }
             foreach (var r in PushList)
             {
                 if (!String.IsNullOrEmpty(r))
-                    PushResources(r);    
+                    PushResources(r);
             }
 
             //We have a very special case - MaterialKits => ReplacementParts.

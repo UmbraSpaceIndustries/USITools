@@ -26,6 +26,12 @@ namespace USITools
         [KSPField]
         public bool inflatable = false;
 
+        [KSPField]
+        public int PrimaryLayer = 2;
+
+        [KSPField]
+        public int SecondaryLayer = 3;
+
         [KSPField] 
         public float inflatedMultiplier = -1;
 
@@ -103,7 +109,11 @@ namespace USITools
                 if (inflatedMultiplier > 0)
                     ExpandResourceCapacity();
                 if (CrewCapacity > 0)
+                {
                     part.CrewCapacity = CrewCapacity;
+                    if (CrewCapacity > 0 & !part.Modules.Contains("TransferDialogSpawner"))
+                        part.AddModule("TransferDialogSpawner");
+                }
                 foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
                 {
                     m.EnableModule();
@@ -203,13 +213,12 @@ namespace USITools
         {
             try
             {
-                DeployAnimation[deployAnimationName].layer = 2;
+                DeployAnimation[deployAnimationName].layer = PrimaryLayer;
                 if (secondaryAnimationName != "")
                 {
-                    SecondaryAnimation[secondaryAnimationName].layer = 3;
+                    SecondaryAnimation[secondaryAnimationName].layer = SecondaryLayer;
                 }
                 CheckAnimationState();
-                base.OnStart(state);
             }
             catch (Exception ex)
             {
@@ -245,8 +254,6 @@ namespace USITools
                 ReverseDeployAnimation(-1000);
             }
         }
-
-
 
         private void ExpandResourceCapacity()
         {
@@ -290,27 +297,26 @@ namespace USITools
         }
 
 
-        public override void OnUpdate()
+        public void FixedUpdate()
         {
-            if (vessel != null)
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
+            if (isDeployed && secondaryAnimationName != "")
             {
-                if (isDeployed && secondaryAnimationName != "")
+                try
                 {
-                    try
+                    if (!SecondaryAnimation.isPlaying && !DeployAnimation.isPlaying)
                     {
-                        if (!SecondaryAnimation.isPlaying && !DeployAnimation.isPlaying)
-                        {
-                            SecondaryAnimation[secondaryAnimationName].speed = 1;
-                            SecondaryAnimation.Play(secondaryAnimationName);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        print("Error in OnUpdate - USI Animation - " + ex.Message);
+                        SecondaryAnimation[secondaryAnimationName].speed = 1;
+                        SecondaryAnimation.Play(secondaryAnimationName);
                     }
                 }
+                catch (Exception ex)
+                {
+                    print("Error in OnUpdate - USI Animation - " + ex.Message);
+                }
             }
-            base.OnUpdate();
         }
 
         float IPartCostModifier.GetModuleCost(float defaultCost)
