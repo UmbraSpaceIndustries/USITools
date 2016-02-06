@@ -1,3 +1,20 @@
+0.6.1 - 2016.02.02
+------------------
+Fixed an issue where distributed warehouses were excessively greedy
+
+0.6.0 - 2016.02.01
+------------------
+Added new module for structural supports (versus horribly abusing fairings)
+Auto-Repairer part module added (for use with USI-LS and UKS)
+Added the concept of global bonuses to prevent circular references (i.e. between kolonization and life support)
+Added custom layers to USI Animation
+
+0.5.5 - 2016.01.18
+------------------
+Inflatable fuel tank module
+Tweaks to the pulse engine module
+Bundled USI FX as part of USITools, as it is the best common denominator
+
 0.5.4 - 2015.12.08
 ------------------
 New modules for aquatic stuff (Ballast, RCS, SAS, engines, and Intake)
