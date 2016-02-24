@@ -116,7 +116,8 @@ namespace KolonyTools
 
         public List<Vessel> GetResourceStockpiles()
         {
-            var depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true);
+            List<Vessel> depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true)
+                .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList(); 
             var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, false, vessel, true);
             foreach (var v in nearbyVesselList)
             {
@@ -130,8 +131,8 @@ namespace KolonyTools
                     if (range <= m.ResourceDistributionRange)
                     {
                         //Now find ones adjacent to our depot.                        
-                        var stockpiles = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,
-                            true);
+                        List<Vessel> stockpiles = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,
+                            true).Where(sv=>sv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
                         foreach (var s in stockpiles)
                         {
                             if (!depots.Contains(s))
@@ -142,6 +143,7 @@ namespace KolonyTools
             }
             return depots;
         }
+        
 
         public List<Vessel> GetPowerDistributors()
         {
@@ -223,6 +225,16 @@ namespace KolonyTools
                     var partList = v.Parts.Where(p => p.Resources.Contains(resource.name));
                     foreach (var p in partList)
                     {
+                        //Guard clause.
+                        if (resource.name != "ElectricCharge")
+                        {
+                            var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                            if(wh == null)
+                                continue;
+                            if(!wh.transferEnabled)
+                                continue;
+                        }
+
                         var pr = p.Resources[resource.name];
                         if (pr.amount >= demand)
                         {
