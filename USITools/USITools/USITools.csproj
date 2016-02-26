@@ -45,21 +45,43 @@
       <HintPath>..\..\..\..\KSP_DEV\KSP_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="USITools">
-      <HintPath>..\..\..\..\KSP_DEV\GameData\000_USITools\USITools.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AquaticModules\ModuleAquaticEmitter.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticEngine.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticIntake.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
+    <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
+    <Compile Include="AquaticModules\ModuleBallast.cs" />
+    <Compile Include="Logistics\ModuleAutoRepairer.cs" />
+    <Compile Include="USI_GlobalBonuses.cs" />
+    <Compile Include="ModuleStructuralNode.cs" />
+    <Compile Include="Logistics\LogisticsConfig.cs" />
+    <Compile Include="Logistics\LogisticsSetup.cs" />
+    <Compile Include="Logistics\ModuleDistributedWarehouse.cs" />
+    <Compile Include="Logistics\ModuleLogisticsConsumer.cs" />
+    <Compile Include="Logistics\ModulePowerCoupler.cs" />
+    <Compile Include="Logistics\ModulePowerDistributor.cs" />
+    <Compile Include="Logistics\ModuleResourceDistributor.cs" />
+    <Compile Include="Logistics\LogisticsTools.cs" />
+    <Compile Include="Logistics\USI_ModuleCleaningBin.cs" />
+    <Compile Include="Logistics\USI_ModuleDemolition.cs" />
+    <Compile Include="Logistics\USI_ModuleFieldRepair.cs" />
+    <Compile Include="Logistics\USI_ModuleRecycleablePart.cs" />
+    <Compile Include="Logistics\USI_ModuleRecycleBin.cs" />
+    <Compile Include="Logistics\USI_ModuleResourceWarehouse.cs" />
     <Compile Include="PartCatalog.cs" />
+    <Compile Include="EnginesAndTanks\USIAnimatedFuelTank.cs" />
     <Compile Include="USI_Balloon.cs" />
-    <Compile Include="USI_DropTank.cs" />
+    <Compile Include="USI_ClearIVA.cs" />
+    <Compile Include="EnginesAndTanks\USI_DropTank.cs" />
     <Compile Include="USI_InertialDampener.cs" />
     <Compile Include="USIAnimation.cs" />
     <Compile Include="USI_BaseAnchor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="USI_ClearIVA.cs" />
-    <Compile Include="USI_PulseDrive.cs" />
-    <Compile Include="USI_WiggleEngine.cs" />
+    <Compile Include="EnginesAndTanks\USI_PulseDrive.cs" />
+    <Compile Include="EnginesAndTanks\USI_WiggleEngine.cs" />
+    <Compile Include="USI_ToolbarWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
