@@ -42,7 +42,13 @@ namespace KolonyTools
             var resParts = new List<Part>();
             foreach (var d in depots)
             {
-                resParts.AddRange(d.parts.Where(p => p.Resources.Contains(resource) && p.Modules.Contains("ModuleDistributedWarehouse")));
+                var pList = d.parts.Where(p => p.Resources.Contains(resource) && p.Modules.Contains("ModuleDistributedWarehouse"));
+                foreach (var p in pList)
+                {
+                    var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if(wh != null && wh.transferEnabled)
+                        resParts.Add(p);
+                }
             }
             var amountSum = 0d;
             var maxSum = 0d;
