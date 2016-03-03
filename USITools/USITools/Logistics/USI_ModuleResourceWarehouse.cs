@@ -1,7 +1,7 @@
 namespace KolonyTools
 {
     public class USI_ModuleResourceWarehouse : PartModule
-    {
+    {       
         [KSPField(isPersistant = true)] 
         public bool transferEnabled = true;
 
