@@ -5,12 +5,18 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Distributed Warehouse")]
     public class ModuleDistributedWarehouse : PartModule
     {
         [KSPField] 
         public float LogisticsRange = 2000f;
 
         private double lastCheck;
+
+        public override string GetInfo()
+        {
+			return base.GetInfo() + "\nAutomatically levels resources with other Distributed Warehouses\n";
+        }
 
         public void FixedUpdate()
         {
