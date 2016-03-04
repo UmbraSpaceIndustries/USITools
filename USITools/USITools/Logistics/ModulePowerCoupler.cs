@@ -12,7 +12,7 @@ namespace KolonyTools
         public void Update()
         {
             //Surface only
-            if (!vessel.LandedOrSplashed)
+            if (vessel == null || !vessel.LandedOrSplashed)
             {
                 gui_powerCoupler = "Not landed!";
             }

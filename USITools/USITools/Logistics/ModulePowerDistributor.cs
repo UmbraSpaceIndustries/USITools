@@ -12,7 +12,7 @@ namespace KolonyTools
         {
             get
             {
-                return LogisticsTools.HasCrew(this.part, "Engineer");
+                return this.part != null && LogisticsTools.HasCrew(this.part, "Engineer");
             }
         }
 
@@ -26,7 +26,7 @@ namespace KolonyTools
 
         public void Update()
         {
-            if (!LogisticsTools.HasCrew(this.part, "Engineer"))
+            if (!isDistributingPower)
             {
                 gui_pduRange = "No Engineer!";
             }
