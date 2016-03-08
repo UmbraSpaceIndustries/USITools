@@ -7,18 +7,21 @@ namespace KolonyTools
         [KSPField(guiActive = true, guiName = "PowerCoupler")]
         public string gui_powerCoupler;
 
-        public List<Vessel> PowerSources { get; set; }
+        public int numPowerSources { get; set; }
 
         public void Update()
         {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
             //Surface only
             if (vessel == null || !vessel.LandedOrSplashed)
             {
                 gui_powerCoupler = "Not landed!";
             }
-            else if (PowerSources != null && PowerSources.Count > 0)
+            else if (numPowerSources > 0)
             {
-                gui_powerCoupler = PowerSources.Count + " PDU" + (PowerSources.Count == 1 ? "" : "s");
+                gui_powerCoupler = numPowerSources + " PDU" + (numPowerSources == 1 ? "" : "s");
             }
             else
             {

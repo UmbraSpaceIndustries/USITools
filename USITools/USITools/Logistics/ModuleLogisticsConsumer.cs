@@ -67,7 +67,7 @@ namespace KolonyTools
             if (powerCoupler != null)
             {
                 powerSources.AddRange(GetPowerDistributors());
-                powerCoupler.PowerSources = powerSources;
+                powerCoupler.numPowerSources = powerSources.Count;
             }
 
             var sourceList = new List<Vessel>();

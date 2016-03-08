@@ -26,6 +26,9 @@ namespace KolonyTools
 
         public void Update()
         {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
             if (!isDistributingPower)
             {
                 gui_pduRange = "No Engineer!";
