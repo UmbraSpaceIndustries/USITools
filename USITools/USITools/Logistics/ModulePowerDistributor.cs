@@ -38,5 +38,12 @@ namespace KolonyTools
                 gui_pduRange = ActiveDistributionRange.ToString() + "m";
             }
         }
+
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Distributes power to nearby PowerCouplers\n\n" +
+                "Range: " + PowerDistributionRange + "m";
+        }
     }
 }

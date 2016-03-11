@@ -28,5 +28,12 @@ namespace KolonyTools
                 gui_powerCoupler = "No PDUs in Range";
             }
         }
+
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Receives power from nearby Power Distribution Units (PDUs)\n\n" +
+                "Required: landed/splashed down";
+        }
     }
 }
