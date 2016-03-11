@@ -9,6 +9,13 @@ namespace KolonyTools
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;
+
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Scavanges nearby warehouses or more distant piloted distribution hubs\n\n" +
+                "Scavange Range: " + LogisticsSetup.Instance.Config.ScavangeRange + "m";
+        }
  
         public void FixedUpdate()
         {

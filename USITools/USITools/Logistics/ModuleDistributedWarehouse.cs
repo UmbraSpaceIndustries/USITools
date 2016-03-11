@@ -70,7 +70,13 @@ namespace KolonyTools
                     res.amount = res.maxAmount*fillPercent;
                 }
             }
+        }
 
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Balances nearby warehouse levels\n" +
+                "LogisticsRange: " + LogisticsRange + "m";
         }
     }
 }

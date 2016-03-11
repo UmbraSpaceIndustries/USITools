@@ -35,8 +35,7 @@ namespace KolonyTools
         public override string GetInfo()
         {
             return ".\n" + // Extra space at the top because the module name is so long...
-                "Shares resources between nearby warehouses\n\n" +
-                "Range: " + USITools.Logistics.LogisticsSetup.Instance.Config.ScavangeRange + "m";
+                "Stores shareable resources";
         }
     }
 }
