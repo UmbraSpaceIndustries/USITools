@@ -182,7 +182,7 @@ namespace USITools
             {
                 var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
                 var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime));
-                part.rigidbody.AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
+                part.GetComponent<Rigidbody>().AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
                 part.AddThermalFlux(thrustAmount * heatMultiplier);
             }
         }

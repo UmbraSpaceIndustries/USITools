@@ -37,7 +37,7 @@ namespace USITools
                 float x = ((float)r.Next(-vectorAdjustment, vectorAdjustment)) / 10000f * spd * eThrust;
                 float y = ((float)r.Next(-vectorAdjustment, vectorAdjustment)) / 10000f * spd * eThrust;
                 float z = ((float)r.Next(-vectorAdjustment, vectorAdjustment)) / 10000f * spd * eThrust;
-                part.rigidbody.AddForce(new Vector3(x, y, z));
+                part.GetComponent<Rigidbody>().AddForce(new Vector3(x, y, z));
 
             }
         }
