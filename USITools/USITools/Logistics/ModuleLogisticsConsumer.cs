@@ -6,6 +6,7 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;

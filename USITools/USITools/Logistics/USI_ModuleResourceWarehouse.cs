@@ -1,5 +1,6 @@
 namespace KolonyTools
 {
+    [KSPModule("USI Warehouse")]
     public class USI_ModuleResourceWarehouse : PartModule
     {       
         [KSPField(isPersistant = true)] 
@@ -34,8 +35,7 @@ namespace KolonyTools
         // Info about the module in the Editor part list
         public override string GetInfo()
         {
-            return ".\n" + // Extra space at the top because the module name is so long...
-                "Stores shareable resources";
+            return "Stores shareable resources";
         }
     }
 }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 
 namespace KolonyTools
 {
+    [KSPModule("Power Coupler")]
     public class ModulePowerCoupler : PartModule
     {
         [KSPField(guiActive = true, guiName = "PowerCoupler")]

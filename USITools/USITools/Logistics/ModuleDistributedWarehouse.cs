@@ -5,6 +5,7 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Distributed Warehouse")]
     public class ModuleDistributedWarehouse : PartModule
     {
         [KSPField] 
@@ -75,7 +76,7 @@ namespace KolonyTools
         // Info about the module in the Editor part list
         public override string GetInfo()
         {
-            return "Balances nearby warehouse levels\n" +
+            return "Balances nearby warehouse levels\n\n" +
                 "LogisticsRange: " + LogisticsRange + "m";
         }
     }

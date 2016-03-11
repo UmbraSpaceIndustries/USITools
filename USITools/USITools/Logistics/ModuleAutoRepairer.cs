@@ -6,6 +6,7 @@ using KolonyTools;
 
 namespace USITools.Logistics
 {
+    [KSPModule("Auto-Repairer")]
     public class ModuleAutoRepairer : PartModule
     {
         [KSPField]
@@ -40,5 +41,12 @@ namespace USITools.Logistics
             }
         }
 
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Performs daily maintenance on parts in nearby vessels\n\n" +
+                "Range: " + (int)RepairRange + "m\n" +
+                "Required: Engineer";
+        }
     }
 }

@@ -1,5 +1,6 @@
 namespace KolonyTools
 {
+    [KSPModule("Power Distributor")]
     public class ModulePowerDistributor : PartModule
     {
         [KSPField]

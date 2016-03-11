@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace KolonyTools
 {
+    [KSPModule("Resource Distributor")]
     public class ModuleResourceDistributor : PartModule
     {
         [KSPField]
