@@ -6,9 +6,17 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;
+
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Scavanges nearby warehouses or more distant piloted distribution hubs\n\n" +
+                "Scavange Range: " + LogisticsSetup.Instance.Config.ScavangeRange + "m";
+        }
  
         public void FixedUpdate()
         {
@@ -62,9 +70,13 @@ namespace KolonyTools
 
             var resourceSources = GetResourceStockpiles();
             var powerSources = new List<Vessel>();
-            
-            if(part.FindModulesImplementing<ModulePowerCoupler>().Any())
+
+            var powerCoupler = part.FindModuleImplementing<ModulePowerCoupler>();
+            if (powerCoupler != null)
+            {
                 powerSources.AddRange(GetPowerDistributors());
+                powerCoupler.numPowerSources = powerSources.Count;
+            }
 
             var sourceList = new List<Vessel>();
 
@@ -124,7 +136,7 @@ namespace KolonyTools
                 var range = LogisticsTools.GetRange(vessel, v);
                 var parts =
                     v.Parts.Where(
-                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && HasCrew(p, "Pilot"));
+                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && LogisticsTools.HasCrew(p, "Pilot"));
                 foreach (var p in parts)
                 {
                     var m = p.FindModuleImplementing<ModuleResourceDistributor>();
@@ -154,29 +166,15 @@ namespace KolonyTools
             foreach (var v in nearbyVessels)
             {
                 var range = LogisticsTools.GetRange(vessel, v);
-                var parts =
-                    v.Parts.Where(
-                        p => p.FindModuleImplementing<ModulePowerDistributor>() != null && HasCrew(p, "Engineer"));
-                foreach(var p in parts)
+
+                if (v.parts
+                    .Select(p => p.FindModuleImplementing<ModulePowerDistributor>())
+                    .Any(m => m != null && range <= m.ActiveDistributionRange))
                 {
-                    var m = p.FindModuleImplementing<ModulePowerDistributor>();
-                    if(range <= m.PowerDistributionRange)
-                        distributors.Add(v);
+                    distributors.Add(v);
                 }
             }
             return distributors;
-        }
-
-        private bool HasCrew(Part p, string skill)
-        {
-            if (p.CrewCapacity > 0)
-            {
-                return (p.protoModuleCrew.Any(c => c.experienceTrait.TypeName == skill));
-            }
-            else
-            {
-                return (p.vessel.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
-            }
         }
 
         private void StoreResources(double amount, PartResourceDefinition resource)
