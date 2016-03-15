@@ -95,6 +95,7 @@ namespace USITools
         public override void OnStart(StartState state)
         {
             transformKeys = new Dictionary<string, Vector3>();
+            print("Setting menu to " + menuName);
             Fields["servoPercent"].guiName = menuName;
             MonoUtilities.RefreshContextWindows(part);
 
