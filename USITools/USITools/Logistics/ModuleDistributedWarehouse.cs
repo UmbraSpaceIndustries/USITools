@@ -5,6 +5,7 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Distributed Warehouse")]
     public class ModuleDistributedWarehouse : PartModule
     {
         [KSPField] 
@@ -70,7 +71,13 @@ namespace KolonyTools
                     res.amount = res.maxAmount*fillPercent;
                 }
             }
+        }
 
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Balances nearby warehouse levels\n\n" +
+                "LogisticsRange: " + LogisticsRange + "m";
         }
     }
 }

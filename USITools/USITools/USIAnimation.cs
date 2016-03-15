@@ -78,7 +78,7 @@ namespace USITools
                 {
                     return part.FindModelAnimators(secondaryAnimationName)[0]; 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     print("[OKS] Could not find secondary animation - " + secondaryAnimationName);
                     return null;
