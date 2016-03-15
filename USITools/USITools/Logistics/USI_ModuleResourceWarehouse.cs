@@ -1,6 +1,5 @@
 namespace KolonyTools
 {
-    [KSPModule("Resource Warehouse")]
     public class USI_ModuleResourceWarehouse : PartModule
     {       
         [KSPField(isPersistant = true)] 
@@ -10,11 +9,6 @@ namespace KolonyTools
         public void DisableTransfer()
         {
             ToggleTransfer(false);
-        }
-
-        public override string GetInfo()
-        {
-            return base.GetInfo() + "\nWarehouse full of resources\n";
         }
 
         [KSPEvent(guiName = "Enable Warehouse", active = true, guiActive = false)]

@@ -6,16 +6,10 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
-    [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;
-
-        public override string GetInfo()
-        {
-            return base.GetInfo() + "\nWill pull resources from nearby Logistics Distributors\n";
-        }
-
+ 
         public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight)
