@@ -104,6 +104,9 @@ namespace KolonyTools
             print("Found " + whpList.Count() + " warehouses...");
             foreach (var whp in whpList)
             {
+                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                if(!wh.transferEnabled)
+                    continue;
                 if (whp.Resources.Contains(fetchName))
                 {
                     print("Found " + fetchName);
@@ -138,6 +141,9 @@ namespace KolonyTools
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
             foreach (var whp in whpList)
             {
+                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                if (!wh.transferEnabled)
+                    continue; 
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];
