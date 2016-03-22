@@ -57,6 +57,9 @@ namespace USITools
         [KSPField(guiActive = true)]
         public string Thrust = "none";
 
+        public bool pulseASAP = false;
+        private bool pulseNow = false;
+
         private float lastThrottle;
 
         [KSPEvent(guiActive = true, active = true, guiName = "Previous Fuel")]
@@ -75,6 +78,17 @@ namespace USITools
             if (CurrentFuelIndex >= Fuels.Count())
                 CurrentFuelIndex = 0;
             Fuel = Fuels[CurrentFuelIndex].name;
+        }
+
+        [KSPEvent(guiActive = true, active = true, guiName = "Fire Manually")]
+        public void ManualPulse()
+        {
+            pulseASAP=true;
+        }
+        [KSPAction("Fire Manually")] 
+        public void ManualPulseAction(KSPActionParam param)
+        {
+            ManualPulse();
         }
 
         public double lastCheck;
@@ -133,6 +147,10 @@ namespace USITools
 
         public override void OnFixedUpdate()
         {
+            // Don't surprise the user with a manual pulse lurking
+            // eg because the engine was switched off
+            pulseNow = pulseASAP; pulseASAP = false;
+
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
@@ -157,11 +175,12 @@ namespace USITools
 
             //See if it's time to fire.
             var eng = part.FindModuleImplementing<ModuleEngines>();
-            if (Planetarium.GetUniversalTime() > lastCheck + pulseInterval)
-            {
+            if (Planetarium.GetUniversalTime() > (pulseNow ? lastCheck + minPulseTime : lastCheck + pulseInterval)) {
                 lastThrottle = eng.currentThrottle;
-                if (!eng.isActiveAndEnabled || lastThrottle < 0.01)
-                {
+				// Yes, you can manually pulse an shutdown engine - to allow you to use the throttle for other purposes
+				// But not one that has never been staged, because it has not yet found its supply of AblativeOil.
+				// I think this is probably desirable behaviour anyway so you can put >1 thing on an action group - djsd
+                if (!eng.isActiveAndEnabled || (!pulseNow && lastThrottle < 0.01)) {
                     ToggleEmmitters(false);
                     return;
                 }
@@ -170,6 +189,9 @@ namespace USITools
                 lastParticleCheck = lastCheck;
                 ToggleEmmitters(true);
                 PlayAnimation();
+            } else {
+                // Keep the pulse since it's viable but too early
+                pulseASAP = pulseNow;
             }
 
             //Where are we in the curve?
