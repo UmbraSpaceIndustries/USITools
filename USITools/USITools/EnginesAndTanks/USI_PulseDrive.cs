@@ -147,8 +147,7 @@ namespace USITools
 
         public override void OnFixedUpdate()
         {
-            // Don't surprise the user with a manual pulse lurking
-            // eg because the engine was switched off
+			// Don't surprise the user with a manual pulse lurking (eg because the engine was set to use a missing fuel)
             pulseNow = pulseASAP; pulseASAP = false;
 
             if (!HighLogic.LoadedSceneIsFlight)
