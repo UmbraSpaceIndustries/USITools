@@ -14,12 +14,12 @@ namespace USITools
         [KSPField] 
         public string transformConfig;
 
-        [KSPField(guiName = "Angle", isPersistant = true, guiActive = true, guiActiveEditor = false), UI_FloatRange(stepIncrement = 1f, maxValue = 100f, minValue = 0f)]
+        [KSPField(guiName = "Angle", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 1f, maxValue = 100f, minValue = 0f)]
         public float servoPercent = 0f;
 
         [KSPField]
         public float servoSpeed = 0.1f;
-
+        
         [KSPField] 
         public float minValue = 0f;
 
@@ -95,7 +95,6 @@ namespace USITools
         public override void OnStart(StartState state)
         {
             transformKeys = new Dictionary<string, Vector3>();
-            print("Setting menu to " + menuName);
             Fields["servoPercent"].guiName = menuName;
             MonoUtilities.RefreshContextWindows(part);
 

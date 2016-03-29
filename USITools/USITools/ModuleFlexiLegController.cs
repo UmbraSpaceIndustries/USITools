@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace USITools
 {
     public class ModuleFlexiLegController : PartModule
@@ -5,7 +7,7 @@ namespace USITools
         [KSPField(isPersistant = true)]
         public bool isActiveController = false;
 
-        [KSPEvent(guiActive = true, guiActiveEditor = false, guiName = "Enable Controller")]
+        [KSPEvent(guiActive = true, guiActiveEditor = true, guiName = "Enable Controller")]
         public void EnableController()
         {
             isActiveController = true;
@@ -28,14 +30,38 @@ namespace USITools
         {
             Events["EnableController"].guiActive = !isActiveController;
             Events["DisableController"].guiActive = isActiveController;
+            Events["EnableController"].guiActiveEditor = !isActiveController;
+            Events["DisableController"].guiActiveEditor = isActiveController;
             MonoUtilities.RefreshContextWindows(part);
 
             //We should also toggle ALL controllers on this vessel.
-            var contList = vessel.FindPartModulesImplementing<ModuleFlexiLegController>();
+            var contList = GetLegControllers();
             foreach (var c in contList)
             {
                 c.isActiveController = isActiveController;
             }
+        }
+
+        private List<ModuleFlexiLegController> GetLegControllers()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                if (EditorLogic.fetch.ship.parts.Count > 0)
+                {
+                    var ctr = new List<ModuleFlexiLegController>();
+                    foreach (var p in EditorLogic.fetch.ship.parts)
+                    {
+                        var mod = p.FindModuleImplementing<ModuleFlexiLegController>();
+                        if (mod == null)
+                            continue;
+
+                        ctr.Add(mod);
+                    }
+                    return ctr;
+                }
+                return new List<ModuleFlexiLegController>();
+            }                
+            return vessel.FindPartModulesImplementing<ModuleFlexiLegController>();
         }
     }
 }
