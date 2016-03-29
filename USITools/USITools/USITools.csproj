@@ -65,7 +65,6 @@
     <Compile Include="ModuleConstructedPart.cs" />
     <Compile Include="ModuleFlexiLeg.cs" />
     <Compile Include="ModuleFlexiLegController.cs" />
-    <Compile Include="ModuleWeldablePort.cs" />
     <Compile Include="NodeUtilities.cs" />
     <Compile Include="USI_GlobalBonuses.cs" />
     <Compile Include="ModuleStructuralNode.cs" />
