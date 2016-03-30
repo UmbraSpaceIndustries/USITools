@@ -10,6 +10,15 @@ public class ModuleStructuralNode : PartModule
     [KSPField]
     public string rootObject = "Fairing";
 
+    [KSPField] 
+    public bool spawnManually = false;
+
+    [KSPField(isPersistant = true)] 
+    public bool spawnState = false;
+
+    [KSPField]
+    public bool reverseVisibility = false;
+
     public override void OnStart(StartState state)
     {
         structTransform = part.FindModelTransform(rootObject);
@@ -22,8 +31,7 @@ public class ModuleStructuralNode : PartModule
         }
         else
         {
-            AttachNode node = part.findAttachNode(attachNodeName);
-            structTransform.gameObject.SetActive(node.attachedPart != null);
+            CheckDisplay();
         }
     }
 
@@ -34,8 +42,39 @@ public class ModuleStructuralNode : PartModule
         if (structTransform == null)
             return;
 
-        var node = part.findAttachNode(attachNodeName);
-        structTransform.gameObject.SetActive(node.attachedPart != null);
+        CheckDisplay();
+    }
+
+    public void SpawnStructure()
+    {
+        spawnState = true;
+    }
+
+    public void DespawnStructure()
+    {
+        spawnState = false;
+    }
+
+    private void CheckDisplay()
+    {
+        var attachNode = part.findAttachNode(attachNodeName);
+        if (attachNode == null)
+            return;
+
+        bool showStructure;
+        //We have two workflows.  Manual and Automatic spawning.
+        if (spawnManually)
+        {
+            showStructure = spawnState;
+        }
+        else
+        {
+            showStructure = attachNode.attachedPart != null;
+        }
+        if (reverseVisibility)
+            showStructure = !showStructure;
+
+        structTransform.gameObject.SetActive(showStructure);        
     }
 }
 

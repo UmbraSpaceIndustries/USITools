@@ -78,7 +78,7 @@ namespace USITools
             part.CoMOffset = new Vector3(0, 0, 0);
             foreach (var p in vessel.parts)
             {
-                p.rigidbody.isKinematic = false;
+                p.GetComponent<Rigidbody>().isKinematic = false;
             }
 
         }
@@ -92,7 +92,7 @@ namespace USITools
             part.CoMOffset = new Vector3(0,offset,0);
             foreach (var p in vessel.parts.Where(pt=>pt != part))
             {
-                p.rigidbody.isKinematic = true;
+                p.GetComponent<Rigidbody>().isKinematic = true;
             }
             
 

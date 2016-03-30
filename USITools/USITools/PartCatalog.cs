@@ -1,223 +1,184 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+﻿//using KSP.UI.Screens;
+//using RUI.Icons.Selectable;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using KSP.UI;
+//using UnityEngine;
+//using UnityEngine.UI;
 
 
 
-namespace USITools
-{
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_KolonyFilter : MonoBehaviour
-    {
-        private static List<AvailablePart> kolonyParts = new List<AvailablePart>();
-        internal string category = "Filter by Function";
-        internal string subCategoryTitle = "Kolonization";
-        internal string defaultTitle = "UKS";
-        internal string iconName = "R&D_node_icon_start";
-        internal bool filter = true;
+//namespace USITools
+//{
+//    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+//    public class USI_KolonyFilter : MonoBehaviour
+//    {
+//        private static readonly List<AvailablePart> kolonyParts = new List<AvailablePart>();
+//        internal string category = "Filter by Function";
+//        internal string subCategoryTitle = "Kolonization";
+//        internal string defaultTitle = "UKS";
+//        internal string iconName = "R&D_node_icon_start";
+//        internal bool filter = true;
 
-        void Awake()
-        {
-            kolonyParts.Clear();
-            foreach (AvailablePart avPart in PartLoader.LoadedPartsList)
-            {
-                if (!avPart.partPrefab) continue;
-                if(avPart.manufacturer == "USI - Kolonization Division")
-                {
-                        kolonyParts.Add(avPart);
-                }
-            }
+//        void Awake()
+//        {
+//            kolonyParts.Clear();
+//            foreach (var avPart in PartLoader.LoadedPartsList)
+//            {
+//                if (!avPart.partPrefab) continue;
+//                if(avPart.manufacturer == "USI - Kolonization Division")
+//                {
+//                        kolonyParts.Add(avPart);
+//                }
+//            }
 
-            if (kolonyParts.Count > 0)
-            {
-                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
-            }
+//            print("KolonyFilter Count: " + kolonyParts.Count);
+//            GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+//        }
 
-        }
+//        private static bool EditorItemsFilter(AvailablePart avPart)
+//        {
+//            return kolonyParts.Contains(avPart);
+//        }
 
-        private bool EditorItemsFilter(AvailablePart avPart)
-        {
-            if (kolonyParts.Contains(avPart))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+//        private void SubCategories()
+//        {
+//            print("*****Adding icon for " + subCategoryTitle);
+//            var icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
+//            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
+//            PartCategorizer.AddCustomSubcategoryFilter(filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//        }
+//    }
 
-        private void SubCategories()
-        {
-            RUI.Icons.Selectable.Icon icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
-            PartCategorizer.Category Filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
-            PartCategorizer.AddCustomSubcategoryFilter(Filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+//    public class USI_FreightFilter : MonoBehaviour
+//    {
+//        private static readonly List<AvailablePart> kolonyParts = new List<AvailablePart>();
+//        internal string category = "Filter by Function";
+//        internal string subCategoryTitle = "Freight";
+//        internal string defaultTitle = "FTT";
+//        internal string iconName = "RDicon_fuelSystems-highPerformance";
+//        internal bool filter = true;
 
-            RUIToggleButtonTyped button = Filter.button.activeButton;
-            button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-            button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED);
-        }
-    }
+//        void Awake()
+//        {
+//            kolonyParts.Clear();
+//            foreach (var avPart in PartLoader.LoadedPartsList)
+//            {
+//                if (!avPart.partPrefab) continue;
+//                if (avPart.manufacturer == "USI - Freight Division")
+//                {
+//                    kolonyParts.Add(avPart);
+//                }
+//            }
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_FreightFilter : MonoBehaviour
-    {
-        private static List<AvailablePart> kolonyParts = new List<AvailablePart>();
-        internal string category = "Filter by Function";
-        internal string subCategoryTitle = "Freight";
-        internal string defaultTitle = "FTT";
-        internal string iconName = "RDicon_fuelSystems-highPerformance";
-        internal bool filter = true;
+//            print("FreightFilter Count: " + kolonyParts.Count);
 
-        void Awake()
-        {
-            kolonyParts.Clear();
-            foreach (AvailablePart avPart in PartLoader.LoadedPartsList)
-            {
-                if (!avPart.partPrefab) continue;
-                if (avPart.manufacturer == "USI - Freight Division")
-                {
-                    kolonyParts.Add(avPart);
-                }
-            }
+//            //if (kolonyParts.Count > 0)
+//                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+//        }
 
-            if (kolonyParts.Count > 0)
-            {
-                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
-            }
-        }
+//        private static bool EditorItemsFilter(AvailablePart avPart)
+//        {
+//            return kolonyParts.Contains(avPart);
+//        }
 
-        private bool EditorItemsFilter(AvailablePart avPart)
-        {
-            if (kolonyParts.Contains(avPart))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+//        private void SubCategories()
+//        {
+//            print("*****Adding icon for " + subCategoryTitle);
+//            var icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
+//            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
+//            PartCategorizer.AddCustomSubcategoryFilter(filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//        }
+//    }
 
-        private void SubCategories()
-        {
-            RUI.Icons.Selectable.Icon icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
-            PartCategorizer.Category Filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
-            PartCategorizer.AddCustomSubcategoryFilter(Filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+//    public class USI_KolonyLiteFilter : MonoBehaviour
+//    {
+//        private static readonly List<AvailablePart> kolonyParts = new List<AvailablePart>();
+//        internal string category = "Filter by Function";
+//        internal string subCategoryTitle = "Kolonization Lite";
+//        internal string defaultTitle = "UKS-LITE";
+//        internal string iconName = "R&D_node_icon_start";
+//        internal bool filter = true;
 
-            RUIToggleButtonTyped button = Filter.button.activeButton;
-            button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-            button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED);
-        }
-    }
+//        void Awake()
+//        {
+//            kolonyParts.Clear();
+//            //Suppress if we have any UKS parts handy
+//            if (PartLoader.LoadedPartsList.Any(p => p.manufacturer == "USI - Kolonization Division"))
+//                return;
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_KolonyLiteFilter : MonoBehaviour
-    {
-        private static List<AvailablePart> kolonyParts = new List<AvailablePart>();
-        internal string category = "Filter by Function";
-        internal string subCategoryTitle = "Kolonization Lite";
-        internal string defaultTitle = "UKS-LITE";
-        internal string iconName = "R&D_node_icon_start";
-        internal bool filter = true;
+//            foreach (var avPart in PartLoader.LoadedPartsList)
+//            {
+//                if (!avPart.partPrefab) continue;
+//                if (avPart.manufacturer == "USI - Consumer Kolonization Division")
+//                {
+//                    kolonyParts.Add(avPart);
+//                }
+//            }
 
-        void Awake()
-        {
-            kolonyParts.Clear();
-            //Suppress if we have any UKS parts handy
-            if (PartLoader.LoadedPartsList.Any(p => p.manufacturer == "USI - Kolonization Division"))
-                return;
+//            print("KolonyLiteFilter Count: " + kolonyParts.Count);
 
-            foreach (AvailablePart avPart in PartLoader.LoadedPartsList)
-            {
-                if (!avPart.partPrefab) continue;
-                if (avPart.manufacturer == "USI - Consumer Kolonization Division")
-                {
-                    kolonyParts.Add(avPart);
-                }
-            }
+//            //if (kolonyParts.Count > 0)
+//                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+//        }
 
-            if (kolonyParts.Count > 0)
-            {
-                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
-            }
+//        private static bool EditorItemsFilter(AvailablePart avPart)
+//        {
+//            return kolonyParts.Contains(avPart);
+//        }
 
-        }
+//        private void SubCategories()
+//        {
+//            print("*****Adding icon for " + subCategoryTitle);
+//            var icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
+//            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
+//            PartCategorizer.AddCustomSubcategoryFilter(filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//        }
+//    }
 
-        private bool EditorItemsFilter(AvailablePart avPart)
-        {
-            if (kolonyParts.Contains(avPart))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+//    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
+//    public class USI_RoverFilter : MonoBehaviour
+//    {
+//        private static readonly List<AvailablePart> kolonyParts = new List<AvailablePart>();
+//        internal string category = "Filter by Function";
+//        internal string subCategoryTitle = "Rovers";
+//        internal string defaultTitle = "Rovers";
+//        internal string iconName = "R&D_node_icon_advancedmotors";
+//        internal bool filter = true;
 
-        private void SubCategories()
-        {
-            RUI.Icons.Selectable.Icon icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
-            PartCategorizer.Category Filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
-            PartCategorizer.AddCustomSubcategoryFilter(Filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//        void Awake()
+//        {
+//            kolonyParts.Clear();
+//            foreach (var avPart in PartLoader.LoadedPartsList)
+//            {
+//                if (!avPart.partPrefab) continue;
+//                if (avPart.manufacturer == "USI - Rover Division")
+//                {
+//                    kolonyParts.Add(avPart);
+//                }
+//            }
 
-            RUIToggleButtonTyped button = Filter.button.activeButton;
-            button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-            button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED);
-        }
-    }
+//            print("RoverFilter Count: " + kolonyParts.Count);
+//            //if (kolonyParts.Count > 0)
+//            //{
+//                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+//            //}
+//        }
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_RoverFilter : MonoBehaviour
-    {
-        private static List<AvailablePart> kolonyParts = new List<AvailablePart>();
-        internal string category = "Filter by Function";
-        internal string subCategoryTitle = "Rovers";
-        internal string defaultTitle = "Rovers";
-        internal string iconName = "R&D_node_icon_advancedmotors";
-        internal bool filter = true;
+//        private static bool EditorItemsFilter(AvailablePart avPart)
+//        {
+//            return kolonyParts.Contains(avPart);
+//        }
 
-        void Awake()
-        {
-            kolonyParts.Clear();
-            foreach (AvailablePart avPart in PartLoader.LoadedPartsList)
-            {
-                if (!avPart.partPrefab) continue;
-                if (avPart.manufacturer == "USI - Rover Division")
-                {
-                    kolonyParts.Add(avPart);
-                }
-            }
-
-            if (kolonyParts.Count > 0)
-            {
-                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
-            }
-        }
-
-        private bool EditorItemsFilter(AvailablePart avPart)
-        {
-            if (kolonyParts.Contains(avPart))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private void SubCategories()
-        {
-            RUI.Icons.Selectable.Icon icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
-            PartCategorizer.Category Filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
-            PartCategorizer.AddCustomSubcategoryFilter(Filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
-
-            RUIToggleButtonTyped button = Filter.button.activeButton;
-            button.SetFalse(button, RUIToggleButtonTyped.ClickType.FORCED);
-            button.SetTrue(button, RUIToggleButtonTyped.ClickType.FORCED);
-        }
-    }
-}
+//        private void SubCategories()
+//        {
+//            print("*****Adding icon for " + subCategoryTitle);
+//            var icon = PartCategorizer.Instance.iconLoader.GetIcon(iconName);
+//            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
+//            PartCategorizer.AddCustomSubcategoryFilter(filter, subCategoryTitle, icon, p => EditorItemsFilter(p));
+//        }
+//    }
+//}

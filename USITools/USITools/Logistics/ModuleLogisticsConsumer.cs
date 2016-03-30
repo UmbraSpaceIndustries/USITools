@@ -110,6 +110,11 @@ namespace KolonyTools
                 var curAmount = 0d;
                 foreach (var p in vessel.parts.Where(pr => pr.Resources.Contains(res.ResourceName)))
                 {
+                    var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if(wh != null)
+                        if (!wh.transferEnabled)
+                            continue;
+
                     var rr = p.Resources[res.ResourceName];
                     maxAmount += rr.maxAmount;
                     curAmount += rr.amount;
@@ -129,7 +134,8 @@ namespace KolonyTools
         public List<Vessel> GetResourceStockpiles()
         {
             List<Vessel> depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true)
-                .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList(); 
+                .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
+
             var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, false, vessel, true);
             foreach (var v in nearbyVesselList)
             {
