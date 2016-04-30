@@ -139,7 +139,7 @@ namespace KolonyTools
             //Pull in from warehouses
 
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            foreach (var whp in whpList)
+            foreach (var whp in whpList.Where(w=>w != part))
             {
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if (!wh.transferEnabled)

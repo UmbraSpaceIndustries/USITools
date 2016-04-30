@@ -26,12 +26,70 @@ namespace USITools
         [KSPField] 
         public float maxValue = 150f;
 
+        [KSPField]
+        public string wheel_standin      = "WheelPivot_Standin";
+
+        [KSPField]
+        public string suspension_standin   = "suspensionPivot_Standin";
+
+        [KSPField]
+        public string steering_standin = "SteeringPivot_Standin";
+
         public float currentValue = 0f;
+
+        [KSPField]                              
+        public string wheelTransformName      = "WheelPivot";
+
+        [KSPField]
+        public string suspensionTransformName = "suspensionPivot";
+
+        [KSPField]
+        public string steeringTransformName   = "SteeringPivot";
+
+
+
+        private Transform wheelTransform;
+        private Transform suspensionTransform;
+        private Transform steeringTransform;
+
+        private Transform wheelTransformStandin;
+        private Transform suspensionTransformStandin;
+        private Transform steeringTransformStandin;
+
 
         public void FixedUpdate()
         {
             CheckRotations(servoSpeed);
+            UpdateStandins();
         }
+
+        private void UpdateStandins()
+        {
+            if(wheelTransform != null)
+            {
+                wheelTransform.position = wheelTransformStandin.position;
+                wheelTransform.transform.rotation = wheelTransformStandin.transform.rotation;
+            }
+
+            if (steeringTransform != null)
+            {
+                steeringTransform.position = suspensionTransformStandin.position;
+                steeringTransform.transform.rotation =steeringTransformStandin.transform.rotation;
+            }
+
+            if (suspensionTransform != null)
+            {
+                suspensionTransform.position = suspensionTransformStandin.position;
+                suspensionTransform.transform.rotation = suspensionTransformStandin.transform.rotation;
+            }
+        }
+
+        private Vector3 GetRotationVector(Transform t)
+        {
+            var v = new Vector3(t.transform.eulerAngles.x, t.transform.eulerAngles.y, t.transform.eulerAngles.z);
+            return v;
+        }
+
 
         private void CheckRotations(float speed)
         {
@@ -105,6 +163,16 @@ namespace USITools
             }
             currentValue = 0;
             CheckRotations(1000);
+        }
+
+        public override void OnAwake()
+        {
+            wheelTransform = part.FindModelTransform(wheelTransformName);
+            steeringTransform = part.FindModelTransform(steeringTransformName);
+            suspensionTransform = part.FindModelTransform(suspensionTransformName);
+            wheelTransformStandin = part.FindModelTransform(wheel_standin);
+            steeringTransformStandin = part.FindModelTransform(steering_standin);
+            suspensionTransformStandin = part.FindModelTransform(suspension_standin);
         }
 
         public Dictionary<string, Vector3> transformKeys;
