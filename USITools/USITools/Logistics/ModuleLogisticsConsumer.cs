@@ -6,9 +6,17 @@ using USITools.Logistics;
 
 namespace KolonyTools
 {
+    [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;
+
+        // Info about the module in the Editor part list
+        public override string GetInfo()
+        {
+            return "Scavanges nearby warehouses or more distant piloted distribution hubs\n\n" +
+                "Scavange Range: " + LogisticsSetup.Instance.Config.ScavangeRange + "m";
+        }
  
         public void FixedUpdate()
         {
@@ -62,9 +70,13 @@ namespace KolonyTools
 
             var resourceSources = GetResourceStockpiles();
             var powerSources = new List<Vessel>();
-            
-            if(part.FindModulesImplementing<ModulePowerCoupler>().Any())
+
+            var powerCoupler = part.FindModuleImplementing<ModulePowerCoupler>();
+            if (powerCoupler != null)
+            {
                 powerSources.AddRange(GetPowerDistributors());
+                powerCoupler.numPowerSources = powerSources.Count;
+            }
 
             var sourceList = new List<Vessel>();
 
@@ -98,6 +110,11 @@ namespace KolonyTools
                 var curAmount = 0d;
                 foreach (var p in vessel.parts.Where(pr => pr.Resources.Contains(res.ResourceName)))
                 {
+                    var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if(wh != null)
+                        if (!wh.transferEnabled)
+                            continue;
+
                     var rr = p.Resources[res.ResourceName];
                     maxAmount += rr.maxAmount;
                     curAmount += rr.amount;
@@ -116,22 +133,24 @@ namespace KolonyTools
 
         public List<Vessel> GetResourceStockpiles()
         {
-            var depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true);
+            List<Vessel> depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true)
+                .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
+
             var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, false, vessel, true);
             foreach (var v in nearbyVesselList)
             {
                 var range = LogisticsTools.GetRange(vessel, v);
                 var parts =
                     v.Parts.Where(
-                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && HasCrew(p, "Pilot"));
+                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && LogisticsTools.HasCrew(p, "Pilot"));
                 foreach (var p in parts)
                 {
                     var m = p.FindModuleImplementing<ModuleResourceDistributor>();
                     if (range <= m.ResourceDistributionRange)
                     {
                         //Now find ones adjacent to our depot.                        
-                        var stockpiles = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,
-                            true);
+                        List<Vessel> stockpiles = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,
+                            true).Where(sv=>sv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
                         foreach (var s in stockpiles)
                         {
                             if (!depots.Contains(s))
@@ -142,6 +161,7 @@ namespace KolonyTools
             }
             return depots;
         }
+        
 
         public List<Vessel> GetPowerDistributors()
         {
@@ -152,29 +172,15 @@ namespace KolonyTools
             foreach (var v in nearbyVessels)
             {
                 var range = LogisticsTools.GetRange(vessel, v);
-                var parts =
-                    v.Parts.Where(
-                        p => p.FindModuleImplementing<ModulePowerDistributor>() != null && HasCrew(p, "Engineer"));
-                foreach(var p in parts)
+
+                if (v.parts
+                    .Select(p => p.FindModuleImplementing<ModulePowerDistributor>())
+                    .Any(m => m != null && range <= m.ActiveDistributionRange))
                 {
-                    var m = p.FindModuleImplementing<ModulePowerDistributor>();
-                    if(range <= m.PowerDistributionRange)
-                        distributors.Add(v);
+                    distributors.Add(v);
                 }
             }
             return distributors;
-        }
-
-        private bool HasCrew(Part p, string skill)
-        {
-            if (p.CrewCapacity > 0)
-            {
-                return (p.protoModuleCrew.Any(c => c.experienceTrait.TypeName == skill));
-            }
-            else
-            {
-                return (p.vessel.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
-            }
         }
 
         private void StoreResources(double amount, PartResourceDefinition resource)
@@ -223,6 +229,16 @@ namespace KolonyTools
                     var partList = v.Parts.Where(p => p.Resources.Contains(resource.name));
                     foreach (var p in partList)
                     {
+                        //Guard clause.
+                        if (resource.name != "ElectricCharge")
+                        {
+                            var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                            if(wh == null)
+                                continue;
+                            if(!wh.transferEnabled)
+                                continue;
+                        }
+
                         var pr = p.Resources[resource.name];
                         if (pr.amount >= demand)
                         {

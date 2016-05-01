@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace USITools
 {
-    public class USIAnimation : PartModule, IPartCostModifier
+    public class USIAnimation : PartModule
     {
         [KSPField] 
         public int CrewCapacity = 0;
@@ -78,7 +78,7 @@ namespace USITools
                 {
                     return part.FindModelAnimators(secondaryAnimationName)[0]; 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     print("[OKS] Could not find secondary animation - " + secondaryAnimationName);
                     return null;
@@ -317,11 +317,6 @@ namespace USITools
                     print("Error in OnUpdate - USI Animation - " + ex.Message);
                 }
             }
-        }
-
-        float IPartCostModifier.GetModuleCost(float defaultCost)
-        {
-            return inflatedCost;
         }
     }
 }

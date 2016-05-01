@@ -55,5 +55,17 @@ namespace KolonyTools
             }
             return pList;
         }
+
+        public static bool HasCrew(Part p, string skill)
+        {
+            if (p.CrewCapacity > 0)
+            {
+                return (p.protoModuleCrew.Any(c => c.experienceTrait.TypeName == skill));
+            }
+            else
+            {
+                return (p.vessel.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
+            }
+        }
     }
 }
