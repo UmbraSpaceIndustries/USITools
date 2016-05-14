@@ -75,8 +75,8 @@ namespace USITools
 
             print("FreightFilter Count: " + kolonyParts.Count);
 
-            //if (kolonyParts.Count > 0)
-            GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+            if (kolonyParts.Count > 0)
+                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
         }
 
         private static bool EditorItemsFilter(AvailablePart avPart)
@@ -120,9 +120,8 @@ namespace USITools
             }
 
             print("KolonyLiteFilter Count: " + kolonyParts.Count);
-
-            //if (kolonyParts.Count > 0)
-            GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
+            if (kolonyParts.Count > 0)
+                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
         }
 
         private static bool EditorItemsFilter(AvailablePart avPart)
@@ -162,10 +161,8 @@ namespace USITools
             }
 
             print("RoverFilter Count: " + kolonyParts.Count);
-            //if (kolonyParts.Count > 0)
-            //{
-            GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
-            //}
+            if (kolonyParts.Count > 0)
+                GameEvents.onGUIEditorToolbarReady.Add(SubCategories);
         }
 
         private static bool EditorItemsFilter(AvailablePart avPart)
