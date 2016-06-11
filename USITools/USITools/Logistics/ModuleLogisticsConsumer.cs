@@ -136,7 +136,7 @@ namespace KolonyTools
             List<Vessel> depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true)
                 .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
 
-            var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, false, vessel, true);
+            var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, true, vessel, true);
             foreach (var v in nearbyVesselList)
             {
                 var range = LogisticsTools.GetRange(vessel, v);
