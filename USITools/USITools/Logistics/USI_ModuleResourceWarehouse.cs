@@ -4,7 +4,7 @@ namespace KolonyTools
     public class USI_ModuleResourceWarehouse : PartModule
     {       
         [KSPField(isPersistant = true)] 
-        public bool transferEnabled = false;
+        public bool transferEnabled = true;
 
         [KSPEvent(guiName = "Disable Warehouse", active = false, guiActive = true, guiActiveEditor = true)]
         public void DisableTransfer()

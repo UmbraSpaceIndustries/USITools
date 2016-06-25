@@ -66,12 +66,7 @@
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
-    <Compile Include="ModuleConstructedPart.cs" />
-    <Compile Include="ModuleFlexiLeg.cs" />
-    <Compile Include="ModuleFlexiLegController.cs" />
-    <Compile Include="NodeUtilities.cs" />
     <Compile Include="USI_GlobalBonuses.cs" />
-    <Compile Include="ModuleStructuralNode.cs" />
     <Compile Include="Logistics\LogisticsConfig.cs" />
     <Compile Include="Logistics\LogisticsSetup.cs" />
     <Compile Include="Logistics\ModuleDistributedWarehouse.cs" />
@@ -98,7 +93,6 @@
     <Compile Include="EnginesAndTanks\USI_PulseDrive.cs" />
     <Compile Include="EnginesAndTanks\USI_WiggleEngine.cs" />
     <Compile Include="USI_ToolbarWrapper.cs" />
-    <Compile Include="WeldingData.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
