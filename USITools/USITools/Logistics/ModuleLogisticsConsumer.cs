@@ -31,7 +31,9 @@ namespace KolonyTools
             foreach (var con in part.FindModulesImplementing<ModuleResourceConverter>())
             {
                 if (con.inputList != null)
-                    CheckLogistics(con.inputList);
+                    CheckLogistics(con.inputList, false);
+                if (con.outputList != null)
+                    CheckLogistics(con.outputList, true);
             }
 
             //Special for USI-LS/TAC-LS
@@ -43,7 +45,7 @@ namespace KolonyTools
                     new ResourceRatio {ResourceName = "Food"},
                     new ResourceRatio {ResourceName = "Water"},
                     new ResourceRatio {ResourceName = "Oxygen"},
-                });
+                },false);
             }
 
             // Special for USI-Config'd Extraplanetary LaunchPads
@@ -52,17 +54,17 @@ namespace KolonyTools
                 CheckLogistics(new List<ResourceRatio>
                 {
                     new ResourceRatio {ResourceName = "MaterialKits"}
-                });
+                },false);
             }
 
             //Always check for power!
             CheckLogistics(new List<ResourceRatio>
             {
                 new ResourceRatio {ResourceName = "ElectricCharge"}
-            });
+            },false);
         }
 
-        private void CheckLogistics(List<ResourceRatio> resList)
+        private void CheckLogistics(List<ResourceRatio> resList, bool output)
         {
             //Surface only
             if (!vessel.LandedOrSplashed)
@@ -120,14 +122,32 @@ namespace KolonyTools
                     curAmount += rr.amount;
                 }
                 double fillPercent = curAmount / maxAmount; //We use this to equalize things cross-ship as a percentage.
-                if (fillPercent < 0.5d) //We will not attempt a fillup until we're at less than half capacity
+                if (output)
                 {
-                    //Keep changes small - 10% per tick.  So we should hover between 50% and 60%
-                    var deficit = maxAmount * .1d;
-                    double receipt = FetchResources(deficit, pRes, fillPercent, maxAmount, sourceList);
-                    //Put these in our vessel
-                    StoreResources(receipt, pRes);
+                    if (fillPercent > 0.85d)
+                    {
+                        //We will not attempt to ship out output goods until we are over 85%
+                        {
+                            //Keep changes small - 10% per tick.  So we should hover between 75% and 85%
+                            var surplus = maxAmount * .1d;
+                            double pushed = PushResources(surplus, pRes, sourceList);
+                            TakeResources(pushed, pRes);
+                        }
+                    }
                 }
+                else
+                {
+                    if (fillPercent < 0.5d )
+                    //We will not attempt a fillup until we're at less than half capacity
+                    {
+                        //Keep changes small - 10% per tick.  So we should hover between 50% and 60%
+                        var deficit = maxAmount * .1d;
+                        double receipt = FetchResources(deficit, pRes, fillPercent, maxAmount, sourceList);
+                        //Put these in our vessel
+                        StoreResources(receipt, pRes);
+                    }
+                }
+
             }
         }
 
@@ -212,6 +232,39 @@ namespace KolonyTools
             }
         }
 
+        private double TakeResources(double amount, PartResourceDefinition resource)
+        {
+            double taken = 0;
+            try
+            {
+                var transferAmount = amount;
+                var partList = vessel.Parts.Where(
+                    p => p.Resources.Contains(resource.name));
+                foreach (var p in partList)
+                {
+                    PartResource pr = p.Resources[resource.name];
+                    var available = pr.amount;
+                    if (available >= transferAmount)
+                    {
+                        taken += transferAmount;
+                        pr.amount -= transferAmount;
+                        break;
+                    }
+                    else
+                    {
+                        taken += available;
+                        transferAmount -= available;
+                        pr.amount = 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                print(String.Format("[MKS] - ERROR in StoreResources - {0}", ex.StackTrace));
+            }
+            return taken;
+        }
+
         private double FetchResources(double amount, PartResourceDefinition resource, double fillPercent, double targetMaxAmount, List<Vessel> vList )
         {
             double demand = amount;
@@ -285,6 +338,55 @@ namespace KolonyTools
             return fetched;
         }
 
+        private double PushResources(double amount, PartResourceDefinition resource, List<Vessel> vList)
+        {
+            double surplus = amount;
+            double pushed = 0d;
+            try
+            {
+                //remove full vessels from our list
+                vList.RemoveAll(v => GetAmountOfResourceSpace(v, resource) < ResourceUtilities.FLOAT_TOLERANCE);
+
+                for (int i = 0; i < vList.Count; i++)
+                {
+                    //Attempt to push the remaining surplus equally to all vessels - this will ensure that nearly full vessels get filled quickly
+                    //rather that having smaller and smaller quantities pushed every cycle
+                    double vesselAmount = surplus / (vList.Count - i);
+                    Vessel v = vList[i];
+                    var partList = v.Parts.Where(p => p.Resources.Contains(resource.name));
+                    foreach (var p in partList)
+                    {
+                        //Guard clause.
+                        if (vesselAmount < ResourceUtilities.FLOAT_TOLERANCE)
+                        {
+                            break;
+                        }
+                        if (resource.name != "ElectricCharge")
+                        {
+                            var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                            if (wh == null)
+                                continue;
+                            if (!wh.transferEnabled)
+                                continue;
+                        }
+                        PartResource res= p.Resources[resource.name];
+                        double space = res.maxAmount - res.amount;
+                        double add = Math.Min(space, vesselAmount);
+                        res.amount += add;
+                        pushed += add;
+                        surplus -= add;
+                        vesselAmount -= add;
+                    }
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                print(String.Format("[MKS] - ERROR in PushResources - {0}", ex.StackTrace));
+            }
+            return pushed;
+        }
+
         private double GetAmountOfResourcesToSpare(Vessel v, PartResourceDefinition resource, double targetPercent, double targetMaxAmount)
         {
             var maxAmount = 0d;
@@ -307,6 +409,19 @@ namespace KolonyTools
             {
                 return 0;
             }
+        }
+
+        private double GetAmountOfResourceSpace(Vessel v, PartResourceDefinition resource)
+        {
+            var maxAmount = 0d;
+            var curAmount = 0d;
+            foreach (var p in v.parts.Where(pr => pr.Resources.Contains(resource.name)))
+            {
+                var rr = p.Resources[resource.name];
+                maxAmount += rr.maxAmount;
+                curAmount += rr.amount;
+            }
+            return maxAmount - curAmount;
         }
 
     }
