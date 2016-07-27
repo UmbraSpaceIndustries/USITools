@@ -65,6 +65,9 @@
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
+    <Compile Include="ModuleStructuralNode.cs" />
+    <Compile Include="ModuleSwappableConverter.cs" />
+    <Compile Include="LoadoutInfo.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
     <Compile Include="USI_GlobalBonuses.cs" />
     <Compile Include="Logistics\LogisticsConfig.cs" />
