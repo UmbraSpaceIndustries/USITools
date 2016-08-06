@@ -293,23 +293,60 @@ namespace USITools
 
         private void CompressResourceCapacity()
         {
-            try
-            {
-                foreach (var res in part.Resources.list)
-                {
-                    if (res.maxAmount > inflatedMultiplier)
-                    {
-                        res.maxAmount /= inflatedMultiplier;
-                        if (res.amount > res.maxAmount)
-                            res.amount = res.maxAmount;
-                    }
-                }
-                inflatedCost = 0.0f;
-            }
-            catch (Exception ex)
-            {
-                print("Error in CompressResourceCapacity - " + ex.Message);
-            }
+        	try
+        	{
+        		// Handle excess resources in ILM when collapsing it, rather than deleting them ;)
+        		if (part.Modules.Contains("ModulePlanetaryLogistics"))
+        		{
+        			double excess;
+        			
+        			// Not sure how C# or Unity handle external class calls to a namespace that may or may not exist.
+        			// The namespace SHOULD exist, since KolonyTools.dll is included in UKS, which ModulePlanetaryLogistics
+        			// is unique to.
+        			//
+        			// Also, we could use a 'using' directive to save space down here, but again, not sure how C# and Unity
+        			// handles potentially non-existance external namespaces.
+        			PlanetaryLogistics.PlanetaryLogisticsEntry log;
+        			foreach (var res in part.Resources.list)
+        			{
+        				if (res.maxAmount > inflatedMultiplier)
+        				{
+        					res.maxAmount /= inflatedMultiplier;
+        					if (res.amount > res.maxAmount)
+        					{
+        						// Get the excess resources
+        						excess = res.amount - res.maxAmount;
+        						
+        						// Prep a PlanetaryLogisticsEntry
+        						log = PlanetaryLogistics.PlanetaryLogisticsManager.Instance.FetchLogEntry(res.ResourceName, part.Vessel.mainBody.flightGlobalsIndex);
+        						log.StoredQuantity += excess;
+        						
+        						// Dispatch entry to to PlanetaryLogisticsManager
+        						PlanetaryLogistics.PlanetaryLogisticsManager.Instance.TrackLogEntry(log);
+        						
+        						res.amount = res.maxAmount;
+        					}
+        				}
+        			}
+        		}
+        		else
+        		{
+        			foreach (var res in part.Resources.list)
+        			{
+        				if (res.maxAmount > inflatedMultiplier)
+        				{
+        					res.maxAmount /= inflatedMultiplier;
+        					if (res.amount > res.maxAmount)
+        						res.amount = res.maxAmount;
+        				}
+        			}
+        		}
+        		inflatedCost = 0.0f;
+        	}
+        	catch (Exception ex)
+        	{
+        		print("Error in CompressResourceCapacity - " + ex.Message);
+        	}
         }
 
 
