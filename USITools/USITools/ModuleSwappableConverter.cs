@@ -29,17 +29,21 @@ namespace USITools
         [KSPField]
         public string typeName = "Loadout";
 
-        public string curTemplate = "None";
+        [KSPField(guiActiveEditor = true, guiName = "Active: ")]
+        public string curTemplate = "???";
 
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Install [None]",unfocusedRange = 10f)]
         public void LoadSetup()
         {
             if (!CheckResources())
                 return;
-
+            var oldTemplate = curTemplate;
             currentLoadout = displayLoadout;
             SetupMenus();
             AdjustEfficiency();
+            ScreenMessages.PostScreenMessage("Reconfiguration from " + oldTemplate + " to " + curTemplate + " completed.", 5f,
+                ScreenMessageStyle.UPPER_CENTER);
+            NextSetup();
         }
 
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout",unfocusedRange = 10f)]
@@ -48,7 +52,7 @@ namespace USITools
             displayLoadout++;
             if (displayLoadout >= Loadouts.Count)
             {
-                displayLoadout = -1;
+                displayLoadout = 0;
             }
             if(displayLoadout == currentLoadout)
                 NextSetup();
@@ -59,7 +63,7 @@ namespace USITools
         public void PrevSetup()
         {
             displayLoadout--;
-            if (displayLoadout < -1)
+            if (displayLoadout < 0)
             {
                 displayLoadout = Loadouts.Count-1;
             }
@@ -72,7 +76,6 @@ namespace USITools
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return true;
-
             //Check for an engineer
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
             if (kerbal.experienceTrait.Title != "Engineer")
@@ -104,8 +107,7 @@ namespace USITools
             {
                 TakeResources(r);
             }
-            ScreenMessages.PostScreenMessage("Reconfiguration to " + curTemplate + " completed.", 5f,
-                ScreenMessageStyle.UPPER_CENTER);
+
 
             return true;
         }
@@ -115,11 +117,19 @@ namespace USITools
             var resourceName = resInfo.ResourceName;
             var needed = resInfo.Ratio;
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
+            //EC we're a lot less picky...
+            if (resInfo.ResourceName == "ElectricCharge")
+            {
+                whpList.AddRange(part.vessel.parts);
+            }
             foreach (var whp in whpList.Where(w => w != part))
             {
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.transferEnabled)
-                    continue;
+                if (resInfo.ResourceName != "ElectricCharge")
+                {
+                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if (!wh.transferEnabled)
+                        continue;
+                }
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];
@@ -172,16 +182,10 @@ namespace USITools
         {
             Events["NextSetup"].guiName = (bayName + " Next " + typeName).Trim();
             Events["PrevSetup"].guiName = (bayName + " Prev. " + typeName).Trim();
+            Fields["curTemplate"].guiName = (bayName + " Active " + typeName).Trim();
             curTemplate = Loadouts[currentLoadout].LoadoutName;
-            if (displayLoadout >= 0)
-            {
-                Events["LoadSetup"].guiName =
-                    (bayName + " Install [" + Loadouts[displayLoadout].LoadoutName + "]").Trim();
-            }
-            else
-            {
-                Events["LoadSetup"].guiName = (bayName + " Install [None]").Trim();
-            }
+            Events["LoadSetup"].guiName =
+                (bayName + " Install [" + Loadouts[displayLoadout].LoadoutName + "]").Trim();
 
             MonoUtilities.RefreshContextWindows(part);
         }
@@ -195,6 +199,7 @@ namespace USITools
         public override void OnStart(StartState state)
         {
             _broker = new ResourceBroker();
+            EnableMenus();
             SetupResourceCosts();
             SetupDecals();
             SetupLoadouts();
@@ -202,6 +207,18 @@ namespace USITools
             SetupMenus();
             AdjustEfficiency();
             NextSetup();
+        }
+
+        private void EnableMenus()
+        {
+            var isEditor = HighLogic.LoadedSceneIsEditor;
+            Events["NextSetup"].guiActiveEditor = isEditor;
+            Events["PrevSetup"].guiActiveEditor = isEditor;
+            Events["LoadSetup"].guiActiveEditor = isEditor;
+            Events["NextSetup"].externalToEVAOnly = !isEditor;
+            Events["PrevSetup"].externalToEVAOnly = !isEditor;
+            Events["LoadSetup"].externalToEVAOnly = !isEditor;
+            MonoUtilities.RefreshContextWindows(part);
         }
 
         private void AdjustEfficiency()

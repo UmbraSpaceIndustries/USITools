@@ -25,10 +25,10 @@ namespace USITools
         public int cartridgeYield = 1000000;
 
         [KSPField] 
-        public int maxPulseTime = 3;
+        public double maxPulseTime = 1.0;
 
         [KSPField] 
-        public double minPulseTime = 0.5;
+        public double minPulseTime = 1.0;
 
         [KSPField] 
         public double particleLife = 0.12d;
@@ -89,6 +89,8 @@ namespace USITools
         {
             eList = part.GetComponentsInChildren<KSPParticleEmitter>();
             broker = new ResourceBroker();
+            if (fuelList == null)
+                return;
             var fl = fuelList.Split(';');
             Fuels = new PartResourceDefinition[fl.Count()];
             for(int i = 0; i < fl.Count(); i++)
