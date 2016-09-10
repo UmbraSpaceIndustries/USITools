@@ -18,6 +18,9 @@ namespace KolonyTools
 
         [KSPField]
         public float Efficiency = 0.8f;
+        
+        [KSPField]
+        public bool EngineerOnly = true;
 
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap part",
             unfocusedRange = 5f)]
@@ -30,11 +33,14 @@ namespace KolonyTools
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
-            if (kerbal.experienceTrait.Title != "Engineer")
+            if(EngineerOnly)
             {
-                ScreenMessages.PostScreenMessage("Only Engineers can disassemble parts!", 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                return;
+                if (kerbal.experienceTrait.Title != "Engineer")
+                {
+                    ScreenMessages.PostScreenMessage("Only Engineers can disassemble parts!", 5f,
+                        ScreenMessageStyle.UPPER_CENTER);
+                    return;
+                }
             }
             var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
             double resAmount = part.mass / res.density * Efficiency;
