@@ -25,10 +25,10 @@ namespace USITools
         public int cartridgeYield = 1000000;
 
         [KSPField] 
-        public int maxPulseTime = 3;
+        public double maxPulseTime = 1.0;
 
         [KSPField] 
-        public double minPulseTime = 0.5;
+        public double minPulseTime = 1.0;
 
         [KSPField] 
         public double particleLife = 0.12d;
@@ -89,6 +89,8 @@ namespace USITools
         {
             eList = part.GetComponentsInChildren<KSPParticleEmitter>();
             broker = new ResourceBroker();
+            if (fuelList == null)
+                return;
             var fl = fuelList.Split(';');
             Fuels = new PartResourceDefinition[fl.Count()];
             for(int i = 0; i < fl.Count(); i++)
@@ -181,7 +183,9 @@ namespace USITools
             if(Planetarium.GetUniversalTime() - lastCheck < minPulseTime)
             {
                 var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
-                var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime));
+                float atmoModifier = (float)Math.Max(0,1d - vessel.atmDensity);
+                var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime)) * atmoModifier;
+
                 part.GetComponent<Rigidbody>().AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
                 part.AddThermalFlux(thrustAmount * heatMultiplier);
             }
@@ -196,13 +200,13 @@ namespace USITools
         private void ConsumeFuel()
         {
             var res = Fuels[CurrentFuelIndex];
-            broker.RequestResource(part, res.name, 1, 1, "");
+            broker.RequestResource(part, res.name, 1, 1, res.resourceFlowMode);
         }
 
         private bool HasFuel()
         {
             var res = Fuels[CurrentFuelIndex];
-            return broker.AmountAvailable(part, res.name, 1, "") > 1;
+            return broker.AmountAvailable(part, res.name, 1, res.resourceFlowMode) > 1;
         }
 
         private float GetPulseThrust()

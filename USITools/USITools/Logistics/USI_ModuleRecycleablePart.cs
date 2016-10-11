@@ -19,6 +19,9 @@ namespace KolonyTools
         [KSPField]
         public float Efficiency = 0.8f;
 
+        [KSPField]
+        public bool EngineerOnly = true;
+
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap part",
             unfocusedRange = 5f)]
         public void ScrapPart()
@@ -30,7 +33,7 @@ namespace KolonyTools
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
-            if (kerbal.experienceTrait.Title != "Engineer")
+            if (EngineerOnly && kerbal.experienceTrait.Title != "Engineer")
             {
                 ScreenMessages.PostScreenMessage("Only Engineers can disassemble parts!", 5f,
                     ScreenMessageStyle.UPPER_CENTER);

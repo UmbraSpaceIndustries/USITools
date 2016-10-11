@@ -46,8 +46,11 @@ namespace USITools
             if (vessel != null)
             {
                 bool drop = true;
-                foreach (var res in part.Resources.list)
+                var rCount = part.Resources.Count;
+                for (int i = 0; i < rCount; ++i)
                 {
+                    var res = part.Resources[i];
+
                     if (res.amount >= threshold)
                     {
                         drop = false;

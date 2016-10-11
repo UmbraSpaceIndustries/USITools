@@ -19,7 +19,7 @@
                 vessel.checkSplashed();
                 if (!vessel.Splashed && RCS.rcsEnabled)
                 {
-                    RCS.Disable();
+                    RCS.rcsEnabled = false;
                 }
             }
         }

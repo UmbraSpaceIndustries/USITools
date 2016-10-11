@@ -42,7 +42,7 @@ namespace KolonyTools
             }
         }
 
-        public static IEnumerable<Part> GetRegionalWarehouses(Vessel vessel, string module)
+        public static List<Part> GetRegionalWarehouses(Vessel vessel, string module)
         {
             var pList = new List<Part>();
             var vList = GetNearbyVessels((float)LogisticsSetup.Instance.Config.MaintenanceRange, true, vessel, false);
