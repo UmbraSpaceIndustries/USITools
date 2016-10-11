@@ -30,8 +30,11 @@ namespace USITools
             var totCap = 0d;
             var usedCap = 0d;
 
-            foreach (var r in part.Resources.list)
+            var rCount = part.Resources.Count;
+            for (int i = 0; i < rCount; ++i)
             {
+                var r = part.Resources[i];
+
                 totCap += r.maxAmount;
                 usedCap += r.amount;
             }

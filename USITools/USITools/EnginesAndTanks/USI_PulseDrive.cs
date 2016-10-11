@@ -183,7 +183,9 @@ namespace USITools
             if(Planetarium.GetUniversalTime() - lastCheck < minPulseTime)
             {
                 var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
-                var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime));
+                float atmoModifier = (float)Math.Max(0,1d - vessel.atmDensity);
+                var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime)) * atmoModifier;
+
                 part.GetComponent<Rigidbody>().AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
                 part.AddThermalFlux(thrustAmount * heatMultiplier);
             }
@@ -198,13 +200,13 @@ namespace USITools
         private void ConsumeFuel()
         {
             var res = Fuels[CurrentFuelIndex];
-            broker.RequestResource(part, res.name, 1, 1, "");
+            broker.RequestResource(part, res.name, 1, 1, res.resourceFlowMode);
         }
 
         private bool HasFuel()
         {
             var res = Fuels[CurrentFuelIndex];
-            return broker.AmountAvailable(part, res.name, 1, "") > 1;
+            return broker.AmountAvailable(part, res.name, 1, res.resourceFlowMode) > 1;
         }
 
         private float GetPulseThrust()

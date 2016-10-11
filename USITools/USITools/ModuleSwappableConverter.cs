@@ -4,11 +4,15 @@ using System.ComponentModel;
 using System.Linq;
 using System.Xml;
 using KolonyTools;
+using TestScripts;
 
 namespace USITools
 {
     public class ModuleSwappableConverter : PartModule
     {
+        [KSPField]
+        public bool autoActivate = true;
+
         [KSPField(isPersistant = true)]
         public int currentLoadout = 0;
 
@@ -16,20 +20,12 @@ namespace USITools
         public string ResourceCosts = "";
 
         [KSPField]
-        public string DecalTextures =
-            "0,Tex1,1,Tex2";
-
-        [KSPField]
-        public string DecalObjects =
-            "Object1,Object2";
-
-        [KSPField]
         public string bayName = "";
 
         [KSPField]
         public string typeName = "Loadout";
 
-        [KSPField(guiActiveEditor = true, guiName = "Active: ")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Active: ")]
         public string curTemplate = "???";
 
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Install [None]",unfocusedRange = 10f)]
@@ -185,7 +181,7 @@ namespace USITools
             Fields["curTemplate"].guiName = (bayName + " Active " + typeName).Trim();
             curTemplate = Loadouts[currentLoadout].LoadoutName;
             Events["LoadSetup"].guiName =
-                (bayName + " Install [" + Loadouts[displayLoadout].LoadoutName + "]").Trim();
+                (bayName + " " + curTemplate + "=>" + Loadouts[displayLoadout].LoadoutName).Trim();
 
             MonoUtilities.RefreshContextWindows(part);
         }
@@ -193,31 +189,51 @@ namespace USITools
         private int displayLoadout;
         public List<ResourceRatio> ResCosts;
         public List<LoadoutInfo> Loadouts;
-        public Dictionary<int, string> _decals;
-        private IResourceBroker _broker;
+        //private IResourceBroker _broker;
 
         public override void OnStart(StartState state)
         {
-            _broker = new ResourceBroker();
-            EnableMenus();
-            SetupResourceCosts();
-            SetupDecals();
-            SetupLoadouts();
-            displayLoadout = currentLoadout;
-            SetupMenus();
-            AdjustEfficiency();
-            NextSetup();
+            //_broker = new ResourceBroker();
+            if(autoActivate || HighLogic.LoadedSceneIsEditor)
+                SetModuleState(null,true);
+            GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
+            MonoUtilities.RefreshContextWindows(part);
         }
 
-        private void EnableMenus()
+        public void OnDestroy()
         {
-            var isEditor = HighLogic.LoadedSceneIsEditor;
-            Events["NextSetup"].guiActiveEditor = isEditor;
-            Events["PrevSetup"].guiActiveEditor = isEditor;
-            Events["LoadSetup"].guiActiveEditor = isEditor;
-            Events["NextSetup"].externalToEVAOnly = !isEditor;
-            Events["PrevSetup"].externalToEVAOnly = !isEditor;
-            Events["LoadSetup"].externalToEVAOnly = !isEditor;
+            GameEvents.OnAnimationGroupStateChanged.Remove(SetModuleState);
+        }
+
+        private void SetModuleState(ModuleAnimationGroup module, bool enable)
+        {
+            if (module != null && module.part != part)
+                return;
+
+            if (enable)
+            {
+                EnableMenus(HighLogic.LoadedSceneIsEditor);
+                SetupResourceCosts();
+                SetupLoadouts();
+                displayLoadout = currentLoadout;
+                SetupMenus();
+                AdjustEfficiency();
+                NextSetup();
+            }
+            else
+            {
+                EnableMenus(false);
+            }
+        }
+
+        private void EnableMenus(bool enable)
+        {
+            Events["NextSetup"].guiActiveEditor = enable;
+            Events["PrevSetup"].guiActiveEditor = enable;
+            Events["LoadSetup"].guiActiveEditor = enable;
+            Events["NextSetup"].externalToEVAOnly = !enable;
+            Events["PrevSetup"].externalToEVAOnly = !enable;
+            Events["LoadSetup"].externalToEVAOnly = !enable;
             MonoUtilities.RefreshContextWindows(part);
         }
 
@@ -229,7 +245,7 @@ namespace USITools
             float eBonus = bays.Count / activeBays;
             foreach (var bay in bays)
             {
-                if (bay.currentLoadout >= 0)
+                if (bay.currentLoadout >= 0 && bay.Loadouts != null)
                 {
                     modules[bay.currentLoadout].Efficiency
                         = bay.Loadouts[bay.currentLoadout].BaseEfficiency*eBonus;
@@ -238,17 +254,46 @@ namespace USITools
         }
 
 
-        private void SetupMenus()
+        public void SetupMenus()
         {
             var modules = part.FindModulesImplementing<BaseConverter>();
             for (int i = 0; i < modules.Count; ++i)
             {
-                if(i == currentLoadout)
+                if(EnabledByAnyModule(i))
                     modules[i].EnableModule();
                 else
                     modules[i].DisableModule();
             }
             ChangeMenu();
+        }
+
+        private bool EnabledByAnyModule(int moduleId)
+        {
+            var modules = part.FindModulesImplementing<ModuleSwappableConverter>();
+            for (int i = 0; i < modules.Count; ++i)
+            {
+                if (modules[i].currentLoadout == moduleId)
+                    return true;
+            }
+            return false;
+        }
+
+
+        private void SetupResourceCosts()
+        {
+            ResCosts = new List<ResourceRatio>();
+            if (String.IsNullOrEmpty(ResourceCosts))
+                return;
+
+            var resources = ResourceCosts.Split(',');
+            for (int i = 0; i < resources.Length; i += 2)
+            {
+                ResCosts.Add(new ResourceRatio
+                {
+                    ResourceName = resources[i],
+                    Ratio = double.Parse(resources[i + 1])
+                });
+            }
         }
 
         private void SetupLoadouts()
@@ -262,8 +307,6 @@ namespace USITools
             {
                 var loadout = new LoadoutInfo();
                 loadout.BaseEfficiency = con.Efficiency;
-                if (_decals.ContainsKey(id))
-                    loadout.DecalTexture = _decals[id];
                 loadout.LoadoutName = con.ConverterName;
                 loadout.ModuleId = id;
                 loadoutNames.Add(con.ConverterName);
@@ -274,28 +317,5 @@ namespace USITools
             MonoUtilities.RefreshContextWindows(part);
         }
 
-        private void SetupDecals()
-        {
-            _decals = new Dictionary<int, string>();
-            var decals = DecalTextures.Split(',');
-            for (int i = 0; i < decals.Length; i += 2)
-            {
-                _decals.Add(int.Parse(decals[i]), decals[i + 1]);
-            }
-        }
-
-        private void SetupResourceCosts()
-        {
-            ResCosts = new List<ResourceRatio>();
-            var resources = ResourceCosts.Split(',');
-            for (int i = 0; i < resources.Length; i += 2)
-            {
-                ResCosts.Add(new ResourceRatio
-                {
-                    ResourceName = resources[i],
-                    Ratio = double.Parse(resources[i + 1])
-                });
-            }
-        }
     }
 }

@@ -39,10 +39,6 @@
       <HintPath>..\..\..\..\KSP_DEV\KSP_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="KSPUtil">
-      <HintPath>..\..\..\..\KSP_DEV\KSP_Data\Managed\KSPUtil.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -65,7 +61,9 @@
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
-    <Compile Include="ModuleStructuralNode.cs" />
+    <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
+    <Compile Include="Logistics\ModuleWeightDistributor.cs" />
+    <Compile Include="ModuleAnimationExtended.cs" />
     <Compile Include="ModuleSwappableConverter.cs" />
     <Compile Include="LoadoutInfo.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
