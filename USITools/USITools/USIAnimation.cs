@@ -139,8 +139,12 @@ namespace USITools
                 if (CrewCapacity > 0)
                 {
                     part.CrewCapacity = CrewCapacity;
-                    if (CrewCapacity > 0 & !part.Modules.Contains("TransferDialogSpawner"))
-                        part.AddModule("TransferDialogSpawner");
+                    if (CrewCapacity > 0)
+                    {
+                        part.CheckTransferDialog();
+                        MonoUtilities.RefreshContextWindows(part);
+                    }
+                    //part.AddModule("TransferDialogSpawner");
                 }
                 foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
                 {
