@@ -89,20 +89,20 @@ namespace USITools
     }
 
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_LifeSupportFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Life Support Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "LifeSupport"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_LifeSupportFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Life Support Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "LifeSupport"; }
+    //        set { }
+    //    }
+    //}
 
     public abstract class BaseFilter : MonoBehaviour
     {

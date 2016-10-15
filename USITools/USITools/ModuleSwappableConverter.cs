@@ -45,6 +45,9 @@ namespace USITools
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout",unfocusedRange = 10f)]
         public void NextSetup()
         {
+            if (Loadouts.Count < 2)
+                return;
+
             displayLoadout++;
             if (displayLoadout >= Loadouts.Count)
             {
@@ -179,6 +182,9 @@ namespace USITools
             Events["NextSetup"].guiName = (bayName + " Next " + typeName).Trim();
             Events["PrevSetup"].guiName = (bayName + " Prev. " + typeName).Trim();
             Fields["curTemplate"].guiName = (bayName + " Active " + typeName).Trim();
+            if (Loadouts == null)
+                SetupLoadouts();
+
             curTemplate = Loadouts[currentLoadout].LoadoutName;
             Events["LoadSetup"].guiName =
                 (bayName + " " + curTemplate + "=>" + Loadouts[displayLoadout].LoadoutName).Trim();
@@ -311,7 +317,8 @@ namespace USITools
                 loadout.ModuleId = id;
                 loadoutNames.Add(con.ConverterName);
                 Loadouts.Add(loadout);
-                con.DisableModule(); ;
+                if(!con.IsActivated)
+                    con.DisableModule(); 
                 id++;
             }
             MonoUtilities.RefreshContextWindows(part);
