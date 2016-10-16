@@ -51,6 +51,9 @@ namespace USITools
         [KSPField]
         public float animationSpeed;
 
+        [KSPField]
+        public bool atmosphereNerf = false;
+
         [KSPField(guiActive = true)] 
         public string Fuel = "none";
 
@@ -183,7 +186,9 @@ namespace USITools
             if(Planetarium.GetUniversalTime() - lastCheck < minPulseTime)
             {
                 var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
-                float atmoModifier = (float)Math.Max(0,1d - vessel.atmDensity);
+                var atmoModifier = 0f;
+                if(atmosphereNerf)
+                    atmoModifier = (float)Math.Max(0, 1d - vessel.atmDensity);
                 var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime)) * atmoModifier;
 
                 part.GetComponent<Rigidbody>().AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
