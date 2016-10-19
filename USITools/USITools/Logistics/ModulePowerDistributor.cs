@@ -1,3 +1,5 @@
+using USITools.Logistics;
+
 namespace KolonyTools
 {
     [KSPModule("Power Distributor")]
@@ -13,7 +15,7 @@ namespace KolonyTools
         {
             get
             {
-                return this.part != null && LogisticsTools.HasCrew(this.part, "Engineer");
+                return this.part != null && LogisticsTools.NearbyCrew(this.vessel, LogisticsSetup.Instance.Config.ScavangeRange, "Engineer");
             }
         }
 

@@ -1,42 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Security.AccessControl;
+using System.Text;
+using KolonyTools;
 using UnityEngine;
 
 namespace USITools
 {
     public class USIAnimation : PartModule
     {
-        [KSPField] 
-        public int CrewCapacity = 0;
+        private List<IAnimatedModule> _Modules;
+        private List<ModuleSwappableConverter> _SwapBays;
 
-        [KSPField]
-        public string deployAnimationName = "Deploy";
+        private void FindModules()
+        {
+            if (vessel != null)
+            {
+                _Modules = part.FindModulesImplementing<IAnimatedModule>();
+                _SwapBays = part.FindModulesImplementing<ModuleSwappableConverter>();
+            }
+        }
 
-        [KSPField]
-        public string secondaryAnimationName = "";
 
-        [KSPField(isPersistant = true)]
-        public bool isDeployed = false;
+        [KSPField] public int CrewCapacity = 0;
 
-        [KSPField(isPersistant = true)]
-        public float inflatedCost = 0;
+        [KSPField] public string deployAnimationName = "Deploy";
 
-        [KSPField]
-        public bool inflatable = false;
+        [KSPField] public string secondaryAnimationName = "";
 
-        [KSPField]
-        public int PrimaryLayer = 2;
+        [KSPField(isPersistant = true)] public bool isDeployed = false;
 
-        [KSPField]
-        public int SecondaryLayer = 3;
+        [KSPField(isPersistant = true)] public float inflatedCost = 0;
 
-        [KSPField] 
-        public float inflatedMultiplier = -1;
+        [KSPField] public bool inflatable = false;
 
-        [KSPField]
-        public bool shedOnInflate = false;
+        [KSPField] public int PrimaryLayer = 2;
+
+        [KSPField] public int SecondaryLayer = 3;
+
+        [KSPField] public float inflatedMultiplier = -1;
+
+        [KSPField] public bool shedOnInflate = false;
+
+        [KSPField] public string ResourceCosts = "";
+
+        [KSPField] public float inflatedMass = 1f;
 
         [KSPAction("Deploy Module")]
         public void DeployAction(KSPActionParam param)
@@ -53,7 +63,7 @@ namespace USITools
 
 
         [KSPAction("Toggle Module")]
-        public void ToggleScoopAction(KSPActionParam param)
+        public void ToggleAction(KSPActionParam param)
         {
             if (isDeployed)
             {
@@ -67,10 +77,7 @@ namespace USITools
 
         public Animation DeployAnimation
         {
-            get
-            {
-                return part.FindModelAnimators(deployAnimationName)[0];
-            }
+            get { return part.FindModelAnimators(deployAnimationName)[0]; }
         }
 
         public Animation SecondaryAnimation
@@ -79,7 +86,7 @@ namespace USITools
             {
                 try
                 {
-                    return part.FindModelAnimators(secondaryAnimationName)[0]; 
+                    return part.FindModelAnimators(secondaryAnimationName)[0];
                 }
                 catch (Exception)
                 {
@@ -89,11 +96,15 @@ namespace USITools
             }
         }
 
-        [KSPEvent(guiName = "Deploy", guiActive = true, externalToEVAOnly = true, guiActiveEditor = true, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        [KSPEvent(guiName = "Deploy", guiActive = true, externalToEVAOnly = true, guiActiveEditor = true, active = true,
+            guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void DeployModule()
         {
             if (!isDeployed)
             {
+                if (!CheckResources())
+                    return;
+
                 if (CheckDeployConditions())
                 {
                     PlayDeployAnimation();
@@ -101,6 +112,7 @@ namespace USITools
                     ToggleEvent("RetractModule", true);
                     CheckDeployConditions();
                     isDeployed = true;
+                    EnableModules();
                 }
             }
         }
@@ -127,8 +139,12 @@ namespace USITools
                 if (CrewCapacity > 0)
                 {
                     part.CrewCapacity = CrewCapacity;
-                    if (CrewCapacity > 0 & !part.Modules.Contains("TransferDialogSpawner"))
-                        part.AddModule("TransferDialogSpawner");
+                    if (CrewCapacity > 0)
+                    {
+                        part.CheckTransferDialog();
+                        MonoUtilities.RefreshContextWindows(part);
+                    }
+                    //part.AddModule("TransferDialogSpawner");
                 }
                 foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
                 {
@@ -136,20 +152,123 @@ namespace USITools
                 }
                 MonoUtilities.RefreshContextWindows(part);
             }
+            if (part.mass < inflatedMass)
+                part.mass = inflatedMass;
+
             return true;
         }
 
-        [KSPEvent(guiName = "Retract", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        private bool CheckResources()
+        {
+            if (HighLogic.LoadedSceneIsEditor)
+                return true;
+
+            var allResources = true;
+            var missingResources = "";
+            //Check that we have everything we need.
+            foreach (var r in ResCosts)
+            {
+                if (!HasResource(r))
+                {
+                    allResources = false;
+                    missingResources += "\n" + r.Ratio + " " + r.ResourceName;
+                }
+            }
+            if (!allResources)
+            {
+                ScreenMessages.PostScreenMessage("Missing resources to assemble module:" + missingResources, 5f,
+                    ScreenMessageStyle.UPPER_CENTER);
+                return false;
+            }
+            //Since everything is here...
+            foreach (var r in ResCosts)
+            {
+                TakeResources(r);
+            }
+
+
+            return true;
+        }
+
+        private bool HasResource(ResourceRatio resInfo)
+        {
+            var resourceName = resInfo.ResourceName;
+            var needed = resInfo.Ratio;
+            var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
+            //EC we're a lot less picky...
+            if (resInfo.ResourceName == "ElectricCharge")
+            {
+                whpList.AddRange(part.vessel.parts);
+            }
+            foreach (var whp in whpList.Where(w => w != part))
+            {
+                if (resInfo.ResourceName != "ElectricCharge")
+                {
+                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if (!wh.transferEnabled)
+                        continue;
+                }
+                if (whp.Resources.Contains(resourceName))
+                {
+                    var res = whp.Resources[resourceName];
+                    if (res.amount >= needed)
+                    {
+                        needed = 0;
+                        break;
+                    }
+                    else
+                    {
+                        needed -= res.amount;
+                    }
+                }
+            }
+            return (needed < ResourceUtilities.FLOAT_TOLERANCE);
+        }
+
+        private void TakeResources(ResourceRatio resInfo)
+        {
+            var resourceName = resInfo.ResourceName;
+            var needed = resInfo.Ratio;
+            //Pull in from warehouses
+
+            var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
+            foreach (var whp in whpList.Where(w => w != part))
+            {
+                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                if (!wh.transferEnabled)
+                    continue;
+                if (whp.Resources.Contains(resourceName))
+                {
+                    var res = whp.Resources[resourceName];
+                    if (res.amount >= needed)
+                    {
+                        res.amount -= needed;
+                        needed = 0;
+                        break;
+                    }
+                    else
+                    {
+                        needed -= res.amount;
+                        res.amount = 0;
+                    }
+                }
+            }
+        }
+
+
+        [KSPEvent(guiName = "Retract", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false,
+            active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void RetractModule()
         {
             if (isDeployed)
             {
-                if(CheckRetractConditions())
+                if (CheckRetractConditions())
                 {
                     isDeployed = false;
                     ReverseDeployAnimation();
                     ToggleEvent("DeployModule", true);
                     ToggleEvent("RetractModule", false);
+                    DisableModules();
                 }
             }
         }
@@ -161,7 +280,8 @@ namespace USITools
             {
                 if (part.protoModuleCrew.Count > 0)
                 {
-                    var msg = string.Format("Unable to deflate {0} as it still contains crew members.", part.partInfo.title);
+                    var msg = string.Format("Unable to deflate {0} as it still contains crew members.",
+                        part.partInfo.title);
                     ScreenMessages.PostScreenMessage(msg, 5f, ScreenMessageStyle.UPPER_CENTER);
                     canRetract = false;
                 }
@@ -184,13 +304,13 @@ namespace USITools
         public List<ModuleResourceConverter> GetAffectedMods()
         {
             var modList = new List<ModuleResourceConverter>();
-            var modNames = new List<string> 
-                {"ModuleResourceConverter", "ModuleLifeSupportRecycler"};
+            var modNames = new List<string>
+            {"ModuleResourceConverter", "ModuleLifeSupportRecycler"};
 
-            for(int i = 0; i < part.Modules.Count; i++)
+            for (int i = 0; i < part.Modules.Count; i++)
             {
-                if(modNames.Contains(part.Modules[i].moduleName))
-                    modList.Add((ModuleResourceConverter)part.Modules[i]);
+                if (modNames.Contains(part.Modules[i].moduleName))
+                    modList.Add((ModuleResourceConverter) part.Modules[i]);
             }
             return modList;
         }
@@ -214,21 +334,35 @@ namespace USITools
 
         private void ToggleEvent(string eventName, bool state)
         {
-            Events[eventName].active = state;
-            Events[eventName].externalToEVAOnly = state;
-            Events[eventName].guiActive = state;
-            Events[eventName].guiActiveEditor = state;
+            if (ResourceCosts != string.Empty)
+            {
+                Events[eventName].active = state;
+                Events[eventName].guiActiveUnfocused = state;
+                Events[eventName].externalToEVAOnly = true;
+                Events[eventName].guiActive = false;
+                Events[eventName].guiActiveEditor = state;
+            }
+            else
+            {
+                Events[eventName].active = state;
+                Events[eventName].externalToEVAOnly = false;
+                Events[eventName].guiActiveUnfocused = false;
+                Events[eventName].guiActive = state;
+                Events[eventName].guiActiveEditor = state;
+            }
             if (inflatedMultiplier > 0)
             {
                 Events[eventName].guiActiveEditor = false;
             }
-
         }
 
         public override void OnStart(StartState state)
         {
             try
             {
+                FindModules();
+                SetupResourceCosts();
+                SetupDeployMenus();
                 DeployAnimation[deployAnimationName].layer = PrimaryLayer;
                 if (secondaryAnimationName != "")
                 {
@@ -239,6 +373,58 @@ namespace USITools
             catch (Exception ex)
             {
                 print("ERROR IN USIAnimationOnStart - " + ex.Message);
+            }
+        }
+
+        private void SetupDeployMenus()
+        {
+            if (ResourceCosts != String.Empty)
+            {
+                Events["DeployModule"].guiActiveUnfocused = true;
+                Events["DeployModule"].externalToEVAOnly = true;
+                Events["DeployModule"].unfocusedRange = 10f;
+                Events["DeployModule"].guiActive = false;
+                Events["RetractModule"].guiActive = false;
+                Events["RetractModule"].guiActiveUnfocused = true;
+                Events["RetractModule"].externalToEVAOnly = true;
+                Events["RetractModule"].unfocusedRange = 10f;
+
+                Actions["DeployAction"].active = false;
+                Actions["RetractAction"].active = false;
+                Actions["ToggleAction"].active = false;
+            }
+        }
+
+
+        private void DisableModules()
+        {
+            if (vessel == null || _Modules == null) return;
+            for (int i = 0, iC = _Modules.Count; i < iC; ++i)
+            {
+                _Modules[i].DisableModule();
+            }
+        }
+
+        private void EnableModules()
+        {
+            if (vessel == null || _Modules == null) return;
+
+            if (_SwapBays != null && _SwapBays.Count > 0)
+            {
+                for (int i = 0, iC = _SwapBays.Count; i < iC; ++i)
+                {
+                    var bay = _SwapBays[i];
+                    bay.SetupMenus();
+                }
+            }
+            else
+            {
+                for (int i = 0, iC = _Modules.Count; i < iC; ++i)
+                {
+                    var mod = _Modules[i];
+                    if (mod.IsSituationValid())
+                        mod.EnableModule();
+                }
             }
         }
 
@@ -262,12 +448,14 @@ namespace USITools
                 ToggleEvent("RetractModule", true);
                 PlayDeployAnimation(1000);
                 CheckDeployConditions();
+                EnableModules();
             }
             else
             {
                 ToggleEvent("DeployModule", true);
-                ToggleEvent("RetractModule", false); 
+                ToggleEvent("RetractModule", false);
                 ReverseDeployAnimation(-1000);
+                DisableModules();
             }
         }
 
@@ -275,8 +463,10 @@ namespace USITools
         {
             try
             {
-                foreach (var res in part.Resources.list)
+                var rCount = part.Resources.Count;
+                for (int i = 0; i < rCount; ++i)
                 {
+                    var res = part.Resources[i];
                     if (res.maxAmount < inflatedMultiplier)
                     {
                         double oldMaxAmount = res.maxAmount;
@@ -295,8 +485,10 @@ namespace USITools
         {
             try
             {
-                foreach (var res in part.Resources.list)
+                var rCount = part.Resources.Count;
+                for (int i = 0; i < rCount; ++i)
                 {
+                    var res = part.Resources[i];
                     if (res.maxAmount > inflatedMultiplier)
                     {
                         res.maxAmount /= inflatedMultiplier;
@@ -334,48 +526,38 @@ namespace USITools
                 }
             }
         }
-    }
 
-    public class ModuleAnimationExtended : ModuleAnimateGeneric
-    {
-        [KSPField]
-        public float clampIncrement = 2.5f;
+        public List<ResourceRatio> ResCosts;
 
-        [KSPField]
-        public string menuName = "Clamp";
-
-        [KSPField(isPersistant = true)]
-        public bool initialClamp = false;
-
-
-        [KSPAction("Increase Clamp")]
-        public void IncreaseAction(KSPActionParam param)
+        private void SetupResourceCosts()
         {
-            deployPercent += clampIncrement;
-            if (deployPercent > 100)
-                deployPercent = 100;
-        }
+            ResCosts = new List<ResourceRatio>();
+            if (String.IsNullOrEmpty(ResourceCosts))
+                return;
 
-
-        [KSPAction("Decrease Clamp")]
-        public void DecreaseAction(KSPActionParam param)
-        {
-            deployPercent -= clampIncrement;
-            if (deployPercent < 0)
-                deployPercent = 0;
-        }
-
-        public override void OnStart(StartState state)
-        {
-            Actions["IncreaseAction"].guiName = "Increase " + menuName;
-            Actions["DecreaseAction"].guiName = "Decrease " + menuName;
-            if (initialClamp)
+            var resources = ResourceCosts.Split(',');
+            for (int i = 0; i < resources.Length; i += 2)
             {
-                initialClamp = false;
-                deployPercent = 50;
-                animTime = .5f;
+                ResCosts.Add(new ResourceRatio
+                {
+                    ResourceName = resources[i],
+                    Ratio = double.Parse(resources[i + 1])
+                });
             }
-            base.OnStart(state);
+        }
+
+        public override string GetInfo()
+        {
+            if (String.IsNullOrEmpty(ResourceCosts))
+                return "";
+
+            var output = new StringBuilder("Resource Cost:\n\n");
+            var resources = ResourceCosts.Split(',');
+            for (int i = 0; i < resources.Length; i += 2)
+            {
+                output.Append(string.Format("{0} {1}\n", double.Parse(resources[i + 1]), resources[i]));
+            }
+            return output.ToString();
         }
     }
 }

@@ -15,7 +15,7 @@ namespace USITools
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            var res = part.Resources.list.FirstOrDefault(r => r.resourceName == ResourceName);
+            var res = part.Resources.Get(ResourceName);
             if (res == null)
                 return;
             

@@ -42,7 +42,7 @@ namespace KolonyTools
             }
         }
 
-        public static IEnumerable<Part> GetRegionalWarehouses(Vessel vessel, string module)
+        public static List<Part> GetRegionalWarehouses(Vessel vessel, string module)
         {
             var pList = new List<Part>();
             var vList = GetNearbyVessels((float)LogisticsSetup.Instance.Config.MaintenanceRange, true, vessel, false);
@@ -66,6 +66,12 @@ namespace KolonyTools
             {
                 return (p.vessel.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
             }
+        }
+
+        public static bool NearbyCrew(Vessel v, float range, String skill)
+        {
+            List<Vessel> nearby = GetNearbyVessels(range, true, v, true);
+            return nearby.Any(near=>near.GetVesselCrew().Any(c=>c.experienceTrait.TypeName==skill));
         }
     }
 }
