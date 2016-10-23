@@ -46,7 +46,7 @@ namespace USITools
 
         [KSPField] public string ResourceCosts = "";
 
-        [KSPField] public float inflatedMass = 1f;
+        [KSPField] public string ReplacementResource = "Construction";
 
         [KSPAction("Deploy Module")]
         public void DeployAction(KSPActionParam param)
@@ -144,7 +144,6 @@ namespace USITools
                         part.CheckTransferDialog();
                         MonoUtilities.RefreshContextWindows(part);
                     }
-                    //part.AddModule("TransferDialogSpawner");
                 }
                 foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
                 {
@@ -152,16 +151,18 @@ namespace USITools
                 }
                 MonoUtilities.RefreshContextWindows(part);
             }
-            if (part.mass < inflatedMass)
-                part.mass = inflatedMass;
-
             return true;
         }
 
         private bool CheckResources()
         {
+            var res = part.Resources[ReplacementResource];
             if (HighLogic.LoadedSceneIsEditor)
+            {
+                if (res != null)
+                    res.amount = res.maxAmount;
                 return true;
+            }
 
             var allResources = true;
             var missingResources = "";
@@ -184,6 +185,8 @@ namespace USITools
             foreach (var r in ResCosts)
             {
                 TakeResources(r);
+                if (res != null)
+                    res.amount = res.maxAmount;
             }
 
 
@@ -269,6 +272,9 @@ namespace USITools
                     ToggleEvent("DeployModule", true);
                     ToggleEvent("RetractModule", false);
                     DisableModules();
+                    var res = part.Resources[ReplacementResource];
+                    if (res != null)
+                        res.amount = 0;
                 }
             }
         }
@@ -355,6 +361,7 @@ namespace USITools
                 Events[eventName].guiActiveEditor = false;
             }
         }
+
 
         public override void OnStart(StartState state)
         {
