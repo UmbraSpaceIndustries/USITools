@@ -56,16 +56,9 @@ namespace KolonyTools
             return pList;
         }
 
-        public static bool HasCrew(Part p, string skill)
+        public static bool HasCrew(Vessel v, string skill)
         {
-            if (p.CrewCapacity > 0)
-            {
-                return (p.protoModuleCrew.Any(c => c.experienceTrait.TypeName == skill));
-            }
-            else
-            {
-                return (p.vessel.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
-            }
+            return (v.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
         }
 
         public static bool NearbyCrew(Vessel v, float range, String skill)
