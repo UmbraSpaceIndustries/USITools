@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\KSP_DEV\GameData\000_USITools\</OutputPath>
+    <OutputPath>..\..\..\..\KSP_KSPTV\GameData\000_USITools\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -65,6 +65,7 @@
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
     <Compile Include="Logistics\ModuleWeightDistributor.cs" />
     <Compile Include="ModuleAnimationExtended.cs" />
+    <Compile Include="ModuleEditorMesh.cs" />
     <Compile Include="ModuleEfficiencyCalculator.cs" />
     <Compile Include="ModuleHeatPump.cs" />
     <Compile Include="ModuleResourceConverter_USI.cs" />
