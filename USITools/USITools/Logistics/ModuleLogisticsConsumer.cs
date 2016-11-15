@@ -162,7 +162,7 @@ namespace KolonyTools
                 var range = LogisticsTools.GetRange(vessel, v);
                 var parts =
                     v.Parts.Where(
-                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && LogisticsTools.HasCrew(p, "Pilot"));
+                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && LogisticsTools.HasCrew(p.vessel, "Pilot"));
                 foreach (var p in parts)
                 {
                     var m = p.FindModuleImplementing<ModuleResourceDistributor>();

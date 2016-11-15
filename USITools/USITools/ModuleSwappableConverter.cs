@@ -9,6 +9,11 @@ using TestScripts;
 
 namespace USITools
 {
+    public interface IEfficiencyBonusProvider
+    {
+        float GetEfficiencyBonus();
+    }
+
     public class ModuleSwappableConverter : PartModule
     {
         [KSPField]
@@ -37,7 +42,6 @@ namespace USITools
             var oldTemplate = curTemplate;
             currentLoadout = displayLoadout;
             SetupMenus();
-            AdjustEfficiency();
             ScreenMessages.PostScreenMessage("Reconfiguration from " + oldTemplate + " to " + curTemplate + " completed.", 5f,
                 ScreenMessageStyle.UPPER_CENTER);
             NextSetup();
@@ -107,8 +111,6 @@ namespace USITools
             {
                 TakeResources(r);
             }
-
-
             return true;
         }
 
@@ -197,10 +199,12 @@ namespace USITools
         public List<ResourceRatio> ResCosts;
         public List<LoadoutInfo> Loadouts;
         //private IResourceBroker _broker;
+        private List<ModuleSwappableConverter> _bays;
 
         public override void OnStart(StartState state)
         {
             //_broker = new ResourceBroker();
+            _bays = part.FindModulesImplementing<ModuleSwappableConverter>();
             if(autoActivate || HighLogic.LoadedSceneIsEditor)
                 SetModuleState(null,true);
             GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
@@ -224,7 +228,6 @@ namespace USITools
                 SetupLoadouts();
                 displayLoadout = currentLoadout;
                 SetupMenus();
-                AdjustEfficiency();
                 NextSetup();
             }
             else
@@ -243,23 +246,6 @@ namespace USITools
             Events["LoadSetup"].externalToEVAOnly = !enable;
             MonoUtilities.RefreshContextWindows(part);
         }
-
-        private void AdjustEfficiency()
-        {
-            var bays = part.FindModulesImplementing<ModuleSwappableConverter>();
-            var modules = part.FindModulesImplementing<BaseConverter>();
-            float activeBays = bays.Count(b => b.currentLoadout >= 0);
-            float eBonus = bays.Count / activeBays;
-            foreach (var bay in bays)
-            {
-                if (bay.currentLoadout >= 0 && bay.Loadouts != null)
-                {
-                    modules[bay.currentLoadout].Efficiency
-                        = bay.Loadouts[bay.currentLoadout].BaseEfficiency*eBonus;
-                }
-            }
-        }
-
 
         public void SetupMenus()
         {
@@ -313,7 +299,6 @@ namespace USITools
             foreach (var con in mods)
             {
                 var loadout = new LoadoutInfo();
-                loadout.BaseEfficiency = con.Efficiency;
                 loadout.LoadoutName = con.ConverterName;
                 loadout.ModuleId = id;
                 loadoutNames.Add(con.ConverterName);

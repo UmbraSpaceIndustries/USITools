@@ -1,14 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Security.AccessControl;
 using System.Text;
 using KolonyTools;
 using UnityEngine;
 
 namespace USITools
 {
+    public class ModuleAutoStrut : PartModule
+    {
+        //Quick and hacky
+        public override void OnStart(StartState state)
+        {
+            part.autoStrutMode = Part.AutoStrutMode.ForceRoot;
+            part.UpdateAutoStrut();
+        }
+    }
+
     public class USIAnimation : PartModule
     {
         private List<IAnimatedModule> _Modules;
