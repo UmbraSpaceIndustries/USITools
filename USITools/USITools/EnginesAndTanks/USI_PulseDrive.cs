@@ -186,7 +186,7 @@ namespace USITools
             if(Planetarium.GetUniversalTime() - lastCheck < minPulseTime)
             {
                 var curveTime = (float) (Planetarium.GetUniversalTime() - lastCheck)/(float) minPulseTime;
-                var atmoModifier = 0f;
+                var atmoModifier = 1f;
                 if(atmosphereNerf)
                     atmoModifier = (float)Math.Max(0, 1d - vessel.atmDensity);
                 var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime)) * atmoModifier;

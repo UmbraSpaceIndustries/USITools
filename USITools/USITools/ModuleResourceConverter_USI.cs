@@ -1,30 +1,53 @@
 using System;
+using System.Collections.Generic;
 
 namespace USITools
 {
-    public class ModuleResourceConverter_USI : ModuleResourceConverter
+    public class ModuleResourceConverter_USI : ModuleResourceConverter, IEfficiencyBonusConsumer
     {
-        private float baseEfficiency;
+        private Dictionary<string, float> _bonusList;
+
+        public Dictionary<string, float> BonusList
+        {
+            get
+            {
+                if (_bonusList == null)
+                    _bonusList = new Dictionary<string, float>();
+                return _bonusList;
+            }
+        }
 
         protected override void PreProcessing()
         {
-            if (!IsActivated)
-                return;
-
-            baseEfficiency = EfficiencyBonus;
-            EfficiencyBonus *= GetCrewBonus();
+            base.PreProcessing();
+            EfficiencyBonus = GetEfficiencyBonus();
         }
 
         protected override void PostProcess(ConverterResults result, double deltaTime)
         {
-             base.PostProcess(result, deltaTime);
+            base.PostProcess(result, deltaTime);
             if (result.TimeFactor >= ResourceUtilities.FLOAT_TOLERANCE
                 && !status.EndsWith("load"))
             {
                 statusPercent = 0d; //Force a reset of the load display.
             }
-            if(baseEfficiency > ResourceUtilities.FLOAT_TOLERANCE)
-                EfficiencyBonus = baseEfficiency;
+        }
+        public float GetEfficiencyBonus()
+        {
+            var finBonus = GetCrewBonus();
+            foreach (var b in BonusList)
+            {
+                finBonus *= b.Value;
+            }
+            return finBonus;
+        }
+
+        public void SetEfficiencyBonus(string bonName, float bonVal)
+        {
+            if (!BonusList.ContainsKey(bonName))
+                BonusList.Add(bonName, bonVal);
+            else
+                BonusList[bonName] = bonVal;
         }
     }
 }

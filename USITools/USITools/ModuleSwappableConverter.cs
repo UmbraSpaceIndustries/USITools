@@ -9,11 +9,6 @@ using TestScripts;
 
 namespace USITools
 {
-    public interface IEfficiencyBonusProvider
-    {
-        float GetEfficiencyBonus();
-    }
-
     public class ModuleSwappableConverter : PartModule
     {
         [KSPField]
