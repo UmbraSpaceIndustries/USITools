@@ -10,6 +10,8 @@ namespace KolonyTools
     public class ModuleLogisticsConsumer : PartModule
     {
         private double lastCheck;
+        [KSPField]
+        public string autoResources = "";
 
         // Info about the module in the Editor part list
         public override string GetInfo()
@@ -62,6 +64,17 @@ namespace KolonyTools
             {
                 new ResourceRatio {ResourceName = "ElectricCharge"}
             },false);
+
+            //And any special resources...
+            var auto = autoResources.Split(',');
+            var aRes = new List<ResourceRatio>();
+            foreach (var a in auto)
+            {
+                aRes.Add(new ResourceRatio {ResourceName = a.Trim()});
+            }
+            if(aRes.Count > 0)
+                CheckLogistics(aRes,false);
+
         }
 
         private void CheckLogistics(List<ResourceRatio> resList, bool output)

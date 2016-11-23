@@ -7,16 +7,6 @@ using UnityEngine;
 
 namespace USITools
 {
-    public class ModuleAutoStrut : PartModule
-    {
-        //Quick and hacky
-        public override void OnStart(StartState state)
-        {
-            part.autoStrutMode = Part.AutoStrutMode.ForceRoot;
-            part.UpdateAutoStrut();
-        }
-    }
-
     public class USIAnimation : PartModule
     {
         private List<IAnimatedModule> _Modules;
@@ -457,6 +447,11 @@ namespace USITools
 
         private void CheckAnimationState()
         {
+            if (part.protoModuleCrew.Count > 0)
+            {
+                //We got them in here somehow....
+                isDeployed = true;
+            }
             if (isDeployed)
             {
                 ToggleEvent("DeployModule", false);

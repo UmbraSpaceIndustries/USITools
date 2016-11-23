@@ -66,6 +66,7 @@
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
     <Compile Include="Logistics\ModuleWeightDistributor.cs" />
     <Compile Include="ModuleAnimationExtended.cs" />
+    <Compile Include="ModuleAutoStrut.cs" />
     <Compile Include="ModuleEditorMesh.cs" />
     <Compile Include="ModuleHeatPump.cs" />
     <Compile Include="ModuleResourceConverter_USI.cs" />
