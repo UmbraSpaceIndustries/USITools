@@ -55,12 +55,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Airbags\USI_ModuleBounce.cs" />
+    <Compile Include="Airbags\ModuleAirbag.cs" />
+    <Compile Include="Airbags\ModuleBounceCollider.cs" />
     <Compile Include="AquaticModules\ModuleAquaticEmitter.cs" />
     <Compile Include="AquaticModules\ModuleAquaticEngine.cs" />
     <Compile Include="AquaticModules\ModuleAquaticIntake.cs" />
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
+    <Compile Include="Class1.cs" />
+    <Compile Include="LifeBoat.cs" />
     <Compile Include="ConverterPart.cs" />
     <Compile Include="IEfficiencyBonusConsumer.cs" />
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
@@ -71,6 +76,7 @@
     <Compile Include="ModuleHeatPump.cs" />
     <Compile Include="ModuleResourceConverter_USI.cs" />
     <Compile Include="ModuleResourceHarvester_USI.cs" />
+    <Compile Include="ModuleStoredResource.cs" />
     <Compile Include="ModuleSwapConverterUpdate.cs" />
     <Compile Include="ModuleSwappableConverter.cs" />
     <Compile Include="LoadoutInfo.cs" />
