@@ -75,7 +75,6 @@ namespace USITools
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return true;
-            //Check for an engineer
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
             if (kerbal.experienceTrait.Title != "Engineer")
             {
