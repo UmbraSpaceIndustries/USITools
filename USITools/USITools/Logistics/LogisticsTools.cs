@@ -61,10 +61,18 @@ namespace KolonyTools
             return (v.GetVesselCrew().Any(c => c.experienceTrait.TypeName == skill));
         }
 
-        public static bool NearbyCrew(Vessel v, float range, String skill)
+        public static bool NearbyCrew(Vessel v, float range, String effect)
         {
             List<Vessel> nearby = GetNearbyVessels(range, true, v, true);
-            return nearby.Any(near=>near.GetVesselCrew().Any(c=>c.experienceTrait.TypeName==skill));
+            foreach (var vsl in nearby)
+            {
+                foreach (var c in vsl.GetVesselCrew())
+                {
+                    if (c.HasEffect(effect))
+                        return true;
+                }
+            }
+            return false;
         }
     }
 }

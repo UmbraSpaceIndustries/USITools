@@ -13,11 +13,11 @@ namespace USITools
             if (!IsCooling)
                 return;
 
-            if (!vessel.LandedOrSplashed && vessel.terrainAltitude > 500d)
+            if (!vessel.LandedOrSplashed && vessel.radarAltitude > 500d)
             {
-                ScreenMessages.PostScreenMessage("Heat Pumps must be landed to use geothermal wells!", 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                Shutdown();
+                //ScreenMessages.PostScreenMessage("Heat Pumps must be landed to use geothermal wells!", 5f,
+                //    ScreenMessageStyle.UPPER_CENTER);
+                //Shutdown();
                return;
             }
 

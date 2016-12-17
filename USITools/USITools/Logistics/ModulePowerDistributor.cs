@@ -15,7 +15,7 @@ namespace KolonyTools
         {
             get
             {
-                return this.part != null && LogisticsTools.NearbyCrew(this.vessel, LogisticsSetup.Instance.Config.ScavangeRange, "Engineer");
+                return this.part != null && LogisticsTools.NearbyCrew(this.vessel, LogisticsSetup.Instance.Config.ScavangeRange, "ConverterSkill");
             }
         }
 
