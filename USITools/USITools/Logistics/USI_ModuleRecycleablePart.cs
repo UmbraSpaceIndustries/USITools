@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace KolonyTools
@@ -6,6 +7,7 @@ namespace KolonyTools
     public class USI_ModuleRecycleablePart : PartModule
     {
         //Another super hacky module.
+        private List<String> _blackList = new List<string> { "PotatoRoid", "UsiExplorationRock" };
 
         [KSPField]
         public float EVARange = 5f;
@@ -19,9 +21,6 @@ namespace KolonyTools
         [KSPField]
         public float Efficiency = 0.8f;
 
-        [KSPField]
-        public bool EngineerOnly = true;
-
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap part",
             unfocusedRange = 5f)]
         public void ScrapPart()
@@ -33,17 +32,17 @@ namespace KolonyTools
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
-            if (EngineerOnly && kerbal.experienceTrait.Title != "Engineer")
-            {
-                ScreenMessages.PostScreenMessage("Only Engineers can disassemble parts!", 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                return;
-            }
+
             var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
             double resAmount = part.mass / res.density * Efficiency;
 
-            ScreenMessages.PostScreenMessage(String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.name, resAmount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
-            PushResources(ResourceName, resAmount);
+            if (!_blackList.Contains(part.partName))
+            {
+                ScreenMessages.PostScreenMessage(
+                    String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.name, resAmount,
+                        ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
+                PushResources(ResourceName, resAmount);
+            }
             part.decouple();
             part.explode();
         }

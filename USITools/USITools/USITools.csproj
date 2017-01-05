@@ -64,7 +64,7 @@
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
-    <Compile Include="Class1.cs" />
+    <Compile Include="FloaterModule.cs" />
     <Compile Include="LifeBoat.cs" />
     <Compile Include="ConverterPart.cs" />
     <Compile Include="IEfficiencyBonusConsumer.cs" />
