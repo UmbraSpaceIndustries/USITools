@@ -11,6 +11,7 @@ namespace USITools
     {
         private List<IAnimatedModule> _Modules;
         private List<ModuleSwappableConverter> _SwapBays;
+        private bool _hasBeenInitialized = false;
 
         private void FindModules()
         {
@@ -20,6 +21,15 @@ namespace USITools
                 _SwapBays = part.FindModulesImplementing<ModuleSwappableConverter>();
             }
         }
+
+        [KSPField]
+        public string startEventGUIName = "";
+
+        [KSPField]
+        public string endEventGUIName = "";
+
+        [KSPField]
+        public string actionGUIName = "";
 
 
         [KSPField] public int CrewCapacity = 0;
@@ -361,10 +371,12 @@ namespace USITools
         }
 
 
-        public override void OnStart(StartState state)
+        public void Initialize()
         {
             try
             {
+                _hasBeenInitialized = true;
+                UpdatemenuNames();
                 FindModules();
                 SetupResourceCosts();
                 SetupDeployMenus();
@@ -377,8 +389,24 @@ namespace USITools
             }
             catch (Exception ex)
             {
-                print("ERROR IN USIAnimationOnStart - " + ex.Message);
+                print("ERROR IN USI Animation Initialize - " + ex.Message);
             }
+        }
+
+        private void UpdatemenuNames()
+        {
+            if (startEventGUIName != "")
+            {
+                Events["DeployModule"].guiName = startEventGUIName;
+                Actions["DeployAction"].guiName = startEventGUIName;
+            }
+            if (endEventGUIName != "")
+            {
+                Events["RetractModule"].guiName = endEventGUIName;
+                Actions["RetractAction"].guiName = endEventGUIName;
+            }
+            if (actionGUIName != "")
+                Actions["ToggleAction"].guiName = actionGUIName;
         }
 
         private void SetupDeployMenus()
@@ -408,6 +436,7 @@ namespace USITools
             {
                 _Modules[i].DisableModule();
             }
+            SetControlSurface(false);
         }
 
         private void EnableModules()
@@ -431,19 +460,21 @@ namespace USITools
                         mod.EnableModule();
                 }
             }
+            SetControlSurface(true);
         }
 
-        public override void OnLoad(ConfigNode node)
+        private void SetControlSurface(bool state)
         {
-            try
-            {
-                CheckAnimationState();
-            }
-            catch (Exception ex)
-            {
-                print("ERROR IN USIAnimationOnLoad - " + ex.Message);
-            }
+            var mcs = part.FindModuleImplementing<ModuleControlSurface>();
+            if (mcs == null)
+                return;
+
+            mcs.ignorePitch = !state;
+            mcs.ignoreRoll = !state;
+            mcs.ignoreYaw = !state;
+            mcs.isEnabled = state;
         }
+
 
         private void CheckAnimationState()
         {
@@ -517,6 +548,9 @@ namespace USITools
 
         public void FixedUpdate()
         {
+            if(!_hasBeenInitialized)
+                Initialize();
+
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 

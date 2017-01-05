@@ -24,9 +24,6 @@ namespace KolonyTools
             unfocusedRange = 5f)]
         public void ScrapPart()
         {
-            if (!CheckCrew())
-                return;
-
             _demoParts = new List<Part>();
             if (part.parent != null)
             {
@@ -42,8 +39,6 @@ namespace KolonyTools
             unfocusedRange = 5f)]
         public void ScrapSection()
         {
-            if (!CheckCrew())
-                return;
             _demoParts = new List<Part>();
 
             if (part.parent != null)
@@ -61,8 +56,6 @@ namespace KolonyTools
             unfocusedRange = 5f)]
         public void ScrapVessel()
         {
-            if (!CheckCrew())
-                return;
             _demoParts = new List<Part>();
             foreach (var p in vessel.parts)
             {
@@ -87,31 +80,25 @@ namespace KolonyTools
             }
         }
 
-        private bool CheckCrew()
-        {
-            var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (kerbal.experienceTrait.Title != "Engineer")
-            {
-                ScreenMessages.PostScreenMessage("Only Engineers can disassemble parts!", 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                return false;
-            }
-            return true;
-        }
-
+        private List<String> _blackList = new List<string> { "PotatoRoid", "UsiExplorationRock" };
         private void DestroyParts()
         {
             if (_demoParts == null)
                 return;
             foreach (var part in _demoParts)
             {
-                var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
-                double resAmount = part.mass / res.density * Efficiency;
+                if (!_blackList.Contains(part.partName))
+                {
+                    var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
+                    double resAmount = part.mass/res.density*Efficiency;
+                    ScreenMessages.PostScreenMessage(
+                        String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.partInfo.title,
+                            resAmount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
+                    PushResources(ResourceName, resAmount);
+                }
                 part.decouple();
                 part.explode();
 
-                ScreenMessages.PostScreenMessage(String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.partInfo.title, resAmount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
-                PushResources(ResourceName, resAmount);
             }
         }
         
