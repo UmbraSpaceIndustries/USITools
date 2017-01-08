@@ -26,10 +26,10 @@ namespace USITools
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            if (Math.Abs(lastCheck - Planetarium.GetUniversalTime()) < checkTime)
+            if (Planetarium.GetUniversalTime() - lastCheck < checkTime)
                 return;
 
-            if (_converters == null)
+            if (_converters == null || _converters.Count == 0)
                 SetupParts();
 
             lastCheck = Planetarium.GetUniversalTime();
