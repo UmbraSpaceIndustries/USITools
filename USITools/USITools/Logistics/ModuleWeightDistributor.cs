@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace KolonyTools
+namespace USITools
 {
     public class ModuleWeightDistributor : PartModule
     {

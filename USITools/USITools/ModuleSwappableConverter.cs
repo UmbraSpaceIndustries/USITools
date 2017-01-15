@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
-using System.Xml;
-using KolonyTools;
-using TestScripts;
 
 namespace USITools
 {
@@ -86,8 +81,10 @@ namespace USITools
             var allResources = true;
             var missingResources = "";
             //Check that we have everything we need.
-            foreach (var r in ResCosts)
+            var count = ResCosts.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var r = ResCosts[i];
                 if (!HasResource(r))
                 {
                     allResources = false;
@@ -101,8 +98,9 @@ namespace USITools
                 return false;
             }
             //Since everything is here...
-            foreach (var r in ResCosts)
+            for (int i = 0; i < count; ++i)
             {
+                var r = ResCosts[i];
                 TakeResources(r);
             }
             return true;
@@ -118,8 +116,13 @@ namespace USITools
             {
                 whpList.AddRange(part.vessel.parts);
             }
-            foreach (var whp in whpList.Where(w => w != part))
+            var count = whpList.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
+                if(whp == part)
+                    continue;
+
                 if (resInfo.ResourceName != "ElectricCharge")
                 {
                     var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
@@ -151,8 +154,12 @@ namespace USITools
             //Pull in from warehouses
 
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            foreach (var whp in whpList.Where(w => w != part))
+            var count = whpList.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
+                if (whp == part)
+                    continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if (!wh.transferEnabled)
                     continue;
@@ -290,8 +297,10 @@ namespace USITools
             int id = 0;
             var loadoutNames = new List<string>();
             var mods = part.FindModulesImplementing<BaseConverter>();
-            foreach (var con in mods)
+            var count = mods.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var con = mods[i];
                 var loadout = new LoadoutInfo();
                 loadout.LoadoutName = con.ConverterName;
                 loadout.ModuleId = id;

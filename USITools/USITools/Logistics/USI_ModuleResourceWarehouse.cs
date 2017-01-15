@@ -1,4 +1,4 @@
-namespace KolonyTools
+namespace USITools
 {
     [KSPModule("USI Warehouse")]
     public class USI_ModuleResourceWarehouse : PartModule

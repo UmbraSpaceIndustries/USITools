@@ -1,6 +1,7 @@
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
+using Assets._UI5.Rendering.Scripts;
+
 
 namespace USITools
 {
@@ -14,9 +15,11 @@ namespace USITools
         private void SetupParts()
         {
             _converters = new List<ConverterPart>();
-            foreach (var p in vessel.Parts)
+            var count = vessel.parts.Count;
+            for(int i = 0; i < count; ++i)
             {
-                if (p.FindModulesImplementing<BaseConverter>().Any())
+                var p = vessel.parts[i];
+                if (p.FindModulesImplementing<BaseConverter>().Count > 0)
                     _converters.Add(new ConverterPart(p));
             }
         }
@@ -34,18 +37,23 @@ namespace USITools
 
             lastCheck = Planetarium.GetUniversalTime();
 
-            var Count = _converters.Count;
-            for (int i = 0; i < Count; ++i)
+            var cCount = _converters.Count;
+            for (int i = 0; i < cCount; ++i)
             {
-                var totBon = 1f;
                 var conPart = _converters[i];
-                var cCount = conPart.Converters.Count;
-                for (int z = 0; z < cCount; ++z)
+                var pCount = conPart.Converters.Count;
+                for (int z = 0; z < pCount; ++z)
                 {
                     var eBon = 1f;
-                    if (conPart.SwapBays.Any())
+                    if (conPart.SwapBays.Count > 0)
                     {
-                        float sameBays = conPart.SwapBays.Count(b => b.currentLoadout == z);
+                        var sameBays = 0;
+                        var bCount = conPart.SwapBays.Count;
+                        for (int q = 0; q < bCount; ++q)
+                        {
+                            if (conPart.SwapBays[q].currentLoadout == z)
+                                sameBays++;
+                        }
                         eBon = sameBays;
                     }
                     conPart.Converters[z].SetEfficiencyBonus("SwapBay", eBon);

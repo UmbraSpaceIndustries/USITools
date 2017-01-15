@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using KSPAchievements;
 using UnityEngine;
 using Random = System.Random;
 
@@ -67,7 +62,7 @@ namespace USITools
         {
             CurrentFuelIndex -= 1;
             if (CurrentFuelIndex < 0)
-                CurrentFuelIndex = Fuels.Count() -1;
+                CurrentFuelIndex = Fuels.Length -1;
             Fuel = Fuels[CurrentFuelIndex].name;
         }
 
@@ -75,7 +70,7 @@ namespace USITools
         public void NextFuel()
         {
             CurrentFuelIndex += 1;
-            if (CurrentFuelIndex >= Fuels.Count())
+            if (CurrentFuelIndex >= Fuels.Length)
                 CurrentFuelIndex = 0;
             Fuel = Fuels[CurrentFuelIndex].name;
         }
@@ -95,8 +90,8 @@ namespace USITools
             if (fuelList == null)
                 return;
             var fl = fuelList.Split(';');
-            Fuels = new PartResourceDefinition[fl.Count()];
-            for(int i = 0; i < fl.Count(); i++)
+            Fuels = new PartResourceDefinition[fl.Length];
+            for(int i = 0; i < fl.Length; i++)
             {
                 var res = PartResourceLibrary.Instance.GetDefinition(fl[i]);
                 if (res != null)
@@ -224,8 +219,10 @@ namespace USITools
 
         private void ToggleEmmitters(bool state)
         {
-            foreach (KSPParticleEmitter e in eList)
+            var count = eList.Length;
+            for (int i = 0; i < count; ++i)
             {
+                var e = eList[i];
                 e.emit = state;
                 e.enabled = state;
             }

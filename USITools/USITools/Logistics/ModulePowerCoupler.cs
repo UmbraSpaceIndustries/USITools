@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace KolonyTools
+namespace USITools
 {
     [KSPModule("Power Coupler")]
     public class ModulePowerCoupler : PartModule

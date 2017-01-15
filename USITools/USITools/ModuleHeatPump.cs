@@ -1,6 +1,3 @@
-using System;
-using UniLinq;
-
 namespace USITools
 {
     public class ModuleHeatPump : ModuleActiveRadiator

@@ -1,9 +1,8 @@
 //using System;
 //using System.Collections.Generic;
-//using System.Linq;
 //using USITools.Logistics;
 
-//namespace KolonyTools
+//namespace USITools
 //{
 //    public class ModuleLogisticsCenter : PartModule
 //    {
@@ -41,7 +40,7 @@
 //        {
 //            var nearbyShips = LogisticsTools.GetNearbyVessels(LogisticsRange, true, vessel, true);
 //            var depots = new List<Vessel>();
-//            foreach (var d in nearbyShips)
+//            for_each (var d in nearbyShips)
 //            {
 //                if (d.FindPartModulesImplementing<ModuleDistributedWarehouse>().Any()
 //                    && d.Parts.Any(p=>p.Resources.Contains(resource)))
@@ -49,10 +48,10 @@
 //            }
 //            //Get relevant parts
 //            var resParts = new List<Part>();
-//            foreach (var d in depots)
+//            for_each (var d in depots)
 //            {
 //                var pList = d.parts.Where(p => p.Resources.Contains(resource) && p.Modules.Contains("ModuleDistributedWarehouse"));
-//                foreach (var p in pList)
+//                for_each (var p in pList)
 //                {
 //                    var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
 //                    if(wh != null && wh.transferEnabled)
@@ -63,7 +62,7 @@
 //            var maxSum = 0d;
 
 //            //Figure out our average fill percent
-//            foreach (var p in resParts)
+//            for_each (var p in resParts)
 //            {
 //                var res = p.Resources[resource];
 //                amountSum += res.amount;
@@ -73,7 +72,7 @@
 //            {
 //                double fillPercent = amountSum/maxSum;
 //                //Level everything
-//                foreach (var p in resParts)
+//                for_each (var p in resParts)
 //                {
 //                    var res = p.Resources[resource];
 //                    res.amount = res.maxAmount*fillPercent;

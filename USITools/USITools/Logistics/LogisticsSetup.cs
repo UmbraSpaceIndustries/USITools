@@ -32,8 +32,11 @@ namespace USITools.Logistics
                 WarehouseTime = 10,
                 MaintenanceRange = 150
             };
-            foreach (var lsNode in lsNodes)
+
+            var count = lsNodes.Length;
+            for(int i = 0; i < count; ++i)
             {
+                var lsNode = lsNodes[i];
                 var settings = ResourceUtilities.LoadNodeProperties<LogisticsConfig>(lsNode);
                 finalSettings.WarehouseTime = Math.Max(settings.WarehouseTime, finalSettings.WarehouseTime);
                 finalSettings.LogisticsTime = Math.Max(settings.LogisticsTime, finalSettings.LogisticsTime);

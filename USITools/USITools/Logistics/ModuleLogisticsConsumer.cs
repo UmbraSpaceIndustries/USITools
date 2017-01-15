@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using FinePrint.Utilities;
 using USITools.Logistics;
 
-namespace KolonyTools
+namespace USITools
 {
     [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
@@ -19,7 +17,17 @@ namespace KolonyTools
             return "Scavanges nearby warehouses or more distant piloted distribution hubs\n\n" +
                 "Scavange Range: " + LogisticsSetup.Instance.Config.ScavangeRange + "m";
         }
- 
+
+        public override void OnAwake()
+        {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
+			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
+        }
+
+        private List<ModuleResourceConverter> _conMods; 
+
         public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight)
@@ -29,9 +37,10 @@ namespace KolonyTools
                 return;
 
             lastCheck = Planetarium.GetUniversalTime();
-
-            foreach (var con in part.FindModulesImplementing<ModuleResourceConverter>())
+            var count = _conMods.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var con = _conMods[i];
                 if (con.inputList != null)
                     CheckLogistics(con.inputList, false);
                 if (con.outputList != null)
@@ -68,8 +77,10 @@ namespace KolonyTools
             //And any special resources...
             var auto = autoResources.Split(',');
             var aRes = new List<ResourceRatio>();
-            foreach (var a in auto)
+            var rCount = auto.Length;
+            for (int i = 0; i < rCount; ++i)
             {
+                var a = auto[i];
                 aRes.Add(new ResourceRatio {ResourceName = a.Trim()});
             }
             if(aRes.Count > 0)
@@ -99,8 +110,10 @@ namespace KolonyTools
             //attempt to pull them in from nearby ships.
 
             //Find what we need!
-            foreach (var res in resList)
+            var rCount = resList.Count;
+            for(int i = 0; i < rCount; i++)
             {
+                var res = resList[i];
                 //There are certain exeptions - specifically, anything for field repair.
                 if (res.ResourceName == "Machinery")
                     continue;
@@ -108,14 +121,15 @@ namespace KolonyTools
                 if (res.ResourceName != "ElectricCharge")
                 {
                     //A stockpile must be nearby.
-                    if (!resourceSources.Any())
+                    if (resourceSources.Count == 0)
                         continue;
+
                     sourceList = resourceSources;
                 }
                 else
                 {
                     //A PDU must be nearby
-                    if (!powerSources.Any())
+                    if (powerSources.Count == 0)
                         continue;
                     sourceList = powerSources;
                 }
@@ -123,8 +137,13 @@ namespace KolonyTools
                 var pRes = PartResourceLibrary.Instance.GetDefinition(res.ResourceName);
                 var maxAmount = 0d;
                 var curAmount = 0d;
-                foreach (var p in vessel.parts.Where(pr => pr.Resources.Contains(res.ResourceName)))
+                var parts = vessel.parts;
+                var pCount = parts.Count;
+                for (int x = 0; x < pCount; ++x)
                 {
+                    var p = parts[x];
+                    if (!p.Resources.Contains(res.ResourceName))
+                        continue;
                     var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                     if(wh != null)
                         if (!wh.transferEnabled)
@@ -166,26 +185,43 @@ namespace KolonyTools
 
         public List<Vessel> GetResourceStockpiles()
         {
-            List<Vessel> depots = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true)
-                .Where(dv => dv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
+            var depots = new List<Vessel>();
+            var potDeps = LogisticsTools.GetNearbyVessels(LogisticsSetup.Instance.Config.ScavangeRange, false, vessel, true);
+            var count = potDeps.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                if(potDeps[i].FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Count > 0)
+                    depots.Add(potDeps[i]);
+            }
 
             var nearbyVesselList = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, true, vessel, true);
-            foreach (var v in nearbyVesselList)
+            count = nearbyVesselList.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var v = nearbyVesselList[i];
                 var range = LogisticsTools.GetRange(vessel, v);
-                var parts =
-                    v.Parts.Where(
-                        p => p.FindModuleImplementing<ModuleResourceDistributor>() != null && LogisticsTools.HasCrew(p.vessel, "Pilot"));
-                foreach (var p in parts)
+                var pCount = v.parts.Count;
+
+                for (int q = 0; q < pCount; ++q)
                 {
+                    var p = v.parts[q];
+                    if (p.FindModuleImplementing<ModuleResourceDistributor>() == null)
+                        continue;
+                    if (!LogisticsTools.HasCrew(p.vessel, "Pilot"))
+                        continue;
+
                     var m = p.FindModuleImplementing<ModuleResourceDistributor>();
                     if (range <= m.ResourceDistributionRange)
                     {
                         //Now find ones adjacent to our depot.                        
-                        List<Vessel> stockpiles = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,
-                            true).Where(sv=>sv.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Any()).ToList();
-                        foreach (var s in stockpiles)
+                        var potStock = LogisticsTools.GetNearbyVessels(m.ResourceDistributionRange, false, vessel,true);
+                        var potCount = potStock.Count;
+
+                        for (int z = 0; z < potCount; ++z)
                         {
+                            var s = potStock[z];
+                            if (s.FindPartModulesImplementing<USI_ModuleResourceWarehouse>().Count == 0)
+                                continue;
                             if (!depots.Contains(s))
                                 depots.Add(s);
                         }
@@ -202,15 +238,22 @@ namespace KolonyTools
             var nearbyVessels = LogisticsTools.GetNearbyVessels(LogisticsTools.PHYSICS_RANGE, false,
                 vessel, true);
 
-            foreach (var v in nearbyVessels)
+            var count = nearbyVessels.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var v = nearbyVessels[i];
                 var range = LogisticsTools.GetRange(vessel, v);
 
-                if (v.parts
-                    .Select(p => p.FindModuleImplementing<ModulePowerDistributor>())
-                    .Any(m => m != null && range <= m.ActiveDistributionRange))
+                var pCount = v.parts.Count;
+                for (int x = 0; x < pCount; ++x)
                 {
-                    distributors.Add(v);
+                    var p = v.parts[x];
+                    var mod = p.FindModuleImplementing<ModulePowerDistributor>();
+                    if (mod == null)
+                        continue;
+
+                    if(mod.ActiveDistributionRange >= range)
+                        distributors.Add(v);
                 }
             }
             return distributors;
@@ -221,10 +264,13 @@ namespace KolonyTools
             try
             {
                 var transferAmount = amount;
-                var partList = vessel.Parts.Where(
-                    p => p.Resources.Contains(resource.name));
-                foreach (var p in partList)
+                var count = vessel.Parts.Count;
+                for (int i = 0; i < count; ++i)
                 {
+                    var p = vessel.parts[i];
+                    if (!p.Resources.Contains(resource.name))
+                        continue;
+
                     var pr = p.Resources[resource.name];
                     var storageSpace = pr.maxAmount - pr.amount;
                     if (storageSpace >= transferAmount)
@@ -251,10 +297,13 @@ namespace KolonyTools
             try
             {
                 var transferAmount = amount;
-                var partList = vessel.Parts.Where(
-                    p => p.Resources.Contains(resource.name));
-                foreach (var p in partList)
+                var count = vessel.parts.Count;
+                for (int i = 0; i < count; ++i)
                 {
+                    var p = vessel.parts[i];
+                    if (!p.Resources.Contains(resource.name))
+                        continue;
+
                     PartResource pr = p.Resources[resource.name];
                     var available = pr.amount;
                     if (available >= transferAmount)
@@ -284,17 +333,23 @@ namespace KolonyTools
             double fetched = 0d;
             try
             {
-                foreach (var v in vList)
+                var count = vList.Count;
+                for(int i = 0; i < count; ++i)
                 {
+                    var v = vList[i];
                     if (demand <= ResourceUtilities.FLOAT_TOLERANCE) break;
                     //Is this a valid target?
                     var maxToSpare = GetAmountOfResourcesToSpare(v, resource, fillPercent + fetched / targetMaxAmount, targetMaxAmount);
                     if (maxToSpare < ResourceUtilities.FLOAT_TOLERANCE)
                         continue;
                     //Can we find what we're looking for?
-                    var partList = v.Parts.Where(p => p.Resources.Contains(resource.name));
-                    foreach (var p in partList)
+                    var pCount = v.parts.Count;
+                    for(int x = 0; x < pCount; x++)
                     {
+                        var p = v.parts[x];
+                        if (!p.Resources.Contains(resource.name))
+                            continue;
+
                         //Guard clause.
                         if (resource.name != "ElectricCharge")
                         {
@@ -366,9 +421,13 @@ namespace KolonyTools
                     //rather that having smaller and smaller quantities pushed every cycle
                     double vesselAmount = surplus / (vList.Count - i);
                     Vessel v = vList[i];
-                    var partList = v.Parts.Where(p => p.Resources.Contains(resource.name));
-                    foreach (var p in partList)
+                    var count = v.parts.Count;
+                    for (int x = 0; x < count; x++)
                     {
+                        var p = v.parts[x];
+                        if (!p.Resources.Contains(resource.name))
+                            continue;
+
                         //Guard clause.
                         if (vesselAmount < ResourceUtilities.FLOAT_TOLERANCE)
                         {
@@ -404,8 +463,12 @@ namespace KolonyTools
         {
             var maxAmount = 0d;
             var curAmount = 0d;
-            foreach (var p in v.parts.Where(pr => pr.Resources.Contains(resource.name)))
+            var count = v.parts.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var p = v.parts[i];
+                if (!p.Resources.Contains(resource.name))
+                    continue;
                 var rr = p.Resources[resource.name];
                 maxAmount += rr.maxAmount;
                 curAmount += rr.amount;
@@ -428,8 +491,13 @@ namespace KolonyTools
         {
             var maxAmount = 0d;
             var curAmount = 0d;
-            foreach (var p in v.parts.Where(pr => pr.Resources.Contains(resource.name)))
+            var count = v.parts.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var p = v.parts[i];
+                if (!p.Resources.Contains(resource.name))
+                    continue;
+
                 var rr = p.Resources[resource.name];
                 maxAmount += rr.maxAmount;
                 curAmount += rr.amount;

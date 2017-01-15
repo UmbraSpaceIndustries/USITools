@@ -42,6 +42,9 @@ namespace USITools
 
         public void FixedUpdate()
         {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
             if (!_stabilized)
                 return;
 

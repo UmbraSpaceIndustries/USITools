@@ -1,6 +1,6 @@
 using USITools.Logistics;
 
-namespace KolonyTools
+namespace USITools
 {
     [KSPModule("Power Distributor")]
     public class ModulePowerDistributor : PartModule

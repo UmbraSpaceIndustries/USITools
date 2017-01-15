@@ -80,7 +80,7 @@ namespace AirbagTools
         }
 
 
-        public void OnFixedUpdate()
+        public void FixedUpdate()
         {
             try
             {
@@ -104,9 +104,10 @@ namespace AirbagTools
             if (vessel.srfSpeed > dampenSpeed
                 || vessel.horizontalSrfSpeed > dampenSpeed)
             {
-                //print("Dampening...");
-                foreach (var p in vessel.parts)
+                var count = vessel.parts.Count;
+                for(int i = 0; i < count; ++i)
                 {
+                    var p = vessel.parts[i];
                     p.Rigidbody.angularVelocity *= dampenFactor;
                     p.Rigidbody.velocity *= dampenFactor;
                 }

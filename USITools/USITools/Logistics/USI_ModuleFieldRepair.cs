@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace KolonyTools
+namespace USITools
 {
     public class USI_ModuleFieldRepair : PartModule
     {
@@ -41,13 +38,18 @@ namespace KolonyTools
             var PullList = PullResourceList.Split(',');
             var PushList = PushResourceList.Split(',');
 
-            foreach (var r in PullList)
+            var count = PullList.Length;
+            for(int i = 0; i < count; ++i)
             {
+                var r = PullList[i];
                 if (!String.IsNullOrEmpty(r))
                     GrabResources(r);
             }
-            foreach (var r in PushList)
+
+            count = PushList.Length;
+            for (int i = 0; i < count; ++i)
             {
+                var r = PushList[i];
                 if (!String.IsNullOrEmpty(r))
                     PushResources(r);
             }
@@ -68,8 +70,11 @@ namespace KolonyTools
         {
             var brokRes = part.Resources[resourceName];
             //Put remaining parts in warehouses
-            foreach (var p in LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleCleaningBin"))
+            var wh = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleCleaningBin");
+            var count = wh.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var p = wh[i];
                 if (p.Resources.Contains(resourceName))
                 {
                     var partRes = p.Resources[resourceName];
@@ -90,20 +95,17 @@ namespace KolonyTools
 
         private void SwapResources(string fetchName, string storeName)
         {
-            print("Making sure part contains " + storeName);
             if (!part.Resources.Contains(storeName))
                 return;
 
-            print("Resource exists...");
             var brokRes = part.Resources[storeName];
             var needed = brokRes.maxAmount - brokRes.amount;
-            print("We need " + needed);
             //Pull in from warehouses
-
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            print("Found " + whpList.Count() + " warehouses...");
-            foreach (var whp in whpList)
+            var count = whpList.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if(!wh.transferEnabled)
                     continue;
@@ -139,8 +141,14 @@ namespace KolonyTools
             //Pull in from warehouses
 
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            foreach (var whp in whpList.Where(w=>w != part))
+            var count = whpList.Count;
+
+            for (int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
+                if (whp == part)
+                    continue;
+
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if (!wh.transferEnabled)
                     continue; 

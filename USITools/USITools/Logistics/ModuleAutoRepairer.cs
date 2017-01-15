@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using KolonyTools;
 
 namespace USITools.Logistics
 {
@@ -25,17 +21,29 @@ namespace USITools.Logistics
             if (Math.Abs(Planetarium.GetUniversalTime() - lastCheck) < RepairFrequency)
                 return;
 
-            if (part.protoModuleCrew.All(c => c.experienceTrait.TypeName != "Engineer"))
+            var engineerCount = 0;
+            var cCount = part.protoModuleCrew.Count;
+            for (int i = 0; i < cCount; ++i)
+            {
+                if (part.protoModuleCrew[i].experienceTrait.TypeName == "Engineer")
+                    engineerCount++;
+            }
+
+            if (engineerCount == 0)
                 return;
 
             lastCheck = Planetarium.GetUniversalTime();
 
             var nearbyVesselList = LogisticsTools.GetNearbyVessels(RepairRange, true, vessel, false);
-            foreach (var v in nearbyVesselList)
+            var vCount = nearbyVesselList.Count;
+            for(int i = 0; i < vCount; ++i)
             {
+                var v = nearbyVesselList[i];
                 var modList = v.FindPartModulesImplementing<USI_ModuleFieldRepair>();
-                foreach (var m in modList)
+                var mCount = modList.Count;
+                for(int x = 0; x < mCount; ++x)
                 {
+                    var m = modList[x];
                     m.FinalizeMaintenance("Automated Maintenance performed on " + m.part.partInfo.title);
                 }
             }
