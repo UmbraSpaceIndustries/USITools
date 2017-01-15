@@ -1,128 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace USITools
+﻿namespace USITools
 {
     
     public class USI_InertialDampener : PartModule
     {
-        [KSPField]
-        public float dampenFactor = .1f;
-        [KSPField]
-        public float dampenSpeed = .01f;
-
-        [KSPField] 
-        public float engageSpeed = 1f;
-
         [KSPField(isPersistant = true)]
         public bool isActive = false;
 
-        [KSPField] 
-        public bool autoActivate;
 
-        [KSPEvent(guiName = "Engage Dampener", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
-        public void EngageDampen()
+        [KSPEvent(guiName = "Toggle Ground Tether", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        public void ToggleDampen()
         {
-            if (!isActive)
-            {
-                isActive = true;
-                ToggleEvent("EngageDampen", false);
-                ToggleEvent("DisengageDampen", true);
-            }
+            isActive = !isActive;
+            ModuleStabilization.onStabilizationToggle.Fire(part.vessel,isActive,true);
+            SyncDampeners();
         }
 
-        [KSPEvent(guiName = "Disengage  Dampener", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
-        public void DisengageDampen()
+        public void Start()
         {
-            if (isActive)
-            {
-                isActive = false;
-                ToggleEvent("EngageDampen", true);
-                ToggleEvent("DisengageDampen", false);
-            }
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
+            SyncDampeners();
+            ModuleStabilization.onStabilizationToggle.Fire(part.vessel,isActive,false);
         }
 
-        private void ToggleEvent(string eventName, bool state)
+        private void SyncDampeners()
         {
-            Events[eventName].active = state;
-            Events[eventName].externalToEVAOnly = state;
-            Events[eventName].guiActive = state;
-        }
-
-        public override void OnFixedUpdate()
-        {
-            try
+            var dList = vessel.FindPartModulesImplementing<USI_InertialDampener>();
+            var c = dList.Count;
+            for (int i = 0; i < c; ++i)
             {
-                if (isActive)
-                {
-                    if (part.checkLanded())
-                    {
-                        Dampen();
-                    }
-                    if (part.Landed)
-                    {
-                        Dampen();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                print("ERROR in Inertial Dampener OnFixedUpdate - " + ex.Message);
-            }
-        }
-
-        public override void OnStart(StartState state)
-        {
-            try
-            {
-                part.force_activate();
-                if (isActive)
-                {
-                    ToggleEvent("EngageDampen", false);
-                    ToggleEvent("DisengageDampen", true);
-                    Dampen();
-                }
-                else
-                {
-                    ToggleEvent("EngageDampen", true);
-                    ToggleEvent("DisengageDampen", false);
-                }
-                if (autoActivate)
-                {
-                    isActive = true;
-                    ToggleEvent("EngageDampen", false);
-                    ToggleEvent("DisengageDampen", false);
-                }
-            }
-            catch (Exception ex)
-            {
-                print("ERROR in Inertial Dampener OnStart - " + ex.Message);
-            }
-        }
-
-        private void Dampen()
-        {
-            try
-            {
-                if (vessel.isActiveVessel)
-                {
-                    var maxSpeed = Math.Max(vessel.srfSpeed, vessel.horizontalSrfSpeed);
-                    if (maxSpeed > dampenSpeed && maxSpeed < engageSpeed)
-                    {
-                        foreach (var p in vessel.parts)
-                        {
-                            p.Rigidbody.angularVelocity *= dampenFactor;
-                            p.Rigidbody.velocity *= dampenFactor;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                
-                print("Error dampening - " + ex.Message);
+                dList[i].isActive = isActive;
             }
         }
     }

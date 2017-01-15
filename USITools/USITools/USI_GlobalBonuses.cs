@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using KolonyTools;
 using UnityEngine;
 
 public class USI_GlobalBonuses : MonoBehaviour
@@ -23,7 +21,18 @@ public class USI_GlobalBonuses : MonoBehaviour
 
     public void SaveHabBonus(int bodyId, double bonus)
     {
-        var hab = HabBonusList.FirstOrDefault(h => h.BodyId == bodyId);
+        var count = HabBonusList.Count;
+        PlanetaryHabBonus hab = null;
+        for (int i = 0; i < count; ++i)
+        {
+            var thisHab = HabBonusList[i];
+            if (thisHab.BodyId == bodyId)
+            {
+                hab = thisHab;
+                break;
+            }
+        }
+
         if (hab == null)
         {
             HabBonusList.Add(new PlanetaryHabBonus { BodyId = bodyId, HabBonus = bonus });
@@ -36,15 +45,16 @@ public class USI_GlobalBonuses : MonoBehaviour
 
     public double GetHabBonus(int bodyId)
     {
-        var hab = HabBonusList.FirstOrDefault(h => h.BodyId == bodyId);
-        if (hab == null)
+        var count = HabBonusList.Count;
+        for (int i = 0; i < count; ++i)
         {
-            return 0d;
+            var thisHab = HabBonusList[i];
+            if (thisHab.BodyId == bodyId)
+            {
+                return thisHab.HabBonus;
+            }
         }
-        else
-        {
-            return hab.HabBonus;
-        }
+        return 0d;
     }
 }
 

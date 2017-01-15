@@ -1,4 +1,4 @@
-namespace KolonyTools
+namespace USITools
 {
     public class ModuleWeightDistributableCargo : PartModule
     {

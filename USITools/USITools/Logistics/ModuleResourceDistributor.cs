@@ -1,8 +1,4 @@
-using System;
-using System.Linq;
-using System.Runtime.InteropServices;
-
-namespace KolonyTools
+namespace USITools
 {
     [KSPModule("Resource Distributor")]
     public class ModuleResourceDistributor : PartModule

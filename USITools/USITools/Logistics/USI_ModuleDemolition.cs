@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace KolonyTools
+namespace USITools
 {
     public class USI_ModuleDemolition : PartModule
     {
@@ -57,19 +56,22 @@ namespace KolonyTools
         public void ScrapVessel()
         {
             _demoParts = new List<Part>();
-            foreach (var p in vessel.parts)
+            var count = vessel.parts.Count;
+            for (int i = 0; i < count; ++ i)
             {
-                _demoParts.Add(p);
+                _demoParts.Add(vessel.parts[i]);
             }
             DestroyParts();
         }
 
         private void AddRecursiveParts(Part part, List<Part> list)
         {
-            if (part.children.Any())
+            if (part.children.Count > 0)
             {
-                foreach (var p in part.children)
+                var count = part.children.Count;
+                for(int i = 0; i < count; ++i)
                 {
+                    var p = part.children[i];
                     AddRecursiveParts(p, list);
                     list.Add(p);
                 }
@@ -85,8 +87,11 @@ namespace KolonyTools
         {
             if (_demoParts == null)
                 return;
-            foreach (var part in _demoParts)
+
+            var count = _demoParts.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var part = _demoParts[i];
                 if (!_blackList.Contains(part.partName))
                 {
                     var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
@@ -97,6 +102,7 @@ namespace KolonyTools
                     PushResources(ResourceName, resAmount);
                 }
                 part.decouple();
+                part.explosionPotential = 0f;
                 part.explode();
 
             }
@@ -116,24 +122,32 @@ namespace KolonyTools
         private void PushResources(string resourceName, double amount)
         {
             var vessels = LogisticsTools.GetNearbyVessels(2000, true, vessel, false);
-            foreach (var v in vessels)
+            var count = vessels.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var v = vessels[i];
                 //Put recycled stuff into recycleable places
-                foreach (var p in v.parts.Where(vp => vp != part && vp.Modules.Contains("USI_ModuleRecycleBin")))
+                var parts = v.parts;
+                var pCount = parts.Count;
+                for(int x = 0; x < pCount; ++x)
                 {
-                    if (p.Resources.Contains(resourceName))
+                    var p = parts[x];
+                    if (p == part || !p.Modules.Contains("USI_ModuleRecycleBin"))
+                        continue;
+
+                    if (!p.Resources.Contains(resourceName))
+                        continue;
+
+                    var partRes = p.Resources[resourceName];
+                    var partNeed = partRes.maxAmount - partRes.amount;
+                    if (partNeed > 0 && amount > 0)
                     {
-                        var partRes = p.Resources[resourceName];
-                        var partNeed = partRes.maxAmount - partRes.amount;
-                        if (partNeed > 0 && amount > 0)
+                        if (partNeed > amount)
                         {
-                            if (partNeed > amount)
-                            {
-                                partNeed = amount;
-                            }
-                            partRes.amount += partNeed;
-                            amount -= partNeed;
+                            partNeed = amount;
                         }
+                        partRes.amount += partNeed;
+                        amount -= partNeed;
                     }
                 }
             }

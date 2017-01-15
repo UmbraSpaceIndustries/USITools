@@ -18,8 +18,11 @@ public class ModuleBounceCollider : MonoBehaviour
         try
         {
             Vector3 normal = Vector3.zero;
-            foreach (ContactPoint c in col.contacts)
-                normal += c.normal;
+            var count = col.contacts.Length;
+            for (int i = 0; i < count; ++i)
+            {
+                normal += col.contacts[i].normal;
+            }
             normal.Normalize();
             Vector3 inVelocity = lastVel;
             Vector3 outVelocity = bounciness * (-2f * (Vector3.Dot(inVelocity, normal) * normal) + inVelocity);

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace KolonyTools
+namespace USITools
 {
     public class USI_ModuleRecycleablePart : PartModule
     {
@@ -26,7 +25,7 @@ namespace KolonyTools
         public void ScrapPart()
         {
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (part.children.Any())
+            if (part.children.Count > 0)
             {
                 ScreenMessages.PostScreenMessage("You can only scrap parts without child parts", 5f,
                     ScreenMessageStyle.UPPER_CENTER);
@@ -44,6 +43,7 @@ namespace KolonyTools
                 PushResources(ResourceName, resAmount);
             }
             part.decouple();
+            part.explosionPotential = 0f;
             part.explode();
         }
 
@@ -57,11 +57,19 @@ namespace KolonyTools
         private void PushResources(string resourceName, double amount)
         {
             var vessels = LogisticsTools.GetNearbyVessels(2000, true, vessel, false);
-            foreach (var v in vessels)
+            var count = vessels.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var v = vessels[i];
                 //Put recycled stuff into recycleable places
-                foreach (var p in v.parts.Where(vp => vp != part && vp.Modules.Contains("USI_ModuleRecycleBin")))
+                var mods = v.FindPartModulesImplementing<USI_ModuleRecycleBin>();
+                var pCount = mods.Count;
+                for (int x = 0; x < pCount; ++x)
                 {
+                    var p = mods[x].part;
+                    if (p == part)
+                        continue;
+
                     if (p.Resources.Contains(resourceName))
                     {
                         var partRes = p.Resources[resourceName];

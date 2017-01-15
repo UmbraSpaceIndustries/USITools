@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace USITools
+﻿namespace USITools
 {
     public class ModuleAquaticIntake : PartModule
     {

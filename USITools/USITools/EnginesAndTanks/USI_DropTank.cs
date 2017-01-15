@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace USITools
 {
@@ -64,6 +61,7 @@ namespace USITools
                     }
                     if (explode)
                     {
+                        part.explosionPotential = 0f;
                         part.explode();
                     } 
 

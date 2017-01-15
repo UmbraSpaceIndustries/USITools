@@ -55,6 +55,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
     <Compile Include="Airbags\ModuleAirbag.cs" />
     <Compile Include="Airbags\ModuleBounceCollider.cs" />
@@ -64,23 +65,32 @@
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
+    <Compile Include="BotanySkill.cs" />
+    <Compile Include="ExplorerSkill.cs" />
     <Compile Include="FloaterModule.cs" />
+    <Compile Include="FundsBoost.cs" />
+    <Compile Include="GeologySkill.cs" />
     <Compile Include="LifeBoat.cs" />
     <Compile Include="ConverterPart.cs" />
     <Compile Include="IEfficiencyBonusConsumer.cs" />
+    <Compile Include="LogisticsSkill.cs" />
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
     <Compile Include="Logistics\ModuleWeightDistributor.cs" />
+    <Compile Include="MedicalSkill.cs" />
     <Compile Include="ModuleAnimationExtended.cs" />
     <Compile Include="ModuleAutoStrut.cs" />
     <Compile Include="ModuleEditorMesh.cs" />
     <Compile Include="ModuleHeatPump.cs" />
     <Compile Include="ModuleResourceConverter_USI.cs" />
     <Compile Include="ModuleResourceHarvester_USI.cs" />
+    <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
     <Compile Include="ModuleSwapConverterUpdate.cs" />
     <Compile Include="ModuleSwappableConverter.cs" />
     <Compile Include="LoadoutInfo.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
+    <Compile Include="RepBoost.cs" />
+    <Compile Include="ScienceBoost.cs" />
     <Compile Include="USI_GlobalBonuses.cs" />
     <Compile Include="Logistics\LogisticsConfig.cs" />
     <Compile Include="Logistics\LogisticsSetup.cs" />

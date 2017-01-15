@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using KolonyTools;
 using UnityEngine;
 
 namespace USITools
@@ -88,6 +86,23 @@ namespace USITools
             get { return part.FindModelAnimators(deployAnimationName)[0]; }
         }
 
+        public override void OnStart(StartState state)
+        {
+            Initialize();
+        }
+
+        public override void OnLoad(ConfigNode node)
+        {
+            try
+            {
+                CheckAnimationState();
+            }
+            catch (Exception ex)
+            {
+                print("ERROR IN USIAnimationOnLoad - " + ex.Message);
+            }
+        }
+
         public Animation SecondaryAnimation
         {
             get
@@ -153,8 +168,11 @@ namespace USITools
                         MonoUtilities.RefreshContextWindows(part);
                     }
                 }
-                foreach (var m in part.FindModulesImplementing<ModuleResourceConverter>())
+                var mods = part.FindModulesImplementing<ModuleResourceConverter>();
+                var count = mods.Count;
+                for (int i = 0; i < count; ++i)
                 {
+                    var m = mods[i];
                     m.EnableModule();
                 }
                 MonoUtilities.RefreshContextWindows(part);
@@ -175,8 +193,10 @@ namespace USITools
             var allResources = true;
             var missingResources = "";
             //Check that we have everything we need.
-            foreach (var r in ResCosts)
+            var count = ResCosts.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var r = ResCosts[i];
                 if (!HasResource(r))
                 {
                     allResources = false;
@@ -190,8 +210,10 @@ namespace USITools
                 return false;
             }
             //Since everything is here...
-            foreach (var r in ResCosts)
+            count = ResCosts.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var r = ResCosts[i];
                 TakeResources(r);
                 if (res != null)
                     res.amount = res.maxAmount;
@@ -211,8 +233,14 @@ namespace USITools
             {
                 whpList.AddRange(part.vessel.parts);
             }
-            foreach (var whp in whpList.Where(w => w != part))
+
+            var count = whpList.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
+                if (whp == part)
+                    continue;
+
                 if (resInfo.ResourceName != "ElectricCharge")
                 {
                     var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
@@ -243,8 +271,12 @@ namespace USITools
             //Pull in from warehouses
 
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            foreach (var whp in whpList.Where(w => w != part))
+            var count = whpList.Count;
+            for (int i = 0; i < count; ++i)
             {
+                var whp = whpList[i];
+                if (whp == part)
+                    continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if (!wh.transferEnabled)
                     continue;
@@ -305,9 +337,10 @@ namespace USITools
                     if (inflatedMultiplier > 0)
                         CompressResourceCapacity();
                     var modList = GetAffectedMods();
-                    foreach (var m in modList)
+                    var count = modList.Count;
+                    for(int i = 0; i < count; ++i)
                     {
-                        m.DisableModule();
+                        modList[i].DisableModule();
                     }
                     MonoUtilities.RefreshContextWindows(part);
                 }
@@ -376,7 +409,6 @@ namespace USITools
             try
             {
                 _hasBeenInitialized = true;
-                UpdatemenuNames();
                 FindModules();
                 SetupResourceCosts();
                 SetupDeployMenus();
@@ -386,6 +418,7 @@ namespace USITools
                     SecondaryAnimation[secondaryAnimationName].layer = SecondaryLayer;
                 }
                 CheckAnimationState();
+                UpdatemenuNames();
             }
             catch (Exception ex)
             {
@@ -478,7 +511,7 @@ namespace USITools
 
         private void CheckAnimationState()
         {
-            if (part.protoModuleCrew.Count > 0)
+            if (part.protoModuleCrew.Count > 0 && inflatable)
             {
                 //We got them in here somehow....
                 isDeployed = true;

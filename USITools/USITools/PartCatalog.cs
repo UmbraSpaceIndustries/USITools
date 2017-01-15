@@ -1,15 +1,9 @@
 ﻿using KSP.UI.Screens;
 using RUI.Icons.Selectable;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using KSP.UI;
 using UnityEngine;
-using UnityEngine.UI;
-
-
 
 namespace USITools
 {
@@ -115,8 +109,10 @@ namespace USITools
         void Awake()
         {
             parts.Clear();
-            foreach (var avPart in PartLoader.LoadedPartsList)
+            var count = PartLoader.LoadedPartsList.Count;
+            for(int i = 0; i < count; ++i)
             {
+                var avPart = PartLoader.LoadedPartsList[i];
                 if (!avPart.partPrefab) continue;
                 if (avPart.manufacturer == Manufacturer)
                 {

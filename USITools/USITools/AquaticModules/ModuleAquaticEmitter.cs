@@ -1,5 +1,3 @@
-using System.Linq;
-using UnityEngine;
 
 namespace USITools
 {
@@ -24,8 +22,10 @@ namespace USITools
             if (isSplashed != splashState)
             {
                 splashState = isSplashed;
-                foreach (KSPParticleEmitter e in eList)
+                var count = eList.Length;
+                for(int i = 0; i < count; ++i)
                 {
+                    var e = eList[i];
                     e.emit = splashState;
                     e.enabled = splashState;
                 }

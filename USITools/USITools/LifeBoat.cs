@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace LifeBoat
@@ -46,17 +43,28 @@ namespace LifeBoat
                     {
                         InflateLifeboat();
                     }
-                    if (part.CrewCapacity == 1 && !part.protoModuleCrew.Any())
+                    if (part.CrewCapacity == 1 && !(part.protoModuleCrew.Count > 0))
                     {
                         print("Evacuating!");
-                        var source = vessel.Parts.First(x => x != part
-                                                             && !x.Modules.Contains("LifeBoat")
-                                                             && x.protoModuleCrew.Count > 0);
+                        Part source = null;
+                        var count = vessel.parts.Count;
+                        for (int i = 0; i < count; ++i)
+                        {
+                            var p = vessel.parts[i];
+							if(p != part)
+								continue;
+								
+                            if (!p.Modules.Contains("LifeBoat") && p.protoModuleCrew.Count > 0)
+                            {
+                                source = p;
+                                break;
+                            }
+                        }
 
                         if (source != null)
                         {
                             print("Attempting to evacuate...");
-                            var k = source.protoModuleCrew.First();
+                            var k = source.protoModuleCrew[0];
                             if (k != null)
                             {
                                 print("Evacuating " + k.name);
@@ -72,9 +80,9 @@ namespace LifeBoat
 
                                 //Decouple!
                                 var p = part.parent;
-                                if (p.Modules.OfType<ModuleDecouple>().Any())
+                                var dpart = part.FindModuleImplementing<ModuleDecouple>();
+                                if (dpart != null)
                                 {
-                                    var dpart = p.Modules.OfType<ModuleDecouple>().First();
                                     dpart.Decouple();
                                 }
                             }
@@ -166,9 +174,11 @@ namespace LifeBoat
         private void AddResources()
         {
             var massToLose = 0f;
-
-            foreach (var p in part.FindModulesImplementing<ModuleStoredResource>())
+            var mods = part.FindModulesImplementing<ModuleStoredResource>();
+            var count = mods.Count;
+            for(int i = 0; i <count; ++i)
             {
+                var p = mods[i];
                 var resInfo = PartResourceLibrary.Instance.GetDefinition(p.ResourceName);
                 var resNode = new ConfigNode("RESOURCE");
                 resNode.AddValue("name", p.ResourceName);
@@ -211,9 +221,10 @@ namespace LifeBoat
             if (vessel.srfSpeed > dampenSpeed
                 || vessel.horizontalSrfSpeed > dampenSpeed)
             {
-                //print("Dampening...");
-                foreach (var p in vessel.parts)
+                var count = vessel.parts.Count;
+                for (int i = 0; i < count; ++i)
                 {
+                    var p = vessel.parts[i];
                     p.Rigidbody.angularVelocity *= dampenFactor;
                     p.Rigidbody.velocity *= dampenFactor;
                 }
