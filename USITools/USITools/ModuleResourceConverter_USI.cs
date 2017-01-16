@@ -35,12 +35,6 @@ namespace USITools
         public float GetEfficiencyBonus()
         {
             var finBonus = 1f;
-
-            if (HighLogic.LoadedSceneIsFlight)
-                finBonus = GetCrewBonus();
-
-            var count = BonusList.Count;
-            for(int i = 0; i < count; ++i)
             foreach (var b in BonusList)
             {
                 finBonus *= b.Value;
