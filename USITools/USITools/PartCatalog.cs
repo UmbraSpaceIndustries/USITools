@@ -7,20 +7,20 @@ using UnityEngine;
 
 namespace USITools
 {
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_RoverFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Rover Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "Rovers"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_RoverFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Rover Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "Rovers"; }
+    //        set { }
+    //    }
+    //}
 
     [KSPAddon(KSPAddon.Startup.MainMenu, true)]
     public class USI_ManufacturingFilter : BaseFilter

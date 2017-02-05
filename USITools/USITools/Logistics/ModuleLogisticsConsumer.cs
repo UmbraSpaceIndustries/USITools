@@ -146,7 +146,7 @@ namespace USITools
                         continue;
                     var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                     if(wh != null)
-                        if (!wh.transferEnabled)
+                        if (!wh.localTransferEnabled)
                             continue;
 
                     var rr = p.Resources[res.ResourceName];
@@ -356,7 +356,7 @@ namespace USITools
                             var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                             if(wh == null)
                                 continue;
-                            if(!wh.transferEnabled)
+                            if(!wh.localTransferEnabled)
                                 continue;
                         }
 
@@ -438,7 +438,7 @@ namespace USITools
                             var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                             if (wh == null)
                                 continue;
-                            if (!wh.transferEnabled)
+                            if (!wh.localTransferEnabled)
                                 continue;
                         }
                         PartResource res= p.Resources[resource.name];

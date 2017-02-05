@@ -59,7 +59,7 @@ namespace USITools
                 for (int x = 0; x < pCount; ++x)
                 {
                     Part p = parts[x];
-                    if(p.Modules.Contains(module))
+                    if(p.Modules.Contains(module) || vessel == v)
                         pList.Add(p);
                 }
             }

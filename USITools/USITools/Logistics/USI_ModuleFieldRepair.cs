@@ -107,7 +107,7 @@ namespace USITools
             {
                 var whp = whpList[i];
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if(!wh.transferEnabled)
+                if(!wh.localTransferEnabled)
                     continue;
                 if (whp.Resources.Contains(fetchName))
                 {
@@ -150,7 +150,7 @@ namespace USITools
                     continue;
 
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.transferEnabled)
+                if (!wh.localTransferEnabled)
                     continue; 
                 if (whp.Resources.Contains(resourceName))
                 {
