@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace USITools
 {
-    public class USIAnimation : PartModule
+    public class USIAnimation : PartModule, IMultipleDragCube
     {
         private List<IAnimatedModule> _Modules;
         private List<ModuleSwappableConverter> _SwapBays;
@@ -244,7 +244,7 @@ namespace USITools
                 if (resInfo.ResourceName != "ElectricCharge")
                 {
                     var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                    if (!wh.transferEnabled)
+                    if (!wh.localTransferEnabled)
                         continue;
                 }
                 if (whp.Resources.Contains(resourceName))
@@ -278,7 +278,7 @@ namespace USITools
                 if (whp == part)
                     continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.transferEnabled)
+                if (!wh.localTransferEnabled)
                     continue;
                 if (whp.Resources.Contains(resourceName))
                 {
@@ -366,6 +366,7 @@ namespace USITools
         {
             DeployAnimation[deployAnimationName].speed = speed;
             DeployAnimation.Play(deployAnimationName);
+            SetDragState(1f);
         }
 
         public void ReverseDeployAnimation(int speed = -1)
@@ -377,6 +378,7 @@ namespace USITools
             DeployAnimation[deployAnimationName].time = DeployAnimation[deployAnimationName].length;
             DeployAnimation[deployAnimationName].speed = speed;
             DeployAnimation.Play(deployAnimationName);
+            SetDragState(0f);
         }
 
         private void ToggleEvent(string eventName, bool state)
@@ -623,6 +625,15 @@ namespace USITools
             }
         }
 
+        private void SetDragState(float b)
+        {
+            part.DragCubes.SetCubeWeight("A", b);
+            part.DragCubes.SetCubeWeight("B", 1f - b);
+
+            if (part.DragCubes.Procedural)
+                part.DragCubes.ForceUpdate(true, true);
+        }
+
         public override string GetInfo()
         {
             if (String.IsNullOrEmpty(ResourceCosts))
@@ -635,6 +646,49 @@ namespace USITools
                 output.Append(string.Format("{0} {1}\n", double.Parse(resources[i + 1]), resources[i]));
             }
             return output.ToString();
+        }
+
+        public string[] GetDragCubeNames()
+        {
+            return new string[] { "A", "B" };
+        }
+
+        public bool UsesProceduralDragCubes()
+        {
+            return false;
+        }
+
+        public bool IsMultipleCubesActive { get { return true; } }
+
+        public void AssumeDragCubePosition(string name)
+        {
+            var anim = part.FindModelAnimators(deployAnimationName)[0];
+            if (anim == null)
+            {
+                enabled = false;
+                return;
+            }
+
+            if (anim[deployAnimationName] == null)
+            {
+                enabled = false;
+                return;
+            }
+
+
+            anim[deployAnimationName].speed = 0f;
+            anim[deployAnimationName].enabled = true;
+            anim[deployAnimationName].weight = 1f;
+
+            switch (name)
+            {
+                case "A":
+                    anim[deployAnimationName].normalizedTime = 1f;
+                    break;
+                case "B":
+                    anim[deployAnimationName].normalizedTime = 0f;
+                    break;
+            }
         }
     }
 }

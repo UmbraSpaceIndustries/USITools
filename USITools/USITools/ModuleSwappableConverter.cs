@@ -126,7 +126,7 @@ namespace USITools
                 if (resInfo.ResourceName != "ElectricCharge")
                 {
                     var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                    if (!wh.transferEnabled)
+                    if (!wh.localTransferEnabled)
                         continue;
                 }
                 if (whp.Resources.Contains(resourceName))
@@ -161,7 +161,7 @@ namespace USITools
                 if (whp == part)
                     continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.transferEnabled)
+                if (!wh.localTransferEnabled)
                     continue;
                 if (whp.Resources.Contains(resourceName))
                 {
