@@ -241,10 +241,11 @@ namespace USITools
                 if (whp == part)
                     continue;
 
-                if (resInfo.ResourceName != "ElectricCharge")
+                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+
+                if (resInfo.ResourceName != "ElectricCharge" && wh != null)
                 {
-                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                    if (!wh.localTransferEnabled)
+                    if(!wh.localTransferEnabled)
                         continue;
                 }
                 if (whp.Resources.Contains(resourceName))
@@ -278,8 +279,9 @@ namespace USITools
                 if (whp == part)
                     continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.localTransferEnabled)
-                    continue;
+                if (wh != null)
+                    if(!wh.localTransferEnabled)
+                        continue;
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];

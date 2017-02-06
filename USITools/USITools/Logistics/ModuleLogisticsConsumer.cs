@@ -88,6 +88,8 @@ namespace USITools
 
         }
 
+        private List<String> _blackList = new List<string> { "Machinery", "EnrichedUranium", "DepletedFuel", "Construction", "ReplacementParts" };
+
         private void CheckLogistics(List<ResourceRatio> resList, bool output)
         {
             //Surface only
@@ -115,7 +117,7 @@ namespace USITools
             {
                 var res = resList[i];
                 //There are certain exeptions - specifically, anything for field repair.
-                if (res.ResourceName == "Machinery")
+                if (_blackList.Contains(res.ResourceName))
                     continue;
 
                 if (res.ResourceName != "ElectricCharge")
