@@ -147,10 +147,11 @@ namespace USITools
                     if (!p.Resources.Contains(res.ResourceName))
                         continue;
                     var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                    if(wh != null)
+                    if (wh != null)
+                    {
                         if (!wh.localTransferEnabled)
                             continue;
-
+                    }
                     var rr = p.Resources[res.ResourceName];
                     maxAmount += rr.maxAmount;
                     curAmount += rr.amount;

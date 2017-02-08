@@ -107,8 +107,12 @@ namespace USITools
             {
                 var whp = whpList[i];
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if(!wh.localTransferEnabled)
-                    continue;
+                if (wh != null)
+                {
+                    if (!wh.localTransferEnabled)
+                        continue;
+                }
+
                 if (whp.Resources.Contains(fetchName))
                 {
                     print("Found " + fetchName);
@@ -150,8 +154,11 @@ namespace USITools
                     continue;
 
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.localTransferEnabled)
-                    continue; 
+                if (wh != null)
+                {
+                    if (!wh.localTransferEnabled)
+                        continue;
+                }
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];

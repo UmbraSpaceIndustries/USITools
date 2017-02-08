@@ -280,8 +280,10 @@ namespace USITools
                     continue;
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                 if (wh != null)
-                    if(!wh.localTransferEnabled)
+                {
+                    if (!wh.localTransferEnabled)
                         continue;
+                }
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];
