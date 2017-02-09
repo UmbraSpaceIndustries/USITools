@@ -19,7 +19,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "A Kolonist that increases funds";
+            return "Experience in managing logistics";
         }
     }
 }
