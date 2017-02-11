@@ -143,7 +143,6 @@ namespace USITools
                     else
                     {
                         needed -= res.amount;
-                        res.amount = 0;
                     }
                 }
             }
