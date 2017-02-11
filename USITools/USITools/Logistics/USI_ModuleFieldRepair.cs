@@ -22,9 +22,9 @@ namespace USITools
         public void PerformMaintenance()
         {
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (kerbal.experienceTrait.Title != "Engineer")
+            if (!kerbal.HasEffect("RepairSkill"))
             {
-                ScreenMessages.PostScreenMessage("Only Engineers can perform EVA Maintenance!", 5f,
+                ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (engineers, mechanics) can perform EVA Maintenance!", 5f,
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
@@ -107,8 +107,12 @@ namespace USITools
             {
                 var whp = whpList[i];
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if(!wh.localTransferEnabled)
-                    continue;
+                if (wh != null)
+                {
+                    if (!wh.localTransferEnabled)
+                        continue;
+                }
+
                 if (whp.Resources.Contains(fetchName))
                 {
                     print("Found " + fetchName);
@@ -150,8 +154,11 @@ namespace USITools
                     continue;
 
                 var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (!wh.localTransferEnabled)
-                    continue; 
+                if (wh != null)
+                {
+                    if (!wh.localTransferEnabled)
+                        continue;
+                }
                 if (whp.Resources.Contains(resourceName))
                 {
                     var res = whp.Resources[resourceName];
