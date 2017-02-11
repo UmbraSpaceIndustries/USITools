@@ -22,9 +22,9 @@ namespace USITools
         public void PerformMaintenance()
         {
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (kerbal.experienceTrait.Title != "Engineer")
+            if (!kerbal.HasEffect("RepairSkill"))
             {
-                ScreenMessages.PostScreenMessage("Only Engineers can perform EVA Maintenance!", 5f,
+                ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (engineers, mechanics) can perform EVA Maintenance!", 5f,
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
