@@ -7,6 +7,9 @@ namespace USITools
     {
         private Dictionary<string, float> _bonusList;
 
+        [KSPField]
+        public bool UseBonus = true;
+
         public Dictionary<string, float> BonusList
         {
             get
@@ -49,5 +52,7 @@ namespace USITools
             else
                 BonusList[bonName] = bonVal;
         }
+
+        public bool useEfficiencyBonus => UseBonus;
     }
 }
