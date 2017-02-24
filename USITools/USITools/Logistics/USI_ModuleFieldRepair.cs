@@ -68,6 +68,10 @@ namespace USITools
 
         private void PushResources(string resourceName)
         {
+            if (!part.Resources.Contains(resourceName))
+            {
+                return;
+            }
             var brokRes = part.Resources[resourceName];
             //Put remaining parts in warehouses
             var wh = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleCleaningBin");
@@ -153,9 +157,14 @@ namespace USITools
                 if (whp == part)
                     continue;
 
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (wh != null)
+                var whc = whp.FindModulesImplementing<BaseConverter>();
+                if(whc.Count > 0)
+                    continue;
+
+                
+                if (whp.Modules.Contains("USI_ModuleResourceWarehouse"))
                 {
+                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                     if (!wh.localTransferEnabled)
                         continue;
                 }

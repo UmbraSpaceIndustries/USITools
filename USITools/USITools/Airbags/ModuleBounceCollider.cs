@@ -15,6 +15,9 @@ public class ModuleBounceCollider : MonoBehaviour
 
     private void OnCollisionEnter(Collision col)
     {
+        if (!HighLogic.LoadedSceneIsFlight)
+            return;
+
         try
         {
             Vector3 normal = Vector3.zero;

@@ -4,7 +4,7 @@ namespace USITools
     public class USI_ModuleResourceWarehouse : PartModule
     {
         [KSPField(guiName = "Planetary Warehouse", guiActive = true, guiActiveEditor = true, isPersistant = true), UI_Toggle(disabledText = "Off", enabledText = "On")]
-        public bool soiTransferEnabled = true;
+        public bool soiTransferEnabled = false;
 
         [KSPField(guiName = "Local Warehouse", guiActive = true, guiActiveEditor = true, isPersistant = true), UI_Toggle(disabledText = "Off", enabledText = "On")]
         public bool localTransferEnabled = true;
