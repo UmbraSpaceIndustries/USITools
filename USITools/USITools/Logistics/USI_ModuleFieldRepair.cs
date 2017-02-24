@@ -157,9 +157,14 @@ namespace USITools
                 if (whp == part)
                     continue;
 
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (wh != null)
+                var whc = whp.FindModulesImplementing<BaseConverter>();
+                if(whc.Count > 0)
+                    continue;
+
+                
+                if (whp.Modules.Contains("USI_ModuleResourceWarehouse"))
                 {
+                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                     if (!wh.localTransferEnabled)
                         continue;
                 }
