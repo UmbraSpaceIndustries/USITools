@@ -32,6 +32,9 @@ namespace USITools
         public double powerFactor = 2d;
 
         [KSPField]
+        public double FuelRate = 0.25d;
+
+        [KSPField]
         public double densityMultiplier = 250d;
 
         [KSPField] 
@@ -200,7 +203,7 @@ namespace USITools
         private void ConsumeFuel()
         {
             var res = Fuels[CurrentFuelIndex];
-            broker.RequestResource(part, res.name, 1, 1, res.resourceFlowMode);
+            broker.RequestResource(part, res.name, FuelRate, 1, res.resourceFlowMode);
         }
 
         private bool HasFuel()
