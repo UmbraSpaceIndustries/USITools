@@ -74,7 +74,7 @@ namespace USITools
                 return;
 
 
-            vessel.SetPosition(nuPos);
+            //vessel.SetPosition(nuPos);
 
             var c = vessel.parts.Count;
             for(int i = 0; i < c; ++i)

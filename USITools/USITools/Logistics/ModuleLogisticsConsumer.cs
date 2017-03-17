@@ -149,12 +149,17 @@ namespace USITools
                         continue;
 
                     var wh = p.FindModulesImplementing<USI_ModuleResourceWarehouse>();
-                    if (wh.Count == 0)
-                        return;
+                    if (wh.Count > 0)
+                    {
+                        if (!wh[0].localTransferEnabled)
+                            continue;
+                    }
+                    else
+                    {
+                        if (res.ResourceName != "ElectricCharge")
+                            continue;
+                    }                    
 
-                    if(!wh[0].localTransferEnabled)
-                        continue;
-                    
                     var rr = p.Resources[res.ResourceName];
                     if (rr.flowState)
                     {
