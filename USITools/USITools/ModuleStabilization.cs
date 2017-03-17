@@ -1,13 +1,29 @@
+using System;
+
 namespace USITools
 {
     public class ModuleStabilization : VesselModule
     {
+        [KSPField(isPersistant = true)]
+        public double posX;
+        [KSPField(isPersistant = true)]
+        public double posY;
+        [KSPField(isPersistant = true)]
+        public double posZ;
+
+        private Vector3d nuPos; 
+
         public static EventData<Vessel,bool,bool> onStabilizationToggle = new EventData<Vessel,bool,bool>("onStabilizationToggle");
         private bool _stabilized;
 
         public void Start()
         {
             onStabilizationToggle.Add(StabilizeVessel);
+            nuPos = vessel.GetWorldPos3D();
+            if (Math.Abs(posX + posY + posZ) < ResourceUtilities.FLOAT_TOLERANCE)
+            {
+                nuPos = new Vector3d(posX,posY,posZ);
+            }
         }
 
         public void OnDestroy()
@@ -22,6 +38,12 @@ namespace USITools
 
             if (_stabilized == state)
                 return;
+
+            var pos = vessel.GetWorldPos3D();
+            posX = pos.x;
+            posY = pos.y;
+            posZ = pos.z;
+            nuPos = new Vector3d(posX, posY, posZ);
 
             var newState = state;
             var msg = "Ground tether released!";
@@ -50,6 +72,9 @@ namespace USITools
 
             if (!vessel.Landed)
                 return;
+
+
+            vessel.SetPosition(nuPos);
 
             var c = vessel.parts.Count;
             for(int i = 0; i < c; ++i)

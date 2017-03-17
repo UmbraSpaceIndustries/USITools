@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using USITools.Logistics;
 
 namespace USITools
@@ -146,15 +147,20 @@ namespace USITools
                     var p = parts[x];
                     if (!p.Resources.Contains(res.ResourceName))
                         continue;
-                    var wh = p.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                    if (wh != null)
-                    {
-                        if (!wh.localTransferEnabled)
-                            continue;
-                    }
+
+                    var wh = p.FindModulesImplementing<USI_ModuleResourceWarehouse>();
+                    if (wh.Count == 0)
+                        return;
+
+                    if(!wh[0].localTransferEnabled)
+                        continue;
+                    
                     var rr = p.Resources[res.ResourceName];
-                    maxAmount += rr.maxAmount;
-                    curAmount += rr.amount;
+                    if (rr.flowState)
+                    {
+                        maxAmount += rr.maxAmount;
+                        curAmount += rr.amount;
+                    }
                 }
                 double fillPercent = curAmount / maxAmount; //We use this to equalize things cross-ship as a percentage.
                 if (output)

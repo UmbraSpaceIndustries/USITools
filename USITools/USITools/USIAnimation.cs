@@ -29,7 +29,6 @@ namespace USITools
         [KSPField]
         public string actionGUIName = "";
 
-
         [KSPField] public int CrewCapacity = 0;
 
         [KSPField] public string deployAnimationName = "Deploy";
@@ -136,6 +135,7 @@ namespace USITools
                     CheckDeployConditions();
                     isDeployed = true;
                     EnableModules();
+                    SetControlSurface(true);
                 }
             }
         }
@@ -316,6 +316,7 @@ namespace USITools
                     ToggleEvent("DeployModule", true);
                     ToggleEvent("RetractModule", false);
                     DisableModules();
+                    SetControlSurface(false);
                     var res = part.Resources[ReplacementResource];
                     if (res != null)
                         res.amount = 0;
@@ -475,7 +476,6 @@ namespace USITools
             {
                 _Modules[i].DisableModule();
             }
-            SetControlSurface(false);
         }
 
         private void EnableModules()
@@ -499,7 +499,6 @@ namespace USITools
                         mod.EnableModule();
                 }
             }
-            SetControlSurface(true);
         }
 
         private void SetControlSurface(bool state)
@@ -530,13 +529,14 @@ namespace USITools
                 CheckDeployConditions();
                 EnableModules();
             }
-            else
+            else if(inflatable)
             {
                 ToggleEvent("DeployModule", true);
                 ToggleEvent("RetractModule", false);
                 ReverseDeployAnimation(-1000);
                 DisableModules();
             }
+            SetControlSurface(isDeployed);
         }
 
         private void ExpandResourceCapacity()
