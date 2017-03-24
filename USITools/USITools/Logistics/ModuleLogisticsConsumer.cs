@@ -28,12 +28,24 @@ namespace USITools
             if (lastCheck < 0)
                 lastCheck = part.vessel.lastUT;
 
-			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
+			_conMods = part.FindModulesImplementing<ModuleResourceConverter_USI>();
             _maxDelta = ResourceUtilities.GetMaxDeltaTime();
         }
 
         private double _maxDelta;
-        private List<ModuleResourceConverter> _conMods; 
+        private List<ModuleResourceConverter_USI> _conMods;
+
+        private bool InCatchupMode()
+        {
+            var count = _conMods.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var c = _conMods[i];
+                if (c.IsCatchup)
+                    return true;
+            }
+            return false;
+        }
 
         public void FixedUpdate()
         {
@@ -41,10 +53,14 @@ namespace USITools
                 return;
 
             var planTime = Planetarium.GetUniversalTime();
-            if (Math.Abs(planTime - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
-                return;
 
-            lastCheck = Math.Min(lastCheck+ _maxDelta, planTime);
+            if (!InCatchupMode())
+            {
+                if (Math.Abs(planTime - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
+                    return;
+            }
+
+            lastCheck = Math.Min(lastCheck + _maxDelta, planTime);
             var count = _conMods.Count;
             for (int i = 0; i < count; ++i)
             {
