@@ -25,15 +25,13 @@ namespace USITools
         {
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
-            if (lastCheck < 0)
-                lastCheck = part.vessel.lastUT;
 
-			_conMods = part.FindModulesImplementing<ModuleResourceConverter_USI>();
+			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
             _maxDelta = ResourceUtilities.GetMaxDeltaTime();
         }
 
         private double _maxDelta;
-        private List<ModuleResourceConverter_USI> _conMods;
+        private List<ModuleResourceConverter> _conMods;
 
         private bool InCatchupMode()
         {
@@ -41,7 +39,8 @@ namespace USITools
             for (int i = 0; i < count; ++i)
             {
                 var c = _conMods[i];
-                if (c.IsCatchup)
+                var thisDelta = c.lastTimeFactor/c.GetEfficiencyMultiplier();
+                if (thisDelta / 2 > TimeWarp.deltaTime)
                     return true;
             }
             return false;
@@ -49,6 +48,9 @@ namespace USITools
 
         public void FixedUpdate()
         {
+            if (lastCheck < 0)
+                lastCheck = vessel.lastUT;
+
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
@@ -61,6 +63,7 @@ namespace USITools
             }
 
             lastCheck = Math.Min(lastCheck + _maxDelta, planTime);
+
             var count = _conMods.Count;
             for (int i = 0; i < count; ++i)
             {
