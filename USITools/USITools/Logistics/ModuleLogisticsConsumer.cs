@@ -8,7 +8,9 @@ namespace USITools
     [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
-        private double lastCheck;
+        [KSPField(isPersistant = true)]
+        private double lastCheck = -1d;
+
         [KSPField]
         public string autoResources = "";
 
@@ -23,6 +25,8 @@ namespace USITools
         {
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
+            if (lastCheck < 0)
+                lastCheck = part.vessel.lastUT;
 
 			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
             _maxDelta = ResourceUtilities.GetMaxDeltaTime();
