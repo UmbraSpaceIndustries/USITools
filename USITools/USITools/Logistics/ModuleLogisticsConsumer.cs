@@ -25,8 +25,10 @@ namespace USITools
                 return;
 
 			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
+            _maxDelta = ResourceUtilities.GetMaxDeltaTime();
         }
 
+        private double _maxDelta;
         private List<ModuleResourceConverter> _conMods; 
 
         public void FixedUpdate()
@@ -34,10 +36,11 @@ namespace USITools
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            if (Math.Abs(Planetarium.GetUniversalTime() - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
+            var planTime = Planetarium.GetUniversalTime();
+            if (Math.Abs(planTime - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
                 return;
 
-            lastCheck = Planetarium.GetUniversalTime();
+            lastCheck = Math.Min(lastCheck+ _maxDelta, planTime);
             var count = _conMods.Count;
             for (int i = 0; i < count; ++i)
             {
