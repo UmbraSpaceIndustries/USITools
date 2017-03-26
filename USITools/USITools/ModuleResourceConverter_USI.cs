@@ -10,8 +10,6 @@ namespace USITools
         [KSPField]
         public bool UseBonus = true;
 
-        public bool IsCatchup = false;
-
         public Dictionary<string, float> BonusList
         {
             get
@@ -36,7 +34,6 @@ namespace USITools
             {
                 statusPercent = 0d; //Force a reset of the load display.
             }
-            IsCatchup = deltaTime / 2 > TimeWarp.fixedDeltaTime;
         }
         public float GetEfficiencyBonus()
         {
