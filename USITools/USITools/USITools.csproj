@@ -55,6 +55,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
     <Compile Include="Airbags\ModuleAirbag.cs" />

@@ -1,3 +1,7 @@
+0.8.19 - 2017.05.06
+-------------------
+Fix infinite loop with "prev loadout" when USILS is not installed
+
 0.8.18 - 2017.03.17
 -------------------
 Fixed bugs related to ground tethers and PDU power transfers

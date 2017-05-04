@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using USITools.KolonyTools;
 
 namespace USITools
 {
@@ -24,6 +25,29 @@ namespace USITools
         {
             base.PreProcessing();
             EfficiencyBonus = GetEfficiencyBonus();
+        }
+
+        protected override ConversionRecipe PrepareRecipe(double deltatime)
+        {
+            var recipe = base.PrepareRecipe(deltatime);
+            if (!USI_DifficultyOptions.ConsumeMachineryEnabled)
+            {
+                var iCount = recipe.Inputs.Count;
+                var oCount = recipe.Outputs.Count;
+                for (int i = iCount; i-- > 0;)
+                {
+                    var ip = recipe.Inputs[i];
+                    if (ip.ResourceName == "Machinery")
+                        recipe.Inputs.Remove(ip);
+                }
+                for (int o = oCount; o-- > 0;)
+                {
+                    var op = recipe.Outputs[o];
+                    if (op.ResourceName == "Recyclables")
+                        recipe.Inputs.Remove(op);
+                }
+            }
+            return recipe;
         }
 
         protected override void PostProcess(ConverterResults result, double deltaTime)
