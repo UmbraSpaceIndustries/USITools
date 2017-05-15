@@ -30,24 +30,32 @@ namespace USITools
             _maxDelta = ResourceUtilities.GetMaxDeltaTime();
         }
 
+        private bool CatchupDone;
         private double _maxDelta;
         private List<ModuleResourceConverter> _conMods;
 
         private bool InCatchupMode()
         {
+            if (CatchupDone)
+                return false;
+
             var count = _conMods.Count;
             for (int i = 0; i < count; ++i)
             {
                 var c = _conMods[i];
-                var thisDelta = c.lastTimeFactor/c.GetEfficiencyMultiplier();
-                if (thisDelta / 2 > TimeWarp.deltaTime)
+                var em = c.GetEfficiencyMultiplier();
+                if(c.lastTimeFactor / 2 > em)
                     return true;
             }
+            CatchupDone = true;
             return false;
         }
 
         public void FixedUpdate()
         {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
             if (lastCheck < 0)
                 lastCheck = vessel.lastUT;
 

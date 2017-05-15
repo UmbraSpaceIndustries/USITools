@@ -12,6 +12,9 @@ namespace USITools
 
         public void FixedUpdate()
         {
+            if (!HighLogic.LoadedSceneIsFlight)
+                return;
+
             var eList = part.GetComponentsInChildren<KSPParticleEmitter>();
             //Debug.Log("START:  FOUND " + eList.Count() + " EMMITTERS!");
             
