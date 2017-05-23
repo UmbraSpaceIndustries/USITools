@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -36,6 +37,8 @@ namespace USITools
         [KSPField] public string secondaryAnimationName = "";
 
         [KSPField(isPersistant = true)] public bool isDeployed = false;
+
+        [KSPField(isPersistant = true, guiName = "Deployed", guiFormat = "P2")] public double partialDeployCostPaid = 0d;
 
         [KSPField(isPersistant = true)] public float inflatedCost = 0;
 
@@ -124,7 +127,7 @@ namespace USITools
         {
             if (!isDeployed)
             {
-                if (!CheckResources())
+                if (!CheckAndConsumeResources())
                     return;
 
                 if (CheckDeployConditions())
@@ -180,7 +183,7 @@ namespace USITools
             return true;
         }
 
-        private bool CheckResources()
+        private bool CheckAndConsumeResources()
         {
             var res = part.Resources[ReplacementResource];
             if (HighLogic.LoadedSceneIsEditor)
@@ -190,103 +193,106 @@ namespace USITools
                 return true;
             }
 
-            var allResources = true;
-            var missingResources = "";
-            //Check that we have everything we need.
-            var count = ResCosts.Count;
-            for(int i = 0; i < count; ++i)
+            var resourcesNeeded = 1d - partialDeployCostPaid;
+            var resourcesAvailable = FindResources();
+            if (resourcesNeeded - resourcesAvailable > ResourceUtilities.FLOAT_TOLERANCE)
             {
-                var r = ResCosts[i];
-                if (!HasResource(r))
+                if (resourcesAvailable > ResourceUtilities.FLOAT_TOLERANCE)
                 {
-                    allResources = false;
-                    missingResources += "\n" + r.Ratio + " " + r.ResourceName;
+                    ConsumeResources(resourcesAvailable);
+                    partialDeployCostPaid += resourcesAvailable;
+                    Fields["partialDeployCostPaid"].guiActive = true;
+                    DisplayMessage("Partially assembling module using: ", resourcesAvailable);
+                    resourcesNeeded -= resourcesAvailable;
                 }
-            }
-            if (!allResources)
-            {
-                ScreenMessages.PostScreenMessage("Missing resources to assemble module:" + missingResources, 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
+                DisplayMessage("Missing resources to assemble module: ", resourcesNeeded);
                 return false;
             }
-            //Since everything is here...
-            count = ResCosts.Count;
-            for (int i = 0; i < count; ++i)
+            else
             {
-                var r = ResCosts[i];
-                TakeResources(r);
-                if (res != null)
-                    res.amount = res.maxAmount;
+                DisplayMessage("Assembling module using: ", resourcesNeeded);
+                ConsumeResources(resourcesNeeded);
+                partialDeployCostPaid = 0d;
+                Fields["partialDeployCostPaid"].guiActive = false;
+                return true;
             }
-
-
-            return true;
         }
 
-        private bool HasResource(ResourceRatio resInfo)
+        private void DisplayMessage(string header, double resourcesPercentage)
+        {
+            var resourcesText = String.Join(", ",
+                ResCosts.Select(r => String.Format("{0:0} {1}", r.Ratio * resourcesPercentage, r.ResourceName)).ToArray());
+            ScreenMessages.PostScreenMessage(header + resourcesText, 5f, ScreenMessageStyle.UPPER_CENTER);
+        }
+
+        private double FindResources()
+        {
+            return ResCosts.Select(FindResources).Min();
+        }
+
+        private double FindResources(ResourceRatio resInfo)
         {
             var resourceName = resInfo.ResourceName;
             var needed = resInfo.Ratio;
-            var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            //EC we're a lot less picky...
-            if (resInfo.ResourceName == "ElectricCharge")
+            if (needed < ResourceUtilities.FLOAT_TOLERANCE)
             {
-                whpList.AddRange(part.vessel.parts);
+                return 1d;
             }
+            var available = 0d;
+            var sourceParts = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
 
-            var count = whpList.Count;
-            for(int i = 0; i < count; ++i)
+            foreach (var sourcePart in sourceParts)
             {
-                var whp = whpList[i];
-                if (whp == part)
+                if (sourcePart == part)
                     continue;
 
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                var warehouse = sourcePart.FindModuleImplementing<USI_ModuleResourceWarehouse>();
 
-                if (resInfo.ResourceName != "ElectricCharge" && wh != null)
+                if (resInfo.ResourceName != "ElectricCharge" && warehouse != null) //EC we're a lot less picky...
                 {
-                    if(!wh.localTransferEnabled)
+                    if(!warehouse.localTransferEnabled)
                         continue;
                 }
-                if (whp.Resources.Contains(resourceName))
+                if (sourcePart.Resources.Contains(resourceName))
                 {
-                    var res = whp.Resources[resourceName];
-                    if (res.amount >= needed)
+                    available += sourcePart.Resources[resourceName].amount;
+                    if (available >= needed)
                     {
-                        needed = 0;
-                        break;
-                    }
-                    else
-                    {
-                        needed -= res.amount;
+                        return 1d;
                     }
                 }
             }
-            return (needed < ResourceUtilities.FLOAT_TOLERANCE);
+            return available / needed;
         }
 
-        private void TakeResources(ResourceRatio resInfo)
+        private void ConsumeResources(double percentage)
+        {
+            foreach (var resource in ResCosts)
+            {
+                ConsumeResource(resource, percentage);
+            }
+        }
+
+        private void ConsumeResource(ResourceRatio resInfo, double percentage)
         {
             var resourceName = resInfo.ResourceName;
-            var needed = resInfo.Ratio;
+            var needed = resInfo.Ratio * percentage;
             //Pull in from warehouses
 
-            var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            var count = whpList.Count;
-            for (int i = 0; i < count; ++i)
+            var sourceParts = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
+            foreach (var sourcePart in sourceParts)
             {
-                var whp = whpList[i];
-                if (whp == part)
+                if (sourcePart == part)
                     continue;
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (wh != null)
+                var warehouse = sourcePart.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                if (warehouse != null)
                 {
-                    if (!wh.localTransferEnabled)
+                    if (!warehouse.localTransferEnabled)
                         continue;
                 }
-                if (whp.Resources.Contains(resourceName))
+                if (sourcePart.Resources.Contains(resourceName))
                 {
-                    var res = whp.Resources[resourceName];
+                    var res = sourcePart.Resources[resourceName];
                     if (res.amount >= needed)
                     {
                         res.amount -= needed;
