@@ -193,6 +193,11 @@ namespace USITools
                 return true;
             }
 
+            if (ResCosts.Count == 0)
+            {
+                return true;
+            }
+
             var resourcesNeeded = 1d - partialDeployCostPaid;
             var resourcesAvailable = FindResources();
             if (resourcesNeeded - resourcesAvailable > ResourceUtilities.FLOAT_TOLERANCE)
