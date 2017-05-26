@@ -30,6 +30,14 @@ namespace USITools
                 }
             }
 
+            public override string DisplaySection
+            {
+                get
+                {
+                    return "Kolonization";
+                }
+            }
+
             public override string Title
             {
                 get

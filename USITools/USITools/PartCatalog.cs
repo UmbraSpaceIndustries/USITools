@@ -134,7 +134,7 @@ namespace USITools
         {
             var icon = GenIcon(categoryTitle);
             var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
-            PartCategorizer.AddCustomSubcategoryFilter(filter, categoryTitle, icon, EditorItemsFilter);
+            PartCategorizer.AddCustomSubcategoryFilter(filter, categoryTitle, categoryTitle, icon, EditorItemsFilter);
         }
 
         private Icon GenIcon(string iconName)
