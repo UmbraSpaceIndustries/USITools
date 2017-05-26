@@ -9,6 +9,9 @@ public class ModuleBounceCollider : MonoBehaviour
     Vector3 lastVel = Vector3.zero;
     void FixedUpdate()
     {
+        if (!HighLogic.LoadedSceneIsFlight)
+            return;
+
         if (GetComponent<Rigidbody>())
             lastVel = GetComponent<Rigidbody>().velocity;
     }

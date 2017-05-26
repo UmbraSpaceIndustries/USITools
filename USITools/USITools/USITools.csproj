@@ -55,7 +55,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AgronomySkill.cs" />
+    <Compile Include="USI_DifficultyOptions.cs" />
+    <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
     <Compile Include="Airbags\ModuleAirbag.cs" />
     <Compile Include="Airbags\ModuleBounceCollider.cs" />
@@ -65,18 +66,18 @@
     <Compile Include="AquaticModules\ModuleAquaticRCS.cs" />
     <Compile Include="AquaticModules\ModuleAquaticSAS.cs" />
     <Compile Include="AquaticModules\ModuleBallast.cs" />
-    <Compile Include="BotanySkill.cs" />
-    <Compile Include="ExplorerSkill.cs" />
+    <Compile Include="Traits\BotanySkill.cs" />
+    <Compile Include="Traits\ExplorerSkill.cs" />
     <Compile Include="FloaterModule.cs" />
-    <Compile Include="FundsBoost.cs" />
-    <Compile Include="GeologySkill.cs" />
+    <Compile Include="Traits\FundsBoost.cs" />
+    <Compile Include="Traits\GeologySkill.cs" />
     <Compile Include="LifeBoat.cs" />
     <Compile Include="ConverterPart.cs" />
     <Compile Include="IEfficiencyBonusConsumer.cs" />
-    <Compile Include="LogisticsSkill.cs" />
+    <Compile Include="Traits\LogisticsSkill.cs" />
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
     <Compile Include="Logistics\ModuleWeightDistributor.cs" />
-    <Compile Include="MedicalSkill.cs" />
+    <Compile Include="Traits\MedicalSkill.cs" />
     <Compile Include="ModuleAnimationExtended.cs" />
     <Compile Include="ModuleAutoStrut.cs" />
     <Compile Include="ModuleEditorMesh.cs" />

@@ -5,8 +5,8 @@ namespace USITools
     public class ConverterPart
     {
         public Part HostPart { get; set; }
-        public List<IEfficiencyBonusConsumer> Converters { get; }
-        public List<ModuleSwappableConverter> SwapBays { get; }
+        public List<IEfficiencyBonusConsumer> Converters { get; set; }
+        public List<ModuleSwappableConverter> SwapBays { get; set; }
         public ConverterPart(Part p)
         {
             Converters = new List<IEfficiencyBonusConsumer>();

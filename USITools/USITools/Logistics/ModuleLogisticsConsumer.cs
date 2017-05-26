@@ -8,7 +8,9 @@ namespace USITools
     [KSPModule("Logistics Consumer")]
     public class ModuleLogisticsConsumer : PartModule
     {
-        private double lastCheck;
+        [KSPField(isPersistant = true)]
+        private double lastCheck = -1d;
+
         [KSPField]
         public string autoResources = "";
 
@@ -25,19 +27,51 @@ namespace USITools
                 return;
 
 			_conMods = part.FindModulesImplementing<ModuleResourceConverter>();
+            _maxDelta = ResourceUtilities.GetMaxDeltaTime();
         }
 
-        private List<ModuleResourceConverter> _conMods; 
+        private bool CatchupDone;
+        private double _maxDelta;
+        private List<ModuleResourceConverter> _conMods;
+
+        private bool InCatchupMode()
+        {
+            if (CatchupDone)
+                return false;
+
+            var count = _conMods.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var c = _conMods[i];
+                var em = c.GetEfficiencyMultiplier();
+                if(c.lastTimeFactor / 2 > em)
+                    return true;
+            }
+            CatchupDone = true;
+            return false;
+        }
 
         public void FixedUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            if (Math.Abs(Planetarium.GetUniversalTime() - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
+            if (lastCheck < 0)
+                lastCheck = vessel.lastUT;
+
+            if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            lastCheck = Planetarium.GetUniversalTime();
+            var planTime = Planetarium.GetUniversalTime();
+
+            if (!InCatchupMode())
+            {
+                if (Math.Abs(planTime - lastCheck) < LogisticsSetup.Instance.Config.LogisticsTime)
+                    return;
+            }
+
+            lastCheck = Math.Min(lastCheck + _maxDelta, planTime);
+
             var count = _conMods.Count;
             for (int i = 0; i < count; ++i)
             {

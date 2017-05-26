@@ -56,6 +56,9 @@ namespace USITools
         [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1:  Prev. Loadout", unfocusedRange = 10f)]
         public void PrevSetup()
         {
+            if (Loadouts.Count < 2)
+                return;
+            
             displayLoadout--;
             if (displayLoadout < 0)
             {
