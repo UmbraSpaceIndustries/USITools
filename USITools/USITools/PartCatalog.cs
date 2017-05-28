@@ -101,7 +101,7 @@ namespace USITools
     public abstract class BaseFilter : MonoBehaviour
     {
         private readonly List<AvailablePart> parts = new List<AvailablePart>();
-        internal string category = "Filter by Function";
+        internal string category = "Filter by function";
         internal bool filter = true;
         protected abstract string Manufacturer { get; set; }
         protected abstract string categoryTitle { get; set; }
