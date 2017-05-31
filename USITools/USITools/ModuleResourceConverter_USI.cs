@@ -30,7 +30,7 @@ namespace USITools
         protected override ConversionRecipe PrepareRecipe(double deltatime)
         {
             var recipe = base.PrepareRecipe(deltatime);
-            if (!USI_DifficultyOptions.ConsumeMachineryEnabled)
+            if (!USI_DifficultyOptions.ConsumeMachineryEnabled && recipe != null)
             {
                 var iCount = recipe.Inputs.Count;
                 var oCount = recipe.Outputs.Count;
