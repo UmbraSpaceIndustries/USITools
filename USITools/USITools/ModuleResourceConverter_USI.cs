@@ -78,5 +78,11 @@ namespace USITools
         }
 
         public bool useEfficiencyBonus => UseBonus;
+
+        public override string GetModuleDisplayName()
+        {
+            return GetType().Name;
+        }
+
     }
 }
