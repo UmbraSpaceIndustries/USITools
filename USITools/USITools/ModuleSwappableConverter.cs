@@ -74,9 +74,9 @@ namespace USITools
             if (HighLogic.LoadedSceneIsEditor)
                 return true;
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (kerbal.experienceTrait.Title != "Engineer")
+            if (!kerbal.HasEffect("RepairSkill"))
             {
-                ScreenMessages.PostScreenMessage("Only Engineers can reconfigure modules!", 5f,
+                ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (engineers, mechanics) can reconfigure modules!", 5f,
                     ScreenMessageStyle.UPPER_CENTER);
                 return false;
             }
