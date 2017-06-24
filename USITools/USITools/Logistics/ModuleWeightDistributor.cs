@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using KSP;
+using UnityEngine;
 
 namespace USITools
 {
@@ -76,9 +79,21 @@ namespace USITools
                     disablePhysics = false;
 
                 if (disablePhysics)
-                    p.physicalSignificance = Part.PhysicalSignificance.NONE;
+                {
+                    Transform childtransform = p.partTransform;
+                    Transform transform = part.partTransform;
+
+                    Vector3d worldPartPosition;
+                    Vector3d localPartPosition;
+                    Vector3d childlocalPosition;
+
+                    localPartPosition = part.CoMOffset;
+                    worldPartPosition = transform.TransformPoint(localPartPosition);
+                    childlocalPosition = childtransform.InverseTransformPoint(worldPartPosition);
+                    p.CoMOffset = childlocalPosition;
+                }
                 else
-                    p.physicalSignificance = Part.PhysicalSignificance.FULL;
+                    p.CoMOffset = Vector3d.zero;
             }
         }
     }

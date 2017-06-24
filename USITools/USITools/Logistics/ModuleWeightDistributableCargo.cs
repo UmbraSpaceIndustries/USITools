@@ -6,9 +6,8 @@ namespace USITools
         {
             if (part.parent != null && part.children.Count == 0)
                 return;
-            
-            if (part.physicalSignificance == Part.PhysicalSignificance.NONE)
-                part.physicalSignificance = Part.PhysicalSignificance.FULL;
+
+            part.CoMOffset = Vector3d.zero;
         }
     }
 }
