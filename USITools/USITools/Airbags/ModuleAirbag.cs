@@ -87,11 +87,11 @@ namespace AirbagTools
 
             try
             {
-                if (part.checkLanded())
+                if (part.checkLanded() && isDeployed)
                 {
                     Dampen();
                 }
-                if (part.Landed)
+                if (part.Landed && isDeployed)
                 {
                     Dampen();
                 }
