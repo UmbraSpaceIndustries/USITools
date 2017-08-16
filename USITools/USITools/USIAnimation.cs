@@ -540,7 +540,7 @@ namespace USITools
                 CheckDeployConditions();
                 EnableModules();
             }
-            else if(inflatable)
+            else 
             {
                 ToggleEvent("DeployModule", true);
                 ToggleEvent("RetractModule", false);
