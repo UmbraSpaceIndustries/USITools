@@ -53,8 +53,15 @@ namespace USITools
         protected override void PostProcess(ConverterResults result, double deltaTime)
         {
             base.PostProcess(result, deltaTime);
+            var hasLoad = false;
+            if (status != null)
+            {
+                hasLoad = status.EndsWith("Load");
+            }
+
+
             if (result.TimeFactor >= ResourceUtilities.FLOAT_TOLERANCE
-                && !status.EndsWith("load"))
+                && !hasLoad)
             {
                 statusPercent = 0d; //Force a reset of the load display.
             }
@@ -78,5 +85,11 @@ namespace USITools
         }
 
         public bool useEfficiencyBonus => UseBonus;
+
+        public override string GetModuleDisplayName()
+        {
+            return GetType().Name;
+        }
+
     }
 }
