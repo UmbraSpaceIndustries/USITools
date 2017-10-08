@@ -110,6 +110,8 @@
     <Compile Include="Logistics\USI_ModuleResourceWarehouse.cs" />
     <Compile Include="PartCatalog.cs" />
     <Compile Include="EnginesAndTanks\USIAnimatedFuelTank.cs" />
+    <Compile Include="Robotics\USIModuleHitch.cs" />
+    <Compile Include="Robotics\USIModuleRotator.cs" />
     <Compile Include="USI_Balloon.cs" />
     <Compile Include="USI_ClearIVA.cs" />
     <Compile Include="EnginesAndTanks\USI_DropTank.cs" />
