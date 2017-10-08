@@ -101,7 +101,7 @@ namespace USITools
     public abstract class BaseFilter : MonoBehaviour
     {
         private readonly List<AvailablePart> parts = new List<AvailablePart>();
-        internal string category = "Filter by function";
+        internal string category = "#autoLOC_453547";
         internal bool filter = true;
         protected abstract string Manufacturer { get; set; }
         protected abstract string categoryTitle { get; set; }
@@ -133,7 +133,7 @@ namespace USITools
         private void SubCategories()
         {
             var icon = GenIcon(categoryTitle);
-            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categoryName == category);
+            var filter = PartCategorizer.Instance.filters.Find(f => f.button.categorydisplayName == category);
             PartCategorizer.AddCustomSubcategoryFilter(filter, categoryTitle, categoryTitle, icon, EditorItemsFilter);
         }
 
