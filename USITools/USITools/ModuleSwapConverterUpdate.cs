@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using Assets._UI5.Rendering.Scripts;
+using UnityEngine;
 
 
 namespace USITools
@@ -9,6 +10,7 @@ namespace USITools
     {
         private double lastCheck;
         private double checkTime = 5f;
+        private int loadout = -1;
 
         private List<ConverterPart> _converters;
 
@@ -29,14 +31,23 @@ namespace USITools
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
-            if (Planetarium.GetUniversalTime() - lastCheck < checkTime)
+            if (Time.timeSinceLevelLoad - lastCheck < checkTime)
                 return;
 
+            //Only do a converter check if the situation has changed.
+            //One would be the completed load of all modules.  Just don't
+            //thrash this too many times.
             if (_converters == null || _converters.Count == 0)
+            {
                 SetupParts();
+                lastCheck = Time.timeSinceLevelLoad;
+                CalculateStatus();
+            }
+        }
 
-            lastCheck = Planetarium.GetUniversalTime();
 
+        public void CalculateStatus()
+        {
             var cCount = _converters.Count;
             for (int i = 0; i < cCount; ++i)
             {
@@ -47,19 +58,23 @@ namespace USITools
                     var eBon = 1f;
                     if (conPart.SwapBays.Count > 0)
                     {
+                        var loadout = 0;
                         var sameBays = 0;
                         var bCount = conPart.SwapBays.Count;
                         for (int q = 0; q < bCount; ++q)
                         {
+                            loadout = conPart.SwapBays[q].currentLoadout;
                             if (conPart.SwapBays[q].currentLoadout == z)
                                 sameBays++;
+                            conPart.Converters[loadout].EnableModule();
                         }
+                        if(z!= loadout)
+                            conPart.Converters[z].DisableModule();
                         eBon = sameBays;
                     }
                     conPart.Converters[z].SetEfficiencyBonus("SwapBay", eBon);
                 }
             }
         }
-
     }
 }

@@ -9,5 +9,8 @@ namespace USITools
         {
             get;
         }
+
+        void EnableModule();
+        void DisableModule();
     }
 }
