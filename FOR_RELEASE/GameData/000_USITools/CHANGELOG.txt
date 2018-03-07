@@ -1,3 +1,7 @@
+0.10.2 - 2017.03.06
+------------------
+Logistics Updates
+
 0.10.1 - 2017.10.09
 ------------------
 Fixed issue preventing categories from showing

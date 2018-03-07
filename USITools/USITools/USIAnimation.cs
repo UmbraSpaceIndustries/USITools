@@ -9,7 +9,7 @@ namespace USITools
     public class USIAnimation : PartModule, IMultipleDragCube
     {
         private List<IAnimatedModule> _Modules;
-        private List<ModuleSwappableConverter> _SwapBays;
+        private ModuleSwapController _SwapCon;
         private bool _hasBeenInitialized = false;
 
         private void FindModules()
@@ -17,7 +17,7 @@ namespace USITools
             if (vessel != null)
             {
                 _Modules = part.FindModulesImplementing<IAnimatedModule>();
-                _SwapBays = part.FindModulesImplementing<ModuleSwappableConverter>();
+                _SwapCon = part.FindModuleImplementing<ModuleSwapController>();
             }
         }
 
@@ -493,13 +493,9 @@ namespace USITools
         {
             if (vessel == null || _Modules == null) return;
 
-            if (_SwapBays != null && _SwapBays.Count > 0)
+            if (_SwapCon != null)
             {
-                for (int i = 0, iC = _SwapBays.Count; i < iC; ++i)
-                {
-                    var bay = _SwapBays[i];
-                    bay.SetupMenus();
-                }
+                _SwapCon.SetModuleStates();
             }
             else
             {
