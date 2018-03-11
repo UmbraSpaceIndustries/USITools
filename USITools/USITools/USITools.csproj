@@ -55,8 +55,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConverterPart.cs" />
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
-    <Compile Include="ModuleSwapController.cs" />
+    <Compile Include="LoadoutInfo.cs" />
+    <Compile Include="ModuleSwapControllerNew.cs" />
+    <Compile Include="ModuleSwappableConverter.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
@@ -74,7 +77,6 @@
     <Compile Include="Traits\FundsBoost.cs" />
     <Compile Include="Traits\GeologySkill.cs" />
     <Compile Include="LifeBoat.cs" />
-    <Compile Include="ConverterPart.cs" />
     <Compile Include="IEfficiencyBonusConsumer.cs" />
     <Compile Include="Traits\LogisticsSkill.cs" />
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
@@ -88,8 +90,8 @@
     <Compile Include="ModuleResourceHarvester_USI.cs" />
     <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
-    <Compile Include="ModuleSwappableConverter.cs" />
-    <Compile Include="LoadoutInfo.cs" />
+    <Compile Include="ModuleSwappableConverterNew.cs" />
+    <Compile Include="ModuleSwapOption.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
     <Compile Include="RepBoost.cs" />
     <Compile Include="ScienceBoost.cs" />

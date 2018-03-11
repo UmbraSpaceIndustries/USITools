@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace USITools
 {
-    public class ModuleSwapController : PartModule
+    public class ModuleSwapControllerNew : PartModule
     {
         [KSPField]
         public string ResourceCosts = "";
@@ -76,7 +76,28 @@ namespace USITools
 
         private void ApplyConverterChanges(ModuleResourceConverter_USI converter, ModuleSwapOption loadout)
         {
-            
+            converter.ConverterName = loadout.ConverterName;
+            converter.StartActionName = loadout.StartActionName;
+            converter.StopActionName = loadout.StopActionName;
+            converter.UseSpecialistBonus = loadout.UseSpecialistBonus;
+            if (converter.UseSpecialistBonus)
+                converter.ExperienceEffect = loadout.ExperienceEffect;
+
+            converter.inputList.Clear();
+            converter.outputList.Clear();
+            converter.reqList.Clear();
+
+            converter.Recipe.Inputs.Clear();
+            converter.Recipe.Outputs.Clear();
+            converter.Recipe.Requirements.Clear();
+
+            converter.inputList.AddRange(loadout.inputList);
+            converter.outputList.AddRange(loadout.outputList);
+            converter.reqList.AddRange(loadout.reqList);
+
+            converter.Recipe.Inputs.AddRange(loadout.inputList);
+            converter.Recipe.Outputs.AddRange(loadout.outputList);
+            converter.Recipe.Requirements.AddRange(loadout.reqList);
         }
 
         private void ApplyHarvesterChanges(ModuleResourceHarvester_USI harvester, ModuleSwapOption loadout)
