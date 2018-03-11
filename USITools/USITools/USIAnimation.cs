@@ -9,7 +9,6 @@ namespace USITools
     public class USIAnimation : PartModule, IMultipleDragCube
     {
         private List<IAnimatedModule> _Modules;
-        private ModuleSwapController _SwapCon;
         private bool _hasBeenInitialized = false;
 
         private void FindModules()
@@ -17,7 +16,6 @@ namespace USITools
             if (vessel != null)
             {
                 _Modules = part.FindModulesImplementing<IAnimatedModule>();
-                _SwapCon = part.FindModuleImplementing<ModuleSwapController>();
             }
         }
 
@@ -30,31 +28,44 @@ namespace USITools
         [KSPField]
         public string actionGUIName = "";
 
-        [KSPField] public int CrewCapacity = 0;
+        [KSPField]
+        public int CrewCapacity = 0;
 
-        [KSPField] public string deployAnimationName = "Deploy";
+        [KSPField]
+        public string deployAnimationName = "Deploy";
 
-        [KSPField] public string secondaryAnimationName = "";
+        [KSPField]
+        public string secondaryAnimationName = "";
 
-        [KSPField(isPersistant = true)] public bool isDeployed = false;
+        [KSPField(isPersistant = true)]
+        public bool isDeployed = false;
 
-        [KSPField(isPersistant = true, guiName = "Deployed", guiFormat = "P2")] public double partialDeployCostPaid = 0d;
+        [KSPField(isPersistant = true, guiName = "Deployed", guiFormat = "P2")]
+        public double partialDeployCostPaid = 0d;
 
-        [KSPField(isPersistant = true)] public float inflatedCost = 0;
+        [KSPField(isPersistant = true)]
+        public float inflatedCost = 0;
 
-        [KSPField] public bool inflatable = false;
+        [KSPField]
+        public bool inflatable = false;
 
-        [KSPField] public int PrimaryLayer = 2;
+        [KSPField]
+        public int PrimaryLayer = 2;
 
-        [KSPField] public int SecondaryLayer = 3;
+        [KSPField]
+        public int SecondaryLayer = 3;
 
-        [KSPField] public float inflatedMultiplier = -1;
+        [KSPField]
+        public float inflatedMultiplier = -1;
 
-        [KSPField] public bool shedOnInflate = false;
+        [KSPField]
+        public bool shedOnInflate = false;
 
-        [KSPField] public string ResourceCosts = "";
+        [KSPField]
+        public string ResourceCosts = "";
 
-        [KSPField] public string ReplacementResource = "Construction";
+        [KSPField]
+        public string ReplacementResource = "Construction";
 
         [KSPAction("Deploy Module")]
         public void DeployAction(KSPActionParam param)
@@ -255,7 +266,7 @@ namespace USITools
 
                 if (resInfo.ResourceName != "ElectricCharge" && warehouse != null) //EC we're a lot less picky...
                 {
-                    if(!warehouse.localTransferEnabled)
+                    if (!warehouse.localTransferEnabled)
                         continue;
                 }
                 if (sourcePart.Resources.Contains(resourceName))
@@ -354,7 +365,7 @@ namespace USITools
                         CompressResourceCapacity();
                     var modList = GetAffectedMods();
                     var count = modList.Count;
-                    for(int i = 0; i < count; ++i)
+                    for (int i = 0; i < count; ++i)
                     {
                         modList[i].DisableModule();
                     }
@@ -373,7 +384,7 @@ namespace USITools
             for (int i = 0; i < part.Modules.Count; i++)
             {
                 if (modNames.Contains(part.Modules[i].moduleName))
-                    modList.Add((ModuleResourceConverter) part.Modules[i]);
+                    modList.Add((ModuleResourceConverter)part.Modules[i]);
             }
             return modList;
         }
@@ -491,20 +502,14 @@ namespace USITools
 
         private void EnableModules()
         {
-            if (vessel == null || _Modules == null) return;
+            if (vessel == null || _Modules == null)
+                return;
 
-            if (_SwapCon != null)
+            for (int i = 0, iC = _Modules.Count; i < iC; ++i)
             {
-                _SwapCon.SetModuleStates();
-            }
-            else
-            {
-                for (int i = 0, iC = _Modules.Count; i < iC; ++i)
-                {
-                    var mod = _Modules[i];
-                    if (mod.IsSituationValid())
-                        mod.EnableModule();
-                }
+                var mod = _Modules[i];
+                if (mod.IsSituationValid())
+                    mod.EnableModule();
             }
         }
 
@@ -536,7 +541,7 @@ namespace USITools
                 CheckDeployConditions();
                 EnableModules();
             }
-            else 
+            else
             {
                 ToggleEvent("DeployModule", true);
                 ToggleEvent("RetractModule", false);
@@ -558,7 +563,7 @@ namespace USITools
                     {
                         double oldMaxAmount = res.maxAmount;
                         res.maxAmount *= inflatedMultiplier;
-                        inflatedCost += (float) ((res.maxAmount - oldMaxAmount)*res.info.unitCost);
+                        inflatedCost += (float)((res.maxAmount - oldMaxAmount) * res.info.unitCost);
                     }
                 }
             }
@@ -594,7 +599,7 @@ namespace USITools
 
         public void FixedUpdate()
         {
-            if(!_hasBeenInitialized)
+            if (!_hasBeenInitialized)
                 Initialize();
 
             if (!HighLogic.LoadedSceneIsFlight)

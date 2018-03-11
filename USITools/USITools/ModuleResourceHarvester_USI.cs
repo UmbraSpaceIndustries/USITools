@@ -62,5 +62,18 @@ namespace USITools
         }
 
         public bool useEfficiencyBonus => UseBonus;
+        public void EnableConsumer()
+        {
+            base.EnableModule();
+            isEnabled = true;
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+        public void DisableConsumer()
+        {
+            DisableModule();
+            isEnabled = false;
+            MonoUtilities.RefreshContextWindows(part);
+        }
     }
 }
