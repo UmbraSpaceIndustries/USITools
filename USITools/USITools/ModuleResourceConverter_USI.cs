@@ -91,5 +91,20 @@ namespace USITools
             return GetType().Name;
         }
 
+        public void EnableConsumer()
+        {
+            base.EnableModule();
+            isEnabled = true;
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+        public void DisableConsumer()
+        {
+            DisableModule();
+            isEnabled = false;
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+
     }
 }

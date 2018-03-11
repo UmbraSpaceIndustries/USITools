@@ -88,7 +88,6 @@
     <Compile Include="ModuleResourceHarvester_USI.cs" />
     <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
-    <Compile Include="ModuleSwapConverterUpdate.cs" />
     <Compile Include="ModuleSwappableConverter.cs" />
     <Compile Include="LoadoutInfo.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />

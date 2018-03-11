@@ -1,9 +1,20 @@
 namespace USITools
 {
-    public class LoadoutInfo
+    public class ModuleSwapOption : PartModule
     {
-        public int ModuleId { get; set; }
-        public string LoadoutName { get; set; }
-        public string DecalTexture { get; set; }
+        [KSPField]
+        public float Efficiency = 1;
+
+        [KSPField]
+        public string ResourceName = "";
+
+        [KSPField]
+        public string ConverterName = "";
+
+        [KSPField]
+        public string StartActionName = "";
+
+        [KSPField]
+        public string StopActionName = "";
     }
 }

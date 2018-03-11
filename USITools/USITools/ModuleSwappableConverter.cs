@@ -13,6 +13,12 @@ namespace USITools
         [KSPField]
         public string bayName = "";
 
+        [KSPField]
+        public bool isConverter = false;
+
+        [KSPField]
+        public int moduleIndex = 0;
+
         [KSPField(isPersistant = true)]
         public int currentLoadout = 0;
 
@@ -26,21 +32,10 @@ namespace USITools
                 return;
             var oldTemplate = curTemplate;
             currentLoadout = displayLoadout;
-            _controller.SetModuleStates();
+            NextSetup();
             ScreenMessages.PostScreenMessage("Reconfiguration from " + oldTemplate + " to " + curTemplate + " completed.", 5f,
                 ScreenMessageStyle.UPPER_CENTER);
-            NextSetup();
-            UpdateController();
-        }
-
-        private ModuleSwapConverterUpdate _modUpdater;
-
-        private void UpdateController()
-        {
-            if (_modUpdater == null)
-                _modUpdater = part.FindModuleImplementing<ModuleSwapConverterUpdate>();
-
-            _modUpdater.CalculateStatus();
+            ConfigureLoadout();
         }
 
         [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout",unfocusedRange = 10f)]
@@ -54,8 +49,10 @@ namespace USITools
             {
                 displayLoadout = 0;
             }
-            if(displayLoadout == currentLoadout)
+            if (displayLoadout == currentLoadout)
+            {
                 NextSetup();
+            }
 
             ChangeMenu();
         }
@@ -72,7 +69,9 @@ namespace USITools
                 displayLoadout = _controller.Loadouts.Count-1;
             }
             if (displayLoadout == currentLoadout)
+            {
                 PrevSetup();
+            }
             ChangeMenu();
         }
 
@@ -206,7 +205,6 @@ namespace USITools
                 {
                     _postLoad = true;
                     NextSetup();
-                    
                 }
             }
         }
@@ -216,9 +214,9 @@ namespace USITools
             Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();
             Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();
             Fields["curTemplate"].guiName = (bayName + " Active " + _controller.typeName).Trim();
-            curTemplate = _controller.Loadouts[currentLoadout].LoadoutName;
+            curTemplate = _controller.Loadouts[currentLoadout].ConverterName;
             Events["LoadSetup"].guiName =
-                (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].LoadoutName).Trim();
+                (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].ConverterName).Trim();
 
             MonoUtilities.RefreshContextWindows(part);
         }
@@ -230,12 +228,8 @@ namespace USITools
         {
             _controller = part.FindModuleImplementing<ModuleSwapController>();
             GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                UpdateController();
-            }
             displayLoadout = currentLoadout;
-            MonoUtilities.RefreshContextWindows(part);
+            ConfigureLoadout();
         }
 
         public void OnDestroy()
@@ -252,7 +246,6 @@ namespace USITools
             if (HighLogic.LoadedSceneIsFlight)
             {
                 EnableMenus(enable);
-                _controller.SetupLoadouts();
             }
         }
 
@@ -262,6 +255,11 @@ namespace USITools
             Events["PrevSetup"].active = enable;
             Events["LoadSetup"].active = enable;
             MonoUtilities.RefreshContextWindows(part);
+        }
+
+        private void ConfigureLoadout()
+        {
+            _controller.ApplyLoadout(currentLoadout, moduleIndex,isConverter);
         }
     }
 }

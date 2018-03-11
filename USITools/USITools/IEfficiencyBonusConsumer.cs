@@ -10,7 +10,7 @@ namespace USITools
             get;
         }
 
-        void EnableModule();
-        void DisableModule();
+        void EnableConsumer();
+        void DisableConsumer();
     }
 }

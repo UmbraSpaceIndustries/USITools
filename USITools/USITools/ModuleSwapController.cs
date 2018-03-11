@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace USITools
 {
@@ -14,39 +15,19 @@ namespace USITools
         public string typeName = "Loadout";
 
         public List<ResourceRatio> ResCosts;
-        public List<LoadoutInfo> Loadouts;
-        private List<ModuleSwappableConverter> _bays;
-        private List<BaseConverter> _modules;
-        private IEnumerator _setupLoadouts;
+        public List<ModuleSwapOption> Loadouts;
+        private List<ModuleResourceHarvester_USI> _harvesters;
+        private List<ModuleResourceConverter_USI> _converters;
+
+        private double lastCheck;
+        private double checkInterval = 5d;
 
         public override void OnStart(StartState state)
         {
-            _modules = part.FindModulesImplementing<BaseConverter>();
-            _bays = part.FindModulesImplementing<ModuleSwappableConverter>();
-            SetupLoadouts();
+            Loadouts = part.FindModulesImplementing<ModuleSwapOption>();
+            _converters = part.FindModulesImplementing<ModuleResourceConverter_USI>();
+            _harvesters = part.FindModulesImplementing<ModuleResourceHarvester_USI>();
             SetupResourceCosts();
-            SetModuleStates();
-            MonoUtilities.RefreshContextWindows(part);
-        }
-
-        public int GetModuleCount()
-        {
-            return _modules.Count;
-        }
-
-        public bool EnabledByAnyModule(int moduleId)
-        {
-            for (int i = 0; i < _bays.Count; ++i)
-            {
-                if (_bays[i].currentLoadout == moduleId)
-                    return true;
-            }
-            return false;
-        }
-
-        public BaseConverter GetConverter(int i)
-        {
-            return _modules[i];
         }
 
         private void SetupResourceCosts()
@@ -66,38 +47,6 @@ namespace USITools
             }
         }
 
-        public void SetupLoadouts()
-        {
-            if(_setupLoadouts != null)
-                StopCoroutine(_setupLoadouts);
-
-            _setupLoadouts = RunSetupLoadouts();
-            StartCoroutine(_setupLoadouts);
-        }
-
-
-        private IEnumerator RunSetupLoadouts()
-        {
-            //Get our Module List
-            Loadouts = new List<LoadoutInfo>();
-            int id = 0;
-            var loadoutNames = new List<string>();
-            var count = _modules.Count;
-            for (int i = 0; i < count; ++i)
-            {
-                var con = _modules[i];
-                var loadout = new LoadoutInfo();
-                loadout.LoadoutName = con.ConverterName;
-                loadout.ModuleId = id;
-                loadoutNames.Add(con.ConverterName);
-                Loadouts.Add(loadout);
-                if (!con.IsActivated || HighLogic.LoadedSceneIsEditor)
-                    con.DisableModule();
-                id++;
-                yield return (null);
-            }
-        }
-
         public override string GetInfo()
         {
             if (String.IsNullOrEmpty(ResourceCosts))
@@ -112,31 +61,32 @@ namespace USITools
             return output.ToString();
         }
 
-        private IEnumerator _SetModuleStates;
-
-        public IEnumerator RunModuleStates()
+        public void ApplyLoadout(int loadIdx, int moduleIdx, bool isConverter)
         {
-            var count = GetModuleCount();
-            for (int i = 0; i < count; ++i)
+            var loadout = Loadouts[loadIdx];
+            if (isConverter)
             {
-                var con = GetConverter(i);
-                if (HighLogic.LoadedSceneIsEditor && con.enabled)
-                    con.DisableModule();
-                else if (!con.enabled && EnabledByAnyModule(i))
-                    con.EnableModule();
-                else if (con.enabled)
-                    con.DisableModule();
-                yield return (null);
+                ApplyConverterChanges(_converters[moduleIdx], loadout);
+            }
+            else
+            {
+                ApplyHarvesterChanges(_harvesters[moduleIdx], loadout);
             }
         }
 
-        public void SetModuleStates()
+        private void ApplyConverterChanges(ModuleResourceConverter_USI converter, ModuleSwapOption loadout)
         {
-            if(_SetModuleStates != null)
-                StopCoroutine(_SetModuleStates);
+            
+        }
 
-            _SetModuleStates = RunModuleStates();
-            StartCoroutine(_setupLoadouts);
+        private void ApplyHarvesterChanges(ModuleResourceHarvester_USI harvester, ModuleSwapOption loadout)
+        {
+            harvester.Efficiency = loadout.Efficiency;
+            harvester.ResourceName = loadout.ResourceName;
+            harvester.ConverterName = loadout.ConverterName;
+            harvester.StartActionName = loadout.StartActionName;
+            harvester.StopActionName = loadout.StopActionName;
+            MonoUtilities.RefreshContextWindows(part);
         }
     }
 }
