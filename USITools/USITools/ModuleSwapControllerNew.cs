@@ -82,6 +82,9 @@ namespace USITools
             converter.UseSpecialistBonus = loadout.UseSpecialistBonus;
             if (converter.UseSpecialistBonus)
                 converter.ExperienceEffect = loadout.ExperienceEffect;
+            converter.UseBonus = loadout.UseBonus;
+            converter.eMultiplier = loadout.eMultiplier;
+            converter.eTag = loadout.eTag;
 
             converter.inputList.Clear();
             converter.outputList.Clear();

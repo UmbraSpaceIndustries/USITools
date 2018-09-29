@@ -26,6 +26,15 @@ namespace USITools
         [KSPField]
         public string ExperienceEffect = "";
 
+        [KSPField]
+        public bool UseBonus = true;
+
+        [KSPField]
+        public double eMultiplier = 1d;
+
+        [KSPField]
+        public string eTag = "";
+
         public List<ResourceRatio> inputList;
         public List<ResourceRatio> outputList;
         public List<ResourceRatio> reqList;

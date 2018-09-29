@@ -11,6 +11,12 @@ namespace USITools
         [KSPField]
         public bool UseBonus = true;
 
+        [KSPField]
+        public double eMultiplier = 1d;
+
+        [KSPField]
+        public string eTag = "";
+
         public Dictionary<string, float> BonusList
         {
             get
