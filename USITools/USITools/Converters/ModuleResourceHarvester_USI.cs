@@ -11,7 +11,7 @@ namespace USITools
         public Dictionary<string, float> BonusList { get; private set; } =
             new Dictionary<string, float>();
 
-        public bool useEfficiencyBonus
+        public bool UseEfficiencyBonus
         {
             get
             {
@@ -76,20 +76,6 @@ namespace USITools
             {
                 statusPercent = 0d; //Force a reset of the load display.
             }
-        }
-
-        public void EnableConsumer()
-        {
-            base.EnableModule();
-            isEnabled = true;
-            MonoUtilities.RefreshContextWindows(part);
-        }
-
-        public void DisableConsumer()
-        {
-            DisableModule();
-            isEnabled = false;
-            MonoUtilities.RefreshContextWindows(part);
         }
     }
 }

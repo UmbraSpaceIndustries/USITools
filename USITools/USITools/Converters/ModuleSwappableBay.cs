@@ -10,9 +10,6 @@
         public string bayName = "";
 
         [KSPField]
-        public bool isConverter = false;
-
-        [KSPField]
         public int moduleIndex = 0;
 
         [KSPField(isPersistant = true)]

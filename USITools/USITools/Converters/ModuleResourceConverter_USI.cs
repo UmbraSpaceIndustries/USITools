@@ -18,7 +18,25 @@ namespace USITools
         public Dictionary<string, float> BonusList { get; private set; } =
             new Dictionary<string, float>();
 
-        public bool useEfficiencyBonus
+        public float Governor = 1.0f;
+        private double _efficiencyMultiplier;
+        public double EfficiencyMultiplier
+        {
+            get
+            {
+                if (HighLogic.LoadedSceneIsEditor)
+                    return _efficiencyMultiplier * Governor;
+                if (!IsActivated)
+                    _efficiencyMultiplier = 0d;
+                return _efficiencyMultiplier * Governor;
+            }
+            set
+            {
+                _efficiencyMultiplier = value;
+            }
+        }
+
+        public bool UseEfficiencyBonus
         {
             get
             {
@@ -103,25 +121,27 @@ namespace USITools
             {
                 statusPercent = 0d; //Force a reset of the load display.
             }
+
+            if (_swapOption != null)
+            {
+                _swapOption.PostProcess(this, result, deltaTime);
+            }
+        }
+
+        public override string GetInfo()
+        {
+            if (string.IsNullOrEmpty(eTag))
+                return base.GetInfo();
+            var resourceConsumption = base.GetInfo();
+            int index = resourceConsumption.IndexOf("\n"); // Strip the first line containing the etag
+            resourceConsumption = resourceConsumption.Substring(index + 1);
+            return "Boosts efficiency of converters benefiting from a " + eTag + "\n\n" +
+                "Boost power: " + eMultiplier.ToString() + resourceConsumption;
         }
 
         public override string GetModuleDisplayName()
         {
             return GetType().Name;
-        }
-
-        public void EnableConsumer()
-        {
-            base.EnableModule();
-            isEnabled = true;
-            MonoUtilities.RefreshContextWindows(part);
-        }
-
-        public void DisableConsumer()
-        {
-            DisableModule();
-            isEnabled = false;
-            MonoUtilities.RefreshContextWindows(part);
         }
     }
 }

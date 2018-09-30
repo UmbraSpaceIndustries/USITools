@@ -10,10 +10,16 @@ namespace USITools
         {
             converter.ConverterName = ConverterName;
             converter.StartActionName = StartActionName;
+            converter.StopActionName = StopActionName;
             converter.UseSpecialistBonus = UseSpecialistBonus;
             converter.ExperienceEffect = ExperienceEffect;
 
             MonoUtilities.RefreshContextWindows(part);
+        }
+
+        public virtual void PostProcess(T Converter, ConverterResults result, double deltaTime)
+        {
+            PostProcess(result, deltaTime);
         }
     }
 
@@ -43,13 +49,12 @@ namespace USITools
         [KSPField]
         public bool UseBonus = true;
 
-        public List<ResourceRatio> inputList { get; set; }
-        public List<ResourceRatio> outputList { get; set; }
-        public List<ResourceRatio> reqList { get; set; }
+        public List<ResourceRatio> inputList;
+        public List<ResourceRatio> outputList;
+        public List<ResourceRatio> reqList;
 
-        public virtual ConversionRecipe PrepareRecipe(ConversionRecipe recipe)
+        public virtual void PostProcess(ConverterResults result, double deltaTime)
         {
-            return recipe;
         }
 
         public override void OnLoad(ConfigNode node)

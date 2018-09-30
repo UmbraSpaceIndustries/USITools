@@ -25,26 +25,5 @@ namespace USITools
 
             base.ApplyConverterChanges(converter);
         }
-
-        public override ConversionRecipe PrepareRecipe(ConversionRecipe recipe)
-        {
-            if (!USI_DifficultyOptions.ConsumeMachineryEnabled && recipe != null)
-            {
-                for (int i = recipe.Inputs.Count; i-- > 0;)
-                {
-                    var input = recipe.Inputs[i];
-                    if (input.ResourceName == "Machinery")
-                        recipe.Inputs.Remove(input);
-                }
-                for (int o = recipe.Outputs.Count; o-- > 0;)
-                {
-                    var output = recipe.Outputs[o];
-                    if (output.ResourceName == "Recyclables")
-                        recipe.Inputs.Remove(output);
-                }
-            }
-
-            return recipe;
-        }
     }
 }

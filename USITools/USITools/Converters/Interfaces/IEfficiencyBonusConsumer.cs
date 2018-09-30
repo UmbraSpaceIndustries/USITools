@@ -4,10 +4,6 @@ namespace USITools
     {
         float GetEfficiencyBonus();
         void SetEfficiencyBonus(string bonName, float bonValue);
-
-        bool useEfficiencyBonus { get; }
-
-        void EnableConsumer();
-        void DisableConsumer();
+        bool UseEfficiencyBonus { get; }
     }
 }
