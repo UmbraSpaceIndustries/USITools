@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Text;
-
-namespace USITools
+﻿namespace USITools.Converters
 {
-    public class ModuleSwappableConverterNew : PartModule
+    public class ModuleSwappableBay : PartModule
     {
+        #region KSP Fields and Events
         [KSPField]
         public bool autoActivate = true;
 
@@ -24,20 +21,23 @@ namespace USITools
         [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Active: ")]
         public string curTemplate = "???";
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Install [None]",unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Install [None]", unfocusedRange = 10f)]
         public void LoadSetup()
         {
             if (!CheckResources())
                 return;
+
             var oldTemplate = curTemplate;
             currentLoadout = displayLoadout;
             NextSetup();
+
             ScreenMessages.PostScreenMessage("Reconfiguration from " + oldTemplate + " to " + curTemplate + " completed.", 5f,
                 ScreenMessageStyle.UPPER_CENTER);
+
             ConfigureLoadout();
         }
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout",unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout", unfocusedRange = 10f)]
         public void NextSetup()
         {
             if (_controller.Loadouts.Count < 2)
@@ -61,17 +61,81 @@ namespace USITools
         {
             if (_controller.Loadouts.Count < 2)
                 return;
-            
+
             displayLoadout--;
             if (displayLoadout < 0)
             {
-                displayLoadout = _controller.Loadouts.Count-1;
+                displayLoadout = _controller.Loadouts.Count - 1;
             }
             if (displayLoadout == currentLoadout)
             {
                 PrevSetup();
             }
+
             ChangeMenu();
+        }
+        #endregion
+
+        #region Fields and properties
+        private bool _postLoad = false;
+        private int displayLoadout;
+        private ModuleSwapController _controller;
+        #endregion
+
+        public override void OnStart(StartState state)
+        {
+            _controller = part.FindModuleImplementing<ModuleSwapController>();
+            GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
+            displayLoadout = currentLoadout;
+            ConfigureLoadout();
+        }
+
+        private void SetModuleState(ModuleAnimationGroup module, bool enable)
+        {
+            if (module != null && module.part != part)
+                return;
+
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                EnableMenus(enable);
+            }
+        }
+
+        private void EnableMenus(bool enable)
+        {
+            Events["NextSetup"].active = enable;
+            Events["PrevSetup"].active = enable;
+            Events["LoadSetup"].active = enable;
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+        private void ConfigureLoadout()
+        {
+            _controller.ApplyLoadout(currentLoadout, moduleIndex);
+        }
+
+        public void Update()
+        {
+            if (!_postLoad)
+            {
+                if (_controller.Loadouts.Count > 2)
+                {
+                    _postLoad = true;
+                    NextSetup();
+                }
+            }
+        }
+
+        public void ChangeMenu()
+        {
+            Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();
+            Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();
+            Fields["curTemplate"].guiName = (bayName + " Active " + _controller.typeName).Trim();
+            curTemplate = _controller.Loadouts[currentLoadout].ConverterName;
+            Events["LoadSetup"].guiName =
+                (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].ConverterName).Trim();
+
+            MonoUtilities.RefreshContextWindows(part);
         }
 
         private bool CheckResources()
@@ -89,10 +153,10 @@ namespace USITools
             var allResources = true;
             var missingResources = "";
             //Check that we have everything we need.
-            var count = _controller.ResCosts.Count;
-            for(int i = 0; i < count; ++i)
+            var count = _controller.ResourceCostRatios.Count;
+            for (int i = 0; i < count; ++i)
             {
-                var r = _controller.ResCosts[i];
+                var r = _controller.ResourceCostRatios[i];
                 if (!HasResource(r))
                 {
                     allResources = false;
@@ -108,7 +172,7 @@ namespace USITools
             //Since everything is here...
             for (int i = 0; i < count; ++i)
             {
-                var r = _controller.ResCosts[i];
+                var r = _controller.ResourceCostRatios[i];
                 TakeResources(r);
             }
             return true;
@@ -128,7 +192,7 @@ namespace USITools
             for (int i = 0; i < count; ++i)
             {
                 var whp = whpList[i];
-                if(whp == part)
+                if (whp == part)
                     continue;
 
                 if (resInfo.ResourceName != "ElectricCharge")
@@ -194,71 +258,9 @@ namespace USITools
             }
         }
 
-        private bool _postLoad = false;
-
-        public void FixedUpdate()
-        {
-            if (!_postLoad)
-            {
-                if (_controller.Loadouts.Count > 2)
-                {
-                    _postLoad = true;
-                    NextSetup();
-                }
-            }
-        }
-
-        public void ChangeMenu()
-        {
-            Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();
-            Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();
-            Fields["curTemplate"].guiName = (bayName + " Active " + _controller.typeName).Trim();
-            curTemplate = _controller.Loadouts[currentLoadout].ConverterName;
-            Events["LoadSetup"].guiName =
-                (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].ConverterName).Trim();
-
-            MonoUtilities.RefreshContextWindows(part);
-        }
-
-        private int displayLoadout;
-        private ModuleSwapControllerNew _controller;
-
-        public override void OnStart(StartState state)
-        {
-            _controller = part.FindModuleImplementing<ModuleSwapControllerNew>();
-            GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
-            displayLoadout = currentLoadout;
-            ConfigureLoadout();
-        }
-
         public void OnDestroy()
         {
             GameEvents.OnAnimationGroupStateChanged.Remove(SetModuleState);
-        }
-
-
-        private void SetModuleState(ModuleAnimationGroup module, bool enable)
-        {
-            if (module != null && module.part != part)
-                return;
-
-            if (HighLogic.LoadedSceneIsFlight)
-            {
-                EnableMenus(enable);
-            }
-        }
-
-        private void EnableMenus(bool enable)
-        {
-            Events["NextSetup"].active = enable;
-            Events["PrevSetup"].active = enable;
-            Events["LoadSetup"].active = enable;
-            MonoUtilities.RefreshContextWindows(part);
-        }
-
-        private void ConfigureLoadout()
-        {
-            _controller.ApplyLoadout(currentLoadout, moduleIndex,isConverter);
         }
     }
 }

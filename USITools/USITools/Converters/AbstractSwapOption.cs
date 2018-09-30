@@ -1,9 +1,23 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace USITools
 {
-    public class ModuleSwapOption : PartModule
+    public abstract class AbstractSwapOption<T> : AbstractSwapOption
+        where T : BaseConverter
+    {
+        public virtual void ApplyConverterChanges(T converter)
+        {
+            converter.ConverterName = ConverterName;
+            converter.StartActionName = StartActionName;
+            converter.UseSpecialistBonus = UseSpecialistBonus;
+            converter.ExperienceEffect = ExperienceEffect;
+
+            MonoUtilities.RefreshContextWindows(part);
+        }
+    }
+
+    public abstract class AbstractSwapOption : PartModule
     {
         [KSPField]
         public float Efficiency = 1;
@@ -29,15 +43,14 @@ namespace USITools
         [KSPField]
         public bool UseBonus = true;
 
-        [KSPField]
-        public double eMultiplier = 1d;
+        public List<ResourceRatio> inputList { get; set; }
+        public List<ResourceRatio> outputList { get; set; }
+        public List<ResourceRatio> reqList { get; set; }
 
-        [KSPField]
-        public string eTag = "";
-
-        public List<ResourceRatio> inputList;
-        public List<ResourceRatio> outputList;
-        public List<ResourceRatio> reqList;
+        public virtual ConversionRecipe PrepareRecipe(ConversionRecipe recipe)
+        {
+            return recipe;
+        }
 
         public override void OnLoad(ConfigNode node)
         {
@@ -76,9 +89,6 @@ namespace USITools
                         break;
                 }
             }
-
         }
     }
-
-
 }

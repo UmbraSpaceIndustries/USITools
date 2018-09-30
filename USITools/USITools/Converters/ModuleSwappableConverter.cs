@@ -4,6 +4,7 @@ using System.Text;
 
 namespace USITools
 {
+    [Obsolete("Use a class derived from AbstractSwap")]
     public class ModuleSwappableConverter : PartModule
     {
         [KSPField]

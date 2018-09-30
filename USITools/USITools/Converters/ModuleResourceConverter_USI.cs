@@ -1,30 +1,64 @@
-using System;
 using System.Collections.Generic;
 using USITools.KolonyTools;
 
 namespace USITools
 {
-    public class ModuleResourceConverter_USI : ModuleResourceConverter, IEfficiencyBonusConsumer
+    public class ModuleResourceConverter_USI :
+        ModuleResourceConverter,
+        IEfficiencyBonusConsumer,
+        ISwappableConverter
     {
-        private Dictionary<string, float> _bonusList;
-
-        [KSPField]
-        public bool UseBonus = true;
-
+        #region Fields and properties
         [KSPField]
         public double eMultiplier = 1d;
 
         [KSPField]
         public string eTag = "";
 
-        public Dictionary<string, float> BonusList
+        public Dictionary<string, float> BonusList { get; private set; } =
+            new Dictionary<string, float>();
+
+        public bool useEfficiencyBonus
         {
             get
             {
-                if (_bonusList == null)
-                    _bonusList = new Dictionary<string, float>();
-                return _bonusList;
+                if (_swapOption != null)
+                    return _swapOption.UseBonus;
+                else
+                    return false;
             }
+        }
+
+        private AbstractSwapOption<ModuleResourceConverter_USI> _swapOption;
+        #endregion
+
+        public void Swap(AbstractSwapOption swapOption)
+        {
+            Swap(swapOption as AbstractSwapOption<ModuleResourceConverter_USI>);
+        }
+
+        public void Swap(AbstractSwapOption<ModuleResourceConverter_USI> swapOption)
+        {
+            _swapOption = swapOption;
+            _swapOption.ApplyConverterChanges(this);
+        }
+
+        public float GetEfficiencyBonus()
+        {
+            var totalBonus = 1f;
+            foreach (var bonus in BonusList)
+            {
+                totalBonus *= bonus.Value;
+            }
+            return totalBonus;
+        }
+
+        public void SetEfficiencyBonus(string name, float value)
+        {
+            if (!BonusList.ContainsKey(name))
+                BonusList.Add(name, value);
+            else
+                BonusList[name] = value;
         }
 
         protected override void PreProcessing()
@@ -38,17 +72,15 @@ namespace USITools
             var recipe = base.PrepareRecipe(deltatime);
             if (!USI_DifficultyOptions.ConsumeMachineryEnabled && recipe != null)
             {
-                var iCount = recipe.Inputs.Count;
-                var oCount = recipe.Outputs.Count;
-                for (int i = iCount; i-- > 0;)
+                for (int i = recipe.Inputs.Count; i-- > 0;)
                 {
-                    var ip = recipe.Inputs[i];
-                    if (ip.ResourceName == "Machinery")
-                        recipe.Inputs.Remove(ip);
+                    var input = recipe.Inputs[i];
+                    if (input.ResourceName == "Machinery")
+                        recipe.Inputs.Remove(input);
                 }
-                for (int o = oCount; o-- > 0;)
+                for (int output = recipe.Outputs.Count; output-- > 0;)
                 {
-                    var op = recipe.Outputs[o];
+                    var op = recipe.Outputs[output];
                     if (op.ResourceName == "Recyclables")
                         recipe.Inputs.Remove(op);
                 }
@@ -72,25 +104,6 @@ namespace USITools
                 statusPercent = 0d; //Force a reset of the load display.
             }
         }
-        public float GetEfficiencyBonus()
-        {
-            var finBonus = 1f;
-            foreach (var b in BonusList)
-            {
-                finBonus *= b.Value;
-            }
-            return finBonus;
-        }
-
-        public void SetEfficiencyBonus(string bonName, float bonVal)
-        {
-            if (!BonusList.ContainsKey(bonName))
-                BonusList.Add(bonName, bonVal);
-            else
-                BonusList[bonName] = bonVal;
-        }
-
-        public bool useEfficiencyBonus => UseBonus;
 
         public override string GetModuleDisplayName()
         {
@@ -110,7 +123,5 @@ namespace USITools
             isEnabled = false;
             MonoUtilities.RefreshContextWindows(part);
         }
-
-
     }
 }

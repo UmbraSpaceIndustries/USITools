@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace USITools
 {
+    [Obsolete]
     public class ConverterPart
     {
         public Part HostPart { get; set; }
