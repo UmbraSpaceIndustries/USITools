@@ -10,6 +10,9 @@ namespace USITools
 
         [KSPField(guiActive = true, guiName = "PDU Range")]
         public string gui_pduRange;
+ 
+        [KSPField]
+        public string RequiredSkill = "ConverterSkill";
 
         public bool isDistributingPower
         {
