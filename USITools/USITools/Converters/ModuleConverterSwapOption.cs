@@ -1,6 +1,4 @@
-﻿using USITools.KolonyTools;
-
-namespace USITools
+﻿namespace USITools
 {
     public class ModuleConverterSwapOption
         : AbstractSwapOption<ModuleResourceConverter_USI>
