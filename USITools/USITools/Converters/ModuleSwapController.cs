@@ -1,8 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace USITools
 {
+    [Obsolete("Use ModuleSwapController instead.")]
+    public class ModuleSwapControllerNew : ModuleSwapController { }
+
     public class ModuleSwapController : PartModule
     {
         [KSPField]
@@ -11,23 +15,21 @@ namespace USITools
         [KSPField]
         public string typeName = "Loadout";
 
-        public List<ResourceRatio> ResourceCostRatios = new List<ResourceRatio>();
+        public List<ResourceRatio> SwapCosts = new List<ResourceRatio>();
         public List<AbstractSwapOption> Loadouts;
 
         private List<ISwappableConverter> _converters;
-        private double lastCheck;
-        private double checkInterval = 5d;
 
         public override void OnStart(StartState state)
         {
             Loadouts = part.FindModulesImplementing<AbstractSwapOption>();
             _converters = part.FindModulesImplementing<ISwappableConverter>();
-            SetupResourceCosts();
+            SetupSwapCosts();
         }
 
-        private void SetupResourceCosts()
+        private void SetupSwapCosts()
         {
-            ResourceCostRatios.Clear();
+            SwapCosts.Clear();
 
             if (string.IsNullOrEmpty(ResourceCosts))
                 return;
@@ -35,7 +37,7 @@ namespace USITools
             var resources = ResourceCosts.Split(',');
             for (int i = 0; i < resources.Length; i += 2)
             {
-                ResourceCostRatios.Add(new ResourceRatio
+                SwapCosts.Add(new ResourceRatio
                 {
                     ResourceName = resources[i],
                     Ratio = double.Parse(resources[i + 1])

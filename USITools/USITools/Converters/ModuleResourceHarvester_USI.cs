@@ -54,6 +54,11 @@ namespace USITools
                 BonusList[name] = value;
         }
 
+        public override string GetInfo()
+        {
+            return string.Empty;
+        }
+
         protected override void PreProcessing()
         {
             base.PreProcessing();
@@ -69,7 +74,6 @@ namespace USITools
             {
                 hasLoad = status.EndsWith("Load");
             }
-
 
             if (result.TimeFactor >= ResourceUtilities.FLOAT_TOLERANCE
                 && !hasLoad)

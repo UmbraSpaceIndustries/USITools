@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace USITools
+namespace USITools.Converters
 {
     [Obsolete]
     public class ConverterPart

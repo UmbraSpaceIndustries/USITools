@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 namespace USITools
@@ -52,6 +53,89 @@ namespace USITools
         public List<ResourceRatio> inputList;
         public List<ResourceRatio> outputList;
         public List<ResourceRatio> reqList;
+
+        public override string GetInfo()
+        {
+            StringBuilder output = new StringBuilder();
+            output
+                .AppendLine(ConverterName)
+                .AppendLine();
+
+            if (inputList.Count > 0)
+            {
+                output.AppendLine("<color=#99FF00>Inputs:</color>");
+                foreach (var resource in inputList)
+                {
+                    output
+                        .Append(" - ")
+                        .Append(resource.ResourceName)
+                        .Append(": ");
+
+                    if (resource.ResourceName == "ElectricCharge")
+                        output
+                            .AppendFormat("{0:F2}/sec", resource.Ratio)
+                            .AppendLine();
+                    else
+                        output.AppendLine(ParseResourceRatio(resource.Ratio));
+                }
+            }
+            if (outputList.Count > 0)
+            {
+                output.AppendLine("<color=#99FF00>Outputs:</color>");
+                foreach (var resource in outputList)
+                {
+                    output
+                        .Append(" - ")
+                        .Append(resource.ResourceName)
+                        .Append(": ");
+
+                    if (resource.ResourceName == "ElectricCharge")
+                        output
+                            .AppendFormat("{0:F2}/sec", resource.Ratio)
+                            .AppendLine();
+                    else
+                        output.AppendLine(ParseResourceRatio(resource.Ratio));
+                }
+            }
+            if (reqList.Count > 0)
+            {
+                output.AppendLine("<color=#99FF00>Requirements:</color>");
+                foreach (var resource in reqList)
+                {
+                    output
+                        .Append(" - ")
+                        .Append(resource.ResourceName)
+                        .Append(": ")
+                        .AppendFormat("{0:F2}", resource.Ratio)
+                        .AppendLine();
+                }
+            }
+
+            return output.ToString();
+        }
+
+        private string ParseResourceRatio(double ratio)
+        {
+            //string units = "sec";
+            //if (ratio < 0.001)
+            //{
+            //    ratio *= 60;
+            //    units = "min";
+            //}
+            //if (ratio < 0.001)
+            //{
+            //    ratio *= 60;
+            //    units = "hr";
+            //}
+            //if (ratio < 0.001)
+            //{
+            //    ratio *= 6;
+            //    units = "day";
+            //}
+
+            // 60 seconds X 60 minutes X 6 hours = 21600 seconds per Kerbin day
+            return string.Format("{0:F2}/day", ratio * 21600);
+        }
 
         public virtual void PostProcess(ConverterResults result, double deltaTime)
         {

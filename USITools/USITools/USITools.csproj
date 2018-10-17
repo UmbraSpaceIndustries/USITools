@@ -64,8 +64,6 @@
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
     <Compile Include="Converters\LoadoutInfo.cs" />
     <Compile Include="Converters\ModuleSwapController.cs" />
-    <Compile Include="Converters\ModuleSwappableConverter.cs" />
-    <Compile Include="Converters\ModuleSwapControllerNew.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
@@ -96,7 +94,6 @@
     <Compile Include="Converters\ModuleResourceHarvester_USI.cs" />
     <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
-    <Compile Include="Converters\ModuleSwappableConverterNew.cs" />
     <Compile Include="Converters\ModuleHarvesterSwapOption.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
     <Compile Include="RepBoost.cs" />

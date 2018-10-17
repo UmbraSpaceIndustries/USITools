@@ -1,5 +1,13 @@
-﻿namespace USITools.Converters
+﻿using System;
+
+namespace USITools.Converters
 {
+    [Obsolete("Use ModuleSwappableBay instead.")]
+    public class ModuleSwappableConverter : ModuleSwappableBay { }
+
+    [Obsolete("Use ModuleSwappableBay instead.")]
+    public class ModuleSwappableConverterNew : ModuleSwappableBay { }
+
     public class ModuleSwappableBay : PartModule
     {
         #region KSP Fields and Events
@@ -150,10 +158,10 @@
             var allResources = true;
             var missingResources = "";
             //Check that we have everything we need.
-            var count = _controller.ResourceCostRatios.Count;
+            var count = _controller.SwapCosts.Count;
             for (int i = 0; i < count; ++i)
             {
-                var r = _controller.ResourceCostRatios[i];
+                var r = _controller.SwapCosts[i];
                 if (!HasResource(r))
                 {
                     allResources = false;
@@ -169,7 +177,7 @@
             //Since everything is here...
             for (int i = 0; i < count; ++i)
             {
-                var r = _controller.ResourceCostRatios[i];
+                var r = _controller.SwapCosts[i];
                 TakeResources(r);
             }
             return true;
