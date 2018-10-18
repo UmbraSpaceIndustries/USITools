@@ -1,85 +1,101 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace USITools
 {
-    public class ModuleResourceHarvester_USI :
-        ModuleResourceHarvester,
-        IEfficiencyBonusConsumer,
-        ISwappableConverter
+    [Obsolete("Use USI_ResourceHarvester instead.")]
+    public class ModuleResourceHarvester_USI : PartModule
     {
-        #region Fields and properties
-        public Dictionary<string, float> BonusList { get; private set; } =
-            new Dictionary<string, float>();
+        [KSPField(isPersistant = true)]
+        public bool IsActivated;
 
-        public bool UseEfficiencyBonus
+        [KSPField(isPersistant = true)]
+        public bool hasBeenUpdated;
+
+        private ModuleResourceHarvester_USI _presidingInstance;
+
+        public List<bool> PreviouslyActiveList { get; private set; } = new List<bool>();
+
+        public override void OnStart(StartState state)
         {
-            get
+            base.OnStart(state);
+
+            // Determine which recipe each harvester was previously resposible for,
+            //  find which bay(s) are currently responsible for that recipe and
+            //  activate the corresponding harvester(s) if they were previously active.
+            if (_presidingInstance == this && !hasBeenUpdated)
             {
-                if (_swapOption != null)
-                    return _swapOption.UseBonus;
+                var swapOptionCount = part.FindModulesImplementing<AbstractSwapOption>().Count;
+                var harvesters = part.FindModulesImplementing<USI_ResourceHarvester>();
+                var bays = part.FindModulesImplementing<USI_SwappableBay>();
+                var controller = part.FindModuleImplementing<USI_SwapController>();
+
+                if (controller == null)
+                    Debug.LogError(string.Format("[USI] {0}: Trying to import old loadout(s) into a part with no USI_SwapController. Check the part config file.", GetType().Name));
+                else if (swapOptionCount != PreviouslyActiveList.Count)
+                    Debug.LogError(string.Format("[USI] {0}: Trying to import {1} old loadout(s) into a part with {2} swap option(s). Check the part config file.", GetType().Name, PreviouslyActiveList.Count, swapOptionCount));
                 else
-                    return false;
+                {
+                    // i will correspond to the loadout index
+                    for (int i = 0; i < PreviouslyActiveList.Count; i++)
+                    {
+                        bool wasActive = PreviouslyActiveList[i];
+                        if (wasActive)
+                        {
+                            // Determine which bays (if any) are currently configured for this loadout
+                            var configuredBays = bays.Where(b => b.currentLoadout == i);
+                            if (configuredBays.Any())
+                            {
+                                var bayIndexes = configuredBays.Select(b => b.moduleIndex);
+                                foreach (var index in bayIndexes)
+                                {
+                                    var harvester = harvesters[index];
+                                    harvester.isEnabled = true;
+                                    harvester.IsActivated = true;
+                                }
+                            }
+                        }
+                    }
+
+                    hasBeenUpdated = true;
+                }
             }
         }
 
-        private AbstractSwapOption<ModuleResourceHarvester_USI> _swapOption;
-        #endregion
-
-        public void Swap(AbstractSwapOption swapOption)
+        public override void OnLoad(ConfigNode node)
         {
-            Swap(swapOption as AbstractSwapOption<ModuleResourceHarvester_USI>);
-        }
+            base.OnLoad(node);
 
-        public void Swap(AbstractSwapOption<ModuleResourceHarvester_USI> swapOption)
-        {
-            _swapOption = swapOption;
-            _swapOption.ApplyConverterChanges(this);
-        }
-
-        public float GetEfficiencyBonus()
-        {
-            var totalBonus = 1f;
-            foreach (var bonus in BonusList)
+            // The order these nodes are loaded by the game should match the loadout order
+            //  of the swap options. So we should be able to use this to determine
+            //  which recipes were active previously and thus which converters to re-activate.
+            if (_presidingInstance == null)
             {
-                totalBonus *= bonus.Value;
-            }
-            return totalBonus;
-        }
-
-        public void SetEfficiencyBonus(string name, float value)
-        {
-            if (!BonusList.ContainsKey(name))
-                BonusList.Add(name, value);
-            else
-                BonusList[name] = value;
-        }
-
-        public override string GetInfo()
-        {
-            return string.Empty;
-        }
-
-        protected override void PreProcessing()
-        {
-            base.PreProcessing();
-            EfficiencyBonus = GetEfficiencyBonus();
-        }
-
-        protected override void PostProcess(ConverterResults result, double deltaTime)
-        {
-            base.PostProcess(result, deltaTime);
-
-            var hasLoad = false;
-            if (status != null)
-            {
-                hasLoad = status.EndsWith("Load");
+                // If there are other ModuleResourceHarvester_USI instances on this part,
+                //  see if any of them have a PreviouslyActiveList started yet. If so, then
+                //  let that instance handle the remainder of this process. Otherwise, make this instance
+                //  the presiding instance.
+                var otherInstances = part.FindModulesImplementing<ModuleResourceHarvester_USI>();
+                if (otherInstances != null)
+                {
+                    var candidate = otherInstances.Where(i => i.PreviouslyActiveList.Count > 0).FirstOrDefault();
+                    _presidingInstance = candidate ?? this;
+                }
+                else
+                    _presidingInstance = this;
             }
 
-            if (result.TimeFactor >= ResourceUtilities.FLOAT_TOLERANCE
-                && !hasLoad)
-            {
-                statusPercent = 0d; //Force a reset of the load display.
-            }
+            _presidingInstance.PreviouslyActiveList.Add(IsActivated && isEnabled);
+        }
+
+        public override void OnSave(ConfigNode node)
+        {
+            if (_presidingInstance != null)
+                hasBeenUpdated = _presidingInstance.hasBeenUpdated;
+
+            base.OnSave(node);
         }
     }
 }

@@ -5,9 +5,9 @@ using System.Text;
 namespace USITools
 {
     [Obsolete("Use ModuleSwapController instead.")]
-    public class ModuleSwapControllerNew : ModuleSwapController { }
+    public class ModuleSwapControllerNew : USI_SwapController { }
 
-    public class ModuleSwapController : PartModule
+    public class USI_SwapController : PartModule
     {
         [KSPField]
         public string ResourceCosts = "";

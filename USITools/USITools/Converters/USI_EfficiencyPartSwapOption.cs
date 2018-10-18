@@ -1,6 +1,6 @@
 ﻿namespace USITools
 {
-    public class ModuleEfficiencyPartSwapOption : ModuleConverterSwapOption
+    public class USI_EfficiencyPartSwapOption : USI_ConverterSwapOption
     {
         [KSPField]
         public double eMultiplier = 1d;
@@ -8,7 +8,7 @@
         [KSPField]
         public string eTag = "";
 
-        public override void ApplyConverterChanges(ModuleResourceConverter_USI converter)
+        public override void ApplyConverterChanges(USI_ResourceConverter converter)
         {
             UseBonus = false;  // efficiency parts should not use bonuses from other efficiency parts!
             converter.eMultiplier = eMultiplier;
@@ -28,7 +28,7 @@
                 "Boost power: " + eMultiplier.ToString() + resourceConsumption;
         }
 
-        public override void PostProcess(ModuleResourceConverter_USI converter, ConverterResults result, double deltaTime)
+        public override void PostProcess(USI_ResourceConverter converter, ConverterResults result, double deltaTime)
         {
             base.PostProcess(result, deltaTime);
             converter.EfficiencyMultiplier = result.TimeFactor / deltaTime;

@@ -1,9 +1,9 @@
 ﻿namespace USITools
 {
-    public class ModuleConverterSwapOption
-        : AbstractSwapOption<ModuleResourceConverter_USI>
+    public class USI_ConverterSwapOption
+        : AbstractSwapOption<USI_ResourceConverter>
     {
-        public override void ApplyConverterChanges(ModuleResourceConverter_USI converter)
+        public override void ApplyConverterChanges(USI_ResourceConverter converter)
         {
             converter.inputList.Clear();
             converter.outputList.Clear();

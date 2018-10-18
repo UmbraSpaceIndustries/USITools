@@ -1,141 +1,107 @@
+﻿using System;
 using System.Collections.Generic;
-using USITools.KolonyTools;
+using System.Linq;
+using UnityEngine;
 
 namespace USITools
 {
-    public class ModuleResourceConverter_USI :
-        ModuleResourceConverter,
-        IEfficiencyBonusConsumer,
-        ISwappableConverter
+    [Obsolete("Use USI_ResourceConverter instead.")]
+    public class ModuleResourceConverter_USI : PartModule
     {
-        #region Fields and properties
+        [KSPField(isPersistant = true)]
+        public bool IsActivated;
+
+        [KSPField(isPersistant = true)]
+        public bool hasBeenUpdated;
+
         [KSPField]
         public double eMultiplier = 1d;
 
         [KSPField]
         public string eTag = "";
 
-        public Dictionary<string, float> BonusList { get; private set; } =
-            new Dictionary<string, float>();
+        private ModuleResourceConverter_USI _presidingInstance;
 
-        public float Governor = 1.0f;
-        private double _efficiencyMultiplier;
-        public double EfficiencyMultiplier
-        {
-            get
-            {
-                if (HighLogic.LoadedSceneIsEditor)
-                    return _efficiencyMultiplier * Governor;
-                if (!IsActivated)
-                    _efficiencyMultiplier = 0d;
-                return _efficiencyMultiplier * Governor;
-            }
-            set
-            {
-                _efficiencyMultiplier = value;
-            }
-        }
+        public List<bool> PreviouslyActiveList { get; private set; } = new List<bool>();
 
-        public bool UseEfficiencyBonus
+        public override void OnStart(StartState state)
         {
-            get
+            base.OnStart(state);
+
+            // Determine which recipe each converter was previously resposible for,
+            //  find which bay(s) are currently responsible for that recipe and
+            //  activate the corresponding converter(s) if they were previously active.
+            if (_presidingInstance == this && !hasBeenUpdated)
             {
-                if (_swapOption != null)
-                    return _swapOption.UseBonus;
+                var swapOptionCount = part.FindModulesImplementing<AbstractSwapOption>().Count;
+                var converters = part.FindModulesImplementing<USI_ResourceConverter>();
+                var bays = part.FindModulesImplementing<USI_SwappableBay>();
+                var controller = part.FindModuleImplementing<USI_SwapController>();
+
+                if (controller == null)
+                    Debug.LogError(string.Format("[USI] {0}: Trying to import old loadout(s) into a part with no USI_SwapController. Check the part config file.", GetType().Name));
+                else if (swapOptionCount != PreviouslyActiveList.Count)
+                    Debug.LogError(string.Format("[USI] {0}: Trying to import {1} old loadout(s) into a part with {2} swap option(s). Check the part config file.", GetType().Name, PreviouslyActiveList.Count, swapOptionCount));
                 else
-                    return false;
-            }
-        }
-
-        private AbstractSwapOption<ModuleResourceConverter_USI> _swapOption;
-        #endregion
-
-        public void Swap(AbstractSwapOption swapOption)
-        {
-            Swap(swapOption as AbstractSwapOption<ModuleResourceConverter_USI>);
-        }
-
-        public void Swap(AbstractSwapOption<ModuleResourceConverter_USI> swapOption)
-        {
-            _swapOption = swapOption;
-            _swapOption.ApplyConverterChanges(this);
-        }
-
-        public float GetEfficiencyBonus()
-        {
-            var totalBonus = 1f;
-            foreach (var bonus in BonusList)
-            {
-                totalBonus *= bonus.Value;
-            }
-            return totalBonus;
-        }
-
-        public void SetEfficiencyBonus(string name, float value)
-        {
-            if (!BonusList.ContainsKey(name))
-                BonusList.Add(name, value);
-            else
-                BonusList[name] = value;
-        }
-
-        protected override void PreProcessing()
-        {
-            base.PreProcessing();
-            EfficiencyBonus = GetEfficiencyBonus();
-        }
-
-        protected override ConversionRecipe PrepareRecipe(double deltatime)
-        {
-            var recipe = base.PrepareRecipe(deltatime);
-            if (!USI_DifficultyOptions.ConsumeMachineryEnabled && recipe != null)
-            {
-                for (int i = recipe.Inputs.Count; i-- > 0;)
                 {
-                    var input = recipe.Inputs[i];
-                    if (input.ResourceName == "Machinery")
-                        recipe.Inputs.Remove(input);
-                }
-                for (int output = recipe.Outputs.Count; output-- > 0;)
-                {
-                    var op = recipe.Outputs[output];
-                    if (op.ResourceName == "Recyclables")
-                        recipe.Inputs.Remove(op);
+                    // i will correspond to the loadout index
+                    for (int i = 0; i < PreviouslyActiveList.Count; i++)
+                    {
+                        bool wasActive = PreviouslyActiveList[i];
+                        if (wasActive)
+                        {
+                            // Determine which bays (if any) are currently configured for this loadout
+                            var configuredBays = bays.Where(b => b.currentLoadout == i);
+                            if (configuredBays.Any())
+                            {
+                                var bayIndexes = configuredBays.Select(b => b.moduleIndex);
+                                foreach (var index in bayIndexes)
+                                {
+                                    var converter = converters[index];
+                                    converter.isEnabled = true;
+                                    converter.IsActivated = true;
+                                }
+                            }
+                        }
+                    }
+
+                    hasBeenUpdated = true;
                 }
             }
-            return recipe;
         }
 
-        protected override void PostProcess(ConverterResults result, double deltaTime)
+        public override void OnLoad(ConfigNode node)
         {
-            base.PostProcess(result, deltaTime);
-            var hasLoad = false;
-            if (status != null)
+            base.OnLoad(node);
+
+            // The order these nodes are loaded by the game should match the loadout order
+            //  of the swap options. So we should be able to use this to determine
+            //  which recipes were active previously and thus which converters to re-activate.
+            if (_presidingInstance == null)
             {
-                hasLoad = status.EndsWith("Load");
+                // If there are other ModuleResourceConverter_USI instances on this part,
+                //  see if any of them have a PreviouslyActiveList started yet. If so, then
+                //  let that instance handle the remainder of this process. Otherwise, make this instance
+                //  the presiding instance.
+                var otherInstances = part.FindModulesImplementing<ModuleResourceConverter_USI>();
+                if (otherInstances != null)
+                {
+                    var candidate = otherInstances.Where(i => i.PreviouslyActiveList.Count > 0).FirstOrDefault();
+                    _presidingInstance = candidate ?? this;
+                }
+                else
+                    _presidingInstance = this;
             }
 
-
-            if (result.TimeFactor >= ResourceUtilities.FLOAT_TOLERANCE
-                && !hasLoad)
-            {
-                statusPercent = 0d; //Force a reset of the load display.
-            }
-
-            if (_swapOption != null)
-            {
-                _swapOption.PostProcess(this, result, deltaTime);
-            }
+            _presidingInstance.PreviouslyActiveList.Add(IsActivated && isEnabled);
         }
 
-        public override string GetInfo()
+        public override void OnSave(ConfigNode node)
         {
-            return string.Empty;
-        }
+            if (_presidingInstance != null)
+                hasBeenUpdated = _presidingInstance.hasBeenUpdated;
 
-        public override string GetModuleDisplayName()
-        {
-            return GetType().Name;
+            base.OnSave(node);
         }
     }
 }

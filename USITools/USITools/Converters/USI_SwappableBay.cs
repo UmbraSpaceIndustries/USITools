@@ -1,14 +1,8 @@
-﻿using System;
+﻿using UnityEngine;
 
-namespace USITools.Converters
+namespace USITools
 {
-    [Obsolete("Use ModuleSwappableBay instead.")]
-    public class ModuleSwappableConverter : ModuleSwappableBay { }
-
-    [Obsolete("Use ModuleSwappableBay instead.")]
-    public class ModuleSwappableConverterNew : ModuleSwappableBay { }
-
-    public class ModuleSwappableBay : PartModule
+    public class USI_SwappableBay : PartModule
     {
         #region KSP Fields and Events
         [KSPField]
@@ -84,12 +78,16 @@ namespace USITools.Converters
         #region Fields and properties
         private bool _postLoad = false;
         private int displayLoadout;
-        private ModuleSwapController _controller;
+        private USI_SwapController _controller;
         #endregion
 
         public override void OnStart(StartState state)
         {
-            _controller = part.FindModuleImplementing<ModuleSwapController>();
+            _controller = part.FindModuleImplementing<USI_SwapController>();
+            if (_controller == null)
+            {
+                Debug.LogError(string.Format("[USI] {0}: USI_SwappableBay modules require a USI_SwapController module. Check the part config file.", GetType().Name));
+            }
             GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
             displayLoadout = currentLoadout;
             ConfigureLoadout();

@@ -55,15 +55,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Converters\ModuleSwappableBay.cs" />
+    <Compile Include="Converters\ModuleResourceConverter_USI.cs" />
+    <Compile Include="Converters\ModuleResourceHarvester_USI.cs" />
+    <Compile Include="Converters\ModuleSwappableConverter.cs" />
+    <Compile Include="Converters\ModuleSwappableConverterNew.cs" />
+    <Compile Include="Converters\USI_SwappableBay.cs" />
     <Compile Include="Converters\AbstractSwapOption.cs" />
     <Compile Include="Converters\ConverterPart.cs" />
     <Compile Include="Converters\Interfaces\ISwappableConverter.cs" />
-    <Compile Include="Converters\ModuleConverterSwapOption.cs" />
-    <Compile Include="Converters\ModuleEfficiencyPartSwapOption.cs" />
+    <Compile Include="Converters\USI_ConverterSwapOption.cs" />
+    <Compile Include="Converters\USI_EfficiencyPartSwapOption.cs" />
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
     <Compile Include="Converters\LoadoutInfo.cs" />
-    <Compile Include="Converters\ModuleSwapController.cs" />
+    <Compile Include="Converters\USI_SwapController.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
@@ -90,11 +94,11 @@
     <Compile Include="ModuleAutoStrut.cs" />
     <Compile Include="ModuleEditorMesh.cs" />
     <Compile Include="ModuleHeatPump.cs" />
-    <Compile Include="Converters\ModuleResourceConverter_USI.cs" />
-    <Compile Include="Converters\ModuleResourceHarvester_USI.cs" />
+    <Compile Include="Converters\USI_ResourceConverter.cs" />
+    <Compile Include="Converters\USI_ResourceHarvester.cs" />
     <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
-    <Compile Include="Converters\ModuleHarvesterSwapOption.cs" />
+    <Compile Include="Converters\USI_HarvesterSwapOption.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
     <Compile Include="RepBoost.cs" />
     <Compile Include="ScienceBoost.cs" />
