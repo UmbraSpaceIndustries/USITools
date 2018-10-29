@@ -2,25 +2,32 @@
 
 namespace USITools
 {
+    /// <summary>
+    /// Responsible for UI interactions related to swappable converters.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="USI_SwapController"/> and <see cref="AbstractSwapOption"/>
+    ///   for additional information.
+    /// </remarks>
     public class USI_SwappableBay : PartModule
     {
         #region KSP Fields and Events
-        [KSPField]
-        public bool autoActivate = true;
-
         [KSPField]
         public string bayName = "";
 
         [KSPField]
         public int moduleIndex = 0;
 
+        [KSPField]
+        public bool hasPermanentLoadout = false;
+
         [KSPField(isPersistant = true)]
         public int currentLoadout = 0;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Active: ")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Recipe: ")]
         public string curTemplate = "???";
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Install [None]", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Install [None]", unfocusedRange = 10f)]
         public void LoadSetup()
         {
             if (!CheckResources())
@@ -36,7 +43,7 @@ namespace USITools
             ConfigureLoadout();
         }
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1: Next Loadout", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Next Loadout", unfocusedRange = 10f)]
         public void NextSetup()
         {
             if (_controller.Loadouts.Count < 2)
@@ -55,7 +62,7 @@ namespace USITools
             ChangeMenu();
         }
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "B1:  Prev. Loadout", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1:  Prev. Loadout", unfocusedRange = 10f)]
         public void PrevSetup()
         {
             if (_controller.Loadouts.Count < 2)
@@ -79,6 +86,7 @@ namespace USITools
         private bool _postLoad = false;
         private int displayLoadout;
         private USI_SwapController _controller;
+        private bool _repairSkillRequired = true;
         #endregion
 
         public override void OnStart(StartState state)
@@ -86,11 +94,22 @@ namespace USITools
             _controller = part.FindModuleImplementing<USI_SwapController>();
             if (_controller == null)
             {
-                Debug.LogError(string.Format("[USI] {0}: USI_SwappableBay modules require a USI_SwapController module. Check the part config file.", GetType().Name));
+                Debug.LogError(string.Format("[USI] {0}: Part is misconfigured. USI_SwappableBay modules require a USI_SwapController module.", GetType().Name));
             }
+
             GameEvents.OnAnimationGroupStateChanged.Add(SetModuleState);
             displayLoadout = currentLoadout;
+
+            _repairSkillRequired = USI_ConverterOptions.ConverterSwapRequiresRepairSkillEnabled;
+
             ConfigureLoadout();
+            ConfigureMenus();
+
+            // Disable the menus if there is only one swap option or if this bay has a permanent loadout.
+            if (hasPermanentLoadout || _controller.Loadouts.Count < 2)
+            {
+                EnableMenus(false);
+            }
         }
 
         private void SetModuleState(ModuleAnimationGroup module, bool enable)
@@ -98,18 +117,10 @@ namespace USITools
             if (module != null && module.part != part)
                 return;
 
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsFlight && !hasPermanentLoadout)
             {
                 EnableMenus(enable);
             }
-        }
-
-        private void EnableMenus(bool enable)
-        {
-            Events["NextSetup"].active = enable;
-            Events["PrevSetup"].active = enable;
-            Events["LoadSetup"].active = enable;
-            MonoUtilities.RefreshContextWindows(part);
         }
 
         private void ConfigureLoadout()
@@ -117,11 +128,35 @@ namespace USITools
             _controller.ApplyLoadout(currentLoadout, moduleIndex);
         }
 
+        private void ConfigureMenus()
+        {
+            bool evaRequired = USI_ConverterOptions.ConverterSwapRequiresEVAEnabled;
+
+            Events["NextSetup"].externalToEVAOnly = evaRequired;
+            Events["NextSetup"].guiActive = !evaRequired;
+            Events["PrevSetup"].externalToEVAOnly = evaRequired;
+            Events["PrevSetup"].guiActive = !evaRequired;
+            Events["LoadSetup"].externalToEVAOnly = evaRequired;
+            Events["LoadSetup"].guiActive = !evaRequired;
+
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+        private void EnableMenus(bool enable)
+        {
+            Events["NextSetup"].active = enable;
+            Events["PrevSetup"].active = enable;
+            Events["LoadSetup"].active = enable;
+            Fields["curTemplate"].guiActive = enable;
+
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
         public void Update()
         {
             if (!_postLoad)
             {
-                if (_controller.Loadouts.Count > 2)
+                if (_controller.Loadouts.Count > 1)
                 {
                     _postLoad = true;
                     NextSetup();
@@ -133,7 +168,7 @@ namespace USITools
         {
             Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();
             Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();
-            Fields["curTemplate"].guiName = (bayName + " Active " + _controller.typeName).Trim();
+            Fields["curTemplate"].guiName = (bayName + " Recipe").Trim();
             curTemplate = _controller.Loadouts[currentLoadout].ConverterName;
             Events["LoadSetup"].guiName =
                 (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].ConverterName).Trim();
@@ -145,38 +180,69 @@ namespace USITools
         {
             if (HighLogic.LoadedSceneIsEditor)
                 return true;
-            var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
-            if (!kerbal.HasEffect("RepairSkill"))
-            {
-                ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (engineers, mechanics) can reconfigure modules!", 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                return false;
-            }
 
-            var allResources = true;
-            var missingResources = "";
-            //Check that we have everything we need.
-            var count = _controller.SwapCosts.Count;
-            for (int i = 0; i < count; ++i)
+            if (USI_ConverterOptions.ConverterSwapRequiresRepairSkillEnabled)
             {
-                var r = _controller.SwapCosts[i];
-                if (!HasResource(r))
+                if (USI_ConverterOptions.ConverterSwapRequiresEVAEnabled)
                 {
-                    allResources = false;
-                    missingResources += "\n" + r.Ratio + " " + r.ResourceName;
+                    var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
+                    if (!kerbal.HasEffect("RepairSkill"))
+                    {
+                        ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (e.g. engineers, mechanics) can reconfigure modules!", 5f,
+                            ScreenMessageStyle.UPPER_CENTER);
+                        return false;
+                    }
+                }
+                else
+                {
+                    bool foundRepairSkill = false;
+                    var crew = FlightGlobals.ActiveVessel.GetVesselCrew();
+                    for (int i = 0; i < crew.Count; i++)
+                    {
+                        var kerbal = crew[i];
+                        if (kerbal.HasEffect("RepairSkill"))
+                        {
+                            foundRepairSkill = true;
+                            break;
+                        }
+                    }
+                    if (!foundRepairSkill)
+                    {
+                        ScreenMessages.PostScreenMessage("A Kerbal with repair skills (e.g. engineer, mechanic) must be on board to reconfigure modules!", 5f,
+                            ScreenMessageStyle.UPPER_CENTER);
+                        return false;
+                    }
                 }
             }
-            if (!allResources)
+
+            float costMultiplier = USI_ConverterOptions.ConverterSwapCostMultiplierValue;
+            if (costMultiplier > ResourceUtilities.FLOAT_TOLERANCE)
             {
-                ScreenMessages.PostScreenMessage("Missing resources to change module:" + missingResources, 5f,
-                    ScreenMessageStyle.UPPER_CENTER);
-                return false;
-            }
-            //Since everything is here...
-            for (int i = 0; i < count; ++i)
-            {
-                var r = _controller.SwapCosts[i];
-                TakeResources(r);
+                var allResources = true;
+                var missingResources = "";
+                //Check that we have everything we need.
+                var count = _controller.SwapCosts.Count;
+                for (int i = 0; i < count; ++i)
+                {
+                    var resource = _controller.SwapCosts[i];
+                    if (!HasResource(resource))
+                    {
+                        allResources = false;
+                        missingResources += "\n" + (resource.Ratio * costMultiplier) + " " + resource.ResourceName;
+                    }
+                }
+                if (!allResources)
+                {
+                    ScreenMessages.PostScreenMessage("Missing resources to change module:" + missingResources, 5f,
+                        ScreenMessageStyle.UPPER_CENTER);
+                    return false;
+                }
+                //Since everything is here...
+                for (int i = 0; i < count; ++i)
+                {
+                    var resource = _controller.SwapCosts[i];
+                    TakeResources(resource);
+                }
             }
             return true;
         }
@@ -184,7 +250,14 @@ namespace USITools
         private bool HasResource(ResourceRatio resInfo)
         {
             var resourceName = resInfo.ResourceName;
-            var needed = resInfo.Ratio;
+            var costMultiplier = USI_ConverterOptions.ConverterSwapCostMultiplierValue;
+
+            if (costMultiplier <= ResourceUtilities.FLOAT_TOLERANCE)
+            {
+                return true;
+            }
+
+            var needed = resInfo.Ratio * costMultiplier;
             var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
             //EC we're a lot less picky...
             if (resInfo.ResourceName == "ElectricCharge")
@@ -227,35 +300,40 @@ namespace USITools
         private void TakeResources(ResourceRatio resInfo)
         {
             var resourceName = resInfo.ResourceName;
-            var needed = resInfo.Ratio;
-            //Pull in from warehouses
+            var costMultiplier = USI_ConverterOptions.ConverterSwapCostMultiplierValue;
 
-            var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
-            var count = whpList.Count;
-            for (int i = 0; i < count; ++i)
+            if (costMultiplier > 0)
             {
-                var whp = whpList[i];
-                if (whp == part)
-                    continue;
-                var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
-                if (wh != null)
+                var needed = resInfo.Ratio * costMultiplier;
+                //Pull in from warehouses
+
+                var whpList = LogisticsTools.GetRegionalWarehouses(vessel, "USI_ModuleResourceWarehouse");
+                var count = whpList.Count;
+                for (int i = 0; i < count; ++i)
                 {
-                    if (!wh.localTransferEnabled)
+                    var whp = whpList[i];
+                    if (whp == part)
                         continue;
-                }
-                if (whp.Resources.Contains(resourceName))
-                {
-                    var res = whp.Resources[resourceName];
-                    if (res.amount >= needed)
+                    var wh = whp.FindModuleImplementing<USI_ModuleResourceWarehouse>();
+                    if (wh != null)
                     {
-                        res.amount -= needed;
-                        needed = 0;
-                        break;
+                        if (!wh.localTransferEnabled)
+                            continue;
                     }
-                    else
+                    if (whp.Resources.Contains(resourceName))
                     {
-                        needed -= res.amount;
-                        res.amount = 0;
+                        var res = whp.Resources[resourceName];
+                        if (res.amount >= needed)
+                        {
+                            res.amount -= needed;
+                            needed = 0;
+                            break;
+                        }
+                        else
+                        {
+                            needed -= res.amount;
+                            res.amount = 0;
+                        }
                     }
                 }
             }

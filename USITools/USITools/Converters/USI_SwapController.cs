@@ -1,19 +1,25 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace USITools
 {
-    [Obsolete("Use ModuleSwapController instead.")]
-    public class ModuleSwapControllerNew : USI_SwapController { }
-
+    /// <summary>
+    /// Responsible for tracking available converter loadouts and the
+    ///   costs associated with swapping them. Also responsible for instructing
+    ///   an <see cref="ISwappableConverter"/> to apply a loadout to itself.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="USI_SwappableBay"/> and <see cref="AbstractSwapOption"/>
+    ///   for additional information.
+    /// </remarks>
     public class USI_SwapController : PartModule
     {
         [KSPField]
         public string ResourceCosts = "";
 
         [KSPField]
-        public string typeName = "Loadout";
+        public string typeName = "Bay";
 
         public List<ResourceRatio> SwapCosts = new List<ResourceRatio>();
         public List<AbstractSwapOption> Loadouts;
@@ -23,7 +29,10 @@ namespace USITools
         public override void OnStart(StartState state)
         {
             Loadouts = part.FindModulesImplementing<AbstractSwapOption>();
-            _converters = part.FindModulesImplementing<ISwappableConverter>();
+            _converters = part.FindModulesImplementing<ISwappableConverter>()
+                .Where(c => !c.IsStandalone)
+                .ToList();
+
             SetupSwapCosts();
         }
 

@@ -4,8 +4,17 @@ using UnityEngine;
 
 namespace USITools
 {
+    /// <summary>
+    /// Swap options are loadouts that can be applied to a converter to
+    ///   alter its behavior, like changing its recipe or giving it side effects.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="USI_SwapController"/> and <see cref="USI_SwappableBay"/> for
+    ///   details on how these loadouts are applied.
+    /// </remarks>
+    /// <typeparam name="T">Any converter type derived from the base game's <see cref="BaseConverter"/> class.</typeparam>
     public abstract class AbstractSwapOption<T> : AbstractSwapOption
-        where T : BaseConverter
+        where T : BaseConverter, IConverterWithAddons<T>
     {
         public virtual void ApplyConverterChanges(T converter)
         {
@@ -18,20 +27,38 @@ namespace USITools
             MonoUtilities.RefreshContextWindows(part);
         }
 
-        public virtual void PostProcess(T Converter, ConverterResults result, double deltaTime)
+        public virtual ConversionRecipe PrepareRecipe(ConversionRecipe recipe)
         {
-            PostProcess(result, deltaTime);
+            return recipe;
+        }
+
+        public virtual void PreProcessing(T converter)
+        {
+            if (converter.Addons.Count > 0)
+            {
+                for (int i = 0; i < converter.Addons.Count; i++)
+                {
+                    var addon = converter.Addons[i];
+                    addon.PreProcessing();
+                }
+            }
+        }
+
+        public virtual void PostProcess(T converter, ConverterResults result, double deltaTime)
+        {
+            if (converter.Addons.Count > 0)
+            {
+                for (int i = 0; i < converter.Addons.Count; i++)
+                {
+                    var addon = converter.Addons[i];
+                    addon.PostProcess(result, deltaTime);
+                }
+            }
         }
     }
 
     public abstract class AbstractSwapOption : PartModule
     {
-        [KSPField]
-        public float Efficiency = 1;
-
-        [KSPField]
-        public string ResourceName = "";
-
         [KSPField]
         public string ConverterName = "";
 
@@ -46,9 +73,6 @@ namespace USITools
 
         [KSPField]
         public string ExperienceEffect = "";
-
-        [KSPField]
-        public bool UseBonus = true;
 
         public List<ResourceRatio> inputList;
         public List<ResourceRatio> outputList;
@@ -114,6 +138,20 @@ namespace USITools
             return output.ToString();
         }
 
+        public override string GetModuleDisplayName()
+        {
+            string displayName = GetType().Name;
+
+            var idx = displayName.IndexOf('_');
+            if (idx >= 0)
+            {
+                displayName = displayName.Substring(idx + 1);
+            }
+            displayName = displayName.Replace("Swap", " ");
+
+            return displayName;
+        }
+
         private string ParseResourceRatio(double ratio)
         {
             //string units = "sec";
@@ -133,12 +171,7 @@ namespace USITools
             //    units = "day";
             //}
 
-            // 60 seconds X 60 minutes X 6 hours = 21600 seconds per Kerbin day
-            return string.Format("{0:F2}/day", ratio * 21600);
-        }
-
-        public virtual void PostProcess(ConverterResults result, double deltaTime)
-        {
+            return string.Format("{0:F2}/day", ratio * KSPUtil.dateTimeFormatter.Day);
         }
 
         public override void OnLoad(ConfigNode node)
