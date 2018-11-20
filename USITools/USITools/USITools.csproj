@@ -55,11 +55,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConverterPart.cs" />
+    <Compile Include="Converters\AbstractConverterAddon.cs" />
+    <Compile Include="Converters\DeprecatedClasses.cs" />
+    <Compile Include="Converters\Extensions\ConverterExtensionMethods.cs" />
+    <Compile Include="Converters\Interfaces\IConverterWithAddons.cs" />
+    <Compile Include="Converters\USI_ConverterOptions.cs" />
+    <Compile Include="Converters\USI_EfficiencyConsumerAddons.cs" />
+    <Compile Include="Converters\USI_EfficiencyBoosterAddon.cs" />
+    <Compile Include="Converters\USI_SwappableBay.cs" />
+    <Compile Include="Converters\AbstractSwapOption.cs" />
+    <Compile Include="Converters\Interfaces\ISwappableConverter.cs" />
+    <Compile Include="Converters\USI_ConverterSwapOption.cs" />
+    <Compile Include="Converters\USI_EfficiencyBoosterSwapOption.cs" />
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
-    <Compile Include="LoadoutInfo.cs" />
-    <Compile Include="ModuleSwapControllerNew.cs" />
-    <Compile Include="ModuleSwappableConverter.cs" />
+    <Compile Include="Converters\USI_SwapController.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
@@ -77,7 +86,6 @@
     <Compile Include="Traits\FundsBoost.cs" />
     <Compile Include="Traits\GeologySkill.cs" />
     <Compile Include="LifeBoat.cs" />
-    <Compile Include="IEfficiencyBonusConsumer.cs" />
     <Compile Include="Traits\LogisticsSkill.cs" />
     <Compile Include="Logistics\ModuleWeightDistributableCargo.cs" />
     <Compile Include="Logistics\ModuleWeightDistributor.cs" />
@@ -86,12 +94,11 @@
     <Compile Include="ModuleAutoStrut.cs" />
     <Compile Include="ModuleEditorMesh.cs" />
     <Compile Include="ModuleHeatPump.cs" />
-    <Compile Include="ModuleResourceConverter_USI.cs" />
-    <Compile Include="ModuleResourceHarvester_USI.cs" />
+    <Compile Include="Converters\USI_Converter.cs" />
+    <Compile Include="Converters\USI_Harvester.cs" />
     <Compile Include="ModuleStabilization.cs" />
     <Compile Include="ModuleStoredResource.cs" />
-    <Compile Include="ModuleSwappableConverterNew.cs" />
-    <Compile Include="ModuleSwapOption.cs" />
+    <Compile Include="Converters\USI_HarvesterSwapOption.cs" />
     <Compile Include="Logistics\ModuleAutoRepairer.cs" />
     <Compile Include="RepBoost.cs" />
     <Compile Include="ScienceBoost.cs" />

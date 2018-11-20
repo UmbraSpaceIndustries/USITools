@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace USITools
+﻿namespace USITools
 {
     namespace KolonyTools
     {
         public class USI_DifficultyOptions : GameParameters.CustomParameterNode
         {
-            [GameParameters.CustomParameterUI("Consume Machinery (MKS)", toolTip = "If enabled, machienry will be consumed as part of a converter's processing.", autoPersistance = true)]
+            [GameParameters.CustomParameterUI("Consume Machinery (MKS)", toolTip = "If enabled, machinery will be consumed as part of a converter's processing.", autoPersistance = true)]
             public bool ConsumeMachinery = true;
 
             public static bool ConsumeMachineryEnabled
@@ -20,7 +15,6 @@ namespace USITools
                     return options.ConsumeMachinery;
                 }
             }
-
 
             public override string Section
             {
