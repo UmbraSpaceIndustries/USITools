@@ -67,8 +67,14 @@
     <Compile Include="Converters\Interfaces\ISwappableConverter.cs" />
     <Compile Include="Converters\USI_ConverterSwapOption.cs" />
     <Compile Include="Converters\USI_EfficiencyBoosterSwapOption.cs" />
+    <Compile Include="DependencyInjection\DependencyInjectionExceptions.cs" />
+    <Compile Include="DependencyInjection\Interfaces\IDependencyService.cs" />
+    <Compile Include="DependencyInjection\USI_AddonServiceManager.cs" />
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
     <Compile Include="Converters\USI_SwapController.cs" />
+    <Compile Include="DependencyInjection\Interfaces\IServiceCollection.cs" />
+    <Compile Include="DependencyInjection\Interfaces\IServiceManager.cs" />
+    <Compile Include="DependencyInjection\ServiceDefinition.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />
@@ -130,12 +136,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="EnginesAndTanks\USI_PulseDrive.cs" />
     <Compile Include="EnginesAndTanks\USI_WiggleEngine.cs" />
+    <Compile Include="DependencyInjection\ServiceManager.cs" />
+    <Compile Include="DependencyInjection\ServiceCollection.cs" />
     <Compile Include="USI_ToolbarWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="DependencyInjection\DI_README.md" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>"D:\Games\pdb2mdb\pdb2mdb.exe" "$(TargetFileName)"</PostBuildEvent>
