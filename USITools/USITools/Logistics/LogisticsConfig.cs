@@ -6,6 +6,5 @@
         public double LogisticsTime { get; set; }        
         public double WarehouseTime { get; set; }
         public double MaintenanceRange { get; set; }
-
     }
 }
