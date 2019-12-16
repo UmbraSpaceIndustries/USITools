@@ -1,4 +1,5 @@
 ﻿using Experience;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -19,7 +20,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "A Kolonist that increases funds";
+            return Localizer.Format("#LOC_USI_Tools_Funds");//"A Kolonist that increases funds"
         }
     }
 }

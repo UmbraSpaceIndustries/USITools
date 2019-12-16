@@ -1,4 +1,5 @@
 using Experience;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -19,7 +20,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "Experience in managing logistics";
+            return Localizer.Format("#LOC_USI_Tools_Logistics");//"Experience in managing logistics"
         }
     }
 }

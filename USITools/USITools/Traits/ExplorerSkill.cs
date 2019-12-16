@@ -1,4 +1,5 @@
 ﻿using Experience;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -19,7 +20,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "Ability to function even when far from home in adverse conditions";
+            return Localizer.Format("#LOC_USI_Tools_Explorer");//"Ability to function even when far from home in adverse conditions"
         }
     }
 }

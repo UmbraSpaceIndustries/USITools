@@ -1,4 +1,5 @@
 ﻿using Experience;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -19,7 +20,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "Experience in advanced farming and crop diversity";
+            return Localizer.Format("#LOC_USI_Tools_Agronomy");//"Experience in advanced farming and crop diversity"
         }
     }
 }
