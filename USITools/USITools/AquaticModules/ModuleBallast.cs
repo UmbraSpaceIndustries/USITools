@@ -5,7 +5,7 @@
         [KSPField]
         public string ResourceName = "";
 
-        [KSPField(guiName = "Ballast", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 1f, maxValue = 100f, minValue = 0f)]
+        [KSPField(guiName = "#LOC_USI_Ballast", isPersistant = true, guiActive = true, guiActiveEditor = true), UI_FloatRange(stepIncrement = 1f, maxValue = 100f, minValue = 0f)]//Ballast
         public float ballastPercent = 0f;
 
         public void FixedUpdate()
