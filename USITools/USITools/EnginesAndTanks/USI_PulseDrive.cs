@@ -60,7 +60,7 @@ namespace USITools
 
         private float lastThrottle;
 
-        [KSPEvent(guiActive = true, active = true, guiName = "Previous Fuel")]
+        [KSPEvent(guiActive = true, active = true, guiName = "#LOC_USI_PreviousFuel")]//Previous Fuel
         public void PrevFuel()
         {
             CurrentFuelIndex -= 1;
@@ -69,7 +69,7 @@ namespace USITools
             Fuel = Fuels[CurrentFuelIndex].name;
         }
 
-        [KSPEvent(guiActive = true, active = true, guiName = "Next Fuel")]
+        [KSPEvent(guiActive = true, active = true, guiName = "#LOC_USI_NextFuel")]//Next Fuel
         public void NextFuel()
         {
             CurrentFuelIndex += 1;

@@ -82,7 +82,7 @@ namespace USITools
 
     public class USI_ModuleTorchDrive : PartModule
     {
-        [KSPField(guiActive = true, guiName = "Torch Throttle (%)", isPersistant = true),
+        [KSPField(guiActive = true, guiName = "#LOC_USI_TorchDrive", isPersistant = true),//Torch Throttle (%)
          UI_FloatRange(controlEnabled = true, maxValue = 100f, minValue = 1f, stepIncrement = .01f,
              scene = UI_Scene.Flight)] public float torchThrottle = 0;
 
