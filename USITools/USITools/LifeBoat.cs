@@ -110,7 +110,7 @@ namespace LifeBoat
         }
 
 
-        [KSPEvent(guiName = "Inflate Lifeboat", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        [KSPEvent(guiName = "#LOC_USI_InflateLifeboat", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]//Inflate Lifeboat
         public void InflateLifeboat()
         {
             try

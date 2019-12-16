@@ -1,4 +1,5 @@
 using System;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -26,14 +27,14 @@ namespace USITools
                 return;
 
             var newState = state;
-            var msg = "Ground tether released!";
+            var msg = Localizer.Format("#LOC_USI_StabilizeReleased");//"Ground tether released!"
             if (newState)
-                msg = "Ground tether attached!";
+                msg = Localizer.Format("#LOC_USI_StabilizeAttached");//"Ground tether attached!"
 
             if (!vessel.Landed)
             {
                 newState = false;
-                msg = "Must be landed for ground tether to operate!";
+                msg = Localizer.Format("#LOC_USI_StabilizeFail");//"Must be landed for ground tether to operate!"
             }
 
             if(showMsg)

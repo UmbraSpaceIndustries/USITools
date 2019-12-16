@@ -1,10 +1,11 @@
-﻿namespace USITools
+﻿using KSP.Localization;
+namespace USITools
 {
     namespace KolonyTools
     {
         public class USI_DifficultyOptions : GameParameters.CustomParameterNode
         {
-            [GameParameters.CustomParameterUI("Consume Machinery (MKS)", toolTip = "If enabled, machinery will be consumed as part of a converter's processing.", autoPersistance = true)]
+            [GameParameters.CustomParameterUI("#LOC_USI_ConsumeMachinery", toolTip = "#LOC_USI_ConsumeMachinery_desc", autoPersistance = true)]//Consume Machinery (MKS)If enabled, machinery will be consumed as part of a converter's processing.
             public bool ConsumeMachinery = true;
 
             public static bool ConsumeMachineryEnabled
@@ -36,7 +37,7 @@
             {
                 get
                 {
-                    return "Difficulty";
+                    return Localizer.Format("#LOC_USI_OptionsTitle");//"Difficulty"
                 }
             }
 

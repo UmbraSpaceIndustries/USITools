@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -77,7 +78,7 @@ namespace USITools
         }
         protected override string categoryTitle
         {
-            get { return "Kolonization"; }
+            get { return "Kolonization"; }//
             set { }
         }
     }

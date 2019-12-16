@@ -15,7 +15,7 @@ namespace USITools
         public bool isActive = false;
 
 
-        [KSPEvent(guiName = "Drop Anchor", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        [KSPEvent(guiName = "#LOC_USI_DropAnchor", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]//Drop Anchor
         public void DropAnchor()
         {
             isActive = true;
@@ -32,7 +32,7 @@ namespace USITools
             }
         }
 
-        [KSPEvent(guiName = "Raise Anchor", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        [KSPEvent(guiName = "#LOC_USI_RaiseAnchor", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]//Raise Anchor
         public void RaiseAnchor()
         {
             isActive = false;

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -40,7 +41,7 @@ namespace USITools
         [KSPField(isPersistant = true)]
         public bool isDeployed = false;
 
-        [KSPField(isPersistant = true, guiName = "Deployed", guiFormat = "P2")]
+        [KSPField(isPersistant = true, guiName = "#LOC_USI_Tools_Deployed", guiFormat = "P2")]//Deployed
         public double partialDeployCostPaid = 0d;
 
         [KSPField(isPersistant = true)]
@@ -132,7 +133,7 @@ namespace USITools
             }
         }
 
-        [KSPEvent(guiName = "Deploy", guiActive = true, externalToEVAOnly = true, guiActiveEditor = true, active = true,
+        [KSPEvent(guiName = "#LOC_USI_Tools_Deployed", guiActive = true, externalToEVAOnly = true, guiActiveEditor = true, active = true,//Deploy
             guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void DeployModule()
         {
@@ -218,15 +219,15 @@ namespace USITools
                     ConsumeResources(resourcesAvailable);
                     partialDeployCostPaid += resourcesAvailable;
                     Fields["partialDeployCostPaid"].guiActive = true;
-                    DisplayMessage("Partially assembling module using: ", resourcesAvailable);
+                    DisplayMessage(Localizer.Format("#LOC_USI_Tools_msg4"), resourcesAvailable);//"Partially assembling module using: "
                     resourcesNeeded -= resourcesAvailable;
                 }
-                DisplayMessage("Missing resources to assemble module: ", resourcesNeeded);
+                DisplayMessage(Localizer.Format("#LOC_USI_Tools_msg5"), resourcesNeeded);//"Missing resources to assemble module: "
                 return false;
             }
             else
             {
-                DisplayMessage("Assembling module using: ", resourcesNeeded);
+                DisplayMessage(Localizer.Format("#LOC_USI_Tools_msg6"), resourcesNeeded);//"Assembling module using: "
                 ConsumeResources(resourcesNeeded);
                 partialDeployCostPaid = 0d;
                 Fields["partialDeployCostPaid"].guiActive = false;
@@ -325,7 +326,7 @@ namespace USITools
         }
 
 
-        [KSPEvent(guiName = "Retract", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false,
+        [KSPEvent(guiName = "#LOC_USI_Tools_Retract", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false,//Retract
             active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
         public void RetractModule()
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Experience;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -23,7 +24,7 @@ namespace USITools
 
         protected override string GetDescription()
         {
-            return "A Kolonist that increases science";
+            return Localizer.Format("#LOC_USI_Tools_Science");//"A Kolonist that increases science"
         }
     }
 }

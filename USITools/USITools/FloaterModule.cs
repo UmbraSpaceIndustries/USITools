@@ -18,13 +18,13 @@ namespace FloaterTools
         [KSPField]
         public float buoyancyChangeInterval = 10f;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Buoyancy"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_USI_Buoyancy"), UI_FloatRange(minValue = 0f, maxValue = 100f, stepIncrement = 5f)]//Buoyancy
         public float buoyancyPercentageWhenDeployed = 100f;
 
-        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "Pump speed"), UI_FloatRange(minValue = 10f, maxValue = 100f, stepIncrement = 10f)]
+        [KSPField(isPersistant = true, guiActive = true, guiActiveEditor = true, guiName = "#LOC_USI_Pumpspeed"), UI_FloatRange(minValue = 10f, maxValue = 100f, stepIncrement = 10f)]//Pump speed
         public float pumpPower = 100f;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Current buoyancy")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_USI_Currentbuoyancy")]//Current buoyancy
         public float totalCurrentBuoyancy = 0f;
 
         [KSPField(isPersistant = true)]

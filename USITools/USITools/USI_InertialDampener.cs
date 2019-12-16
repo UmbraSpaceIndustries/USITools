@@ -7,7 +7,7 @@
         public bool isActive = false;
 
 
-        [KSPEvent(guiName = "Toggle Ground Tether", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
+        [KSPEvent(guiName = "#LOC_USI_ToggleGroundTether", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]//Toggle Ground Tether
         public void ToggleDampen()
         {
             isActive = !isActive;
