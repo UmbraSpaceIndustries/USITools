@@ -39,7 +39,7 @@ namespace AirbagTools
         }
 
 
-        [KSPEvent(guiName = "Inflate Airbags", guiActiveEditor = true)]
+        [KSPEvent(guiName = "#LOC_USI_InflateAirbags", guiActiveEditor = true)]//Inflate Airbags
         public void InflateAirbags()
         {
             if (!isDeployed)
@@ -51,7 +51,7 @@ namespace AirbagTools
             }
         }
 
-        [KSPEvent(guiName = "Deflate Airbags", guiActiveEditor = false)]
+        [KSPEvent(guiName = "#LOC_USI_DeflateAirbags", guiActiveEditor = false)]//Deflate Airbags
         public void DeflateAirbags()
         {
             if (isDeployed)
