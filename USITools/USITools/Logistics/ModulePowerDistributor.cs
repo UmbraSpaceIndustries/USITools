@@ -1,4 +1,5 @@
 using USITools.Logistics;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -8,7 +9,7 @@ namespace USITools
         [KSPField]
         public int PowerDistributionRange = 2000;
 
-        [KSPField(guiActive = true, guiName = "PDU Range")]
+        [KSPField(guiActive = true, guiName = "#LOC_USI_Tools_PC_Label")]//PDU Range
         public string gui_pduRange;
  
         [KSPField]
@@ -42,7 +43,7 @@ namespace USITools
 
             if (!isDistributingPower)
             {
-                gui_pduRange = "No Engineer!";
+                gui_pduRange = Localizer.Format("#LOC_USI_Tools_PC_Info5");//"No Engineer!"
             }
             else
             {
@@ -53,8 +54,8 @@ namespace USITools
         // Info about the module in the Editor part list
         public override string GetInfo()
         {
-            return "Distributes power to nearby PowerCouplers\n\n" +
-                "Range: " + PowerDistributionRange + "m";
+            return Localizer.Format("#LOC_USI_Tools_PC_Info6") +//"Distributes power to nearby PowerCouplers\n\n"
+                Localizer.Format("#LOC_USI_Tools_PC_Info7", PowerDistributionRange);//"Range: " +  + "m"
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using KSP.Localization;
 
 namespace USITools.Logistics
 {
@@ -44,7 +45,7 @@ namespace USITools.Logistics
                 for(int x = 0; x < mCount; ++x)
                 {
                     var m = modList[x];
-                    m.FinalizeMaintenance("Automated Maintenance performed on " + m.part.partInfo.title);
+                    m.FinalizeMaintenance(Localizer.Format("#LOC_USI_Tools_MAR_msg1", m.part.partInfo.title));//"Automated Maintenance performed on " + 
                 }
             }
         }
@@ -52,9 +53,9 @@ namespace USITools.Logistics
         // Info about the module in the Editor part list
         public override string GetInfo()
         {
-            return "Performs daily maintenance on parts in nearby vessels\n\n" +
-                "Range: " + (int)RepairRange + "m\n" +
-                "Required: Engineer";
+            return Localizer.Format("#LOC_USI_Tools_MAR_info1") +//"Performs daily maintenance on parts in nearby vessels\n\n"
+                Localizer.Format("#LOC_USI_Tools_MAR_info2", (int)RepairRange) +//"Range: " +  + "m\n"
+               Localizer.Format("#LOC_USI_Tools_MAR_info3") ;//"Required: Engineer"
         }
     }
 }

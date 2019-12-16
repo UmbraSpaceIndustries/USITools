@@ -1,4 +1,5 @@
 ﻿using System;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -17,14 +18,14 @@ namespace USITools
         public string PushResourceList = "DepletedFuel,Recyclables";
 
 
-        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Perform maintenance",
+        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "#LOC_USI_Performmaintenance",//Perform maintenance
             unfocusedRange = 5f)]
         public void PerformMaintenance()
         {
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
             if (!kerbal.HasEffect("RepairSkill"))
             {
-                ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (engineers, mechanics) can perform EVA Maintenance!", 5f,
+                ScreenMessages.PostScreenMessage(Localizer.Format("#LOC_USI_Tools_msg10"), 5f,//"Only Kerbals with repair skills (engineers, mechanics) can perform EVA Maintenance!"
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }

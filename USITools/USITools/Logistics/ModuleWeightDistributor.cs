@@ -10,13 +10,13 @@ namespace USITools
         [KSPField(isPersistant = true)]
         public bool transferEnabled = false;
 
-        [KSPEvent(guiName = "Disable Weight Transfer", active = false, guiActive = true, guiActiveEditor = true)]
+        [KSPEvent(guiName = "#LOC_USI_DisableWeightTransfer", active = false, guiActive = true, guiActiveEditor = true)]//Disable Weight Transfer
         public void DisableTransfer()
         {
             ToggleTransfer(false);
         }
 
-        [KSPEvent(guiName = "Enable Weight Transfer", active = true, guiActive = true, guiActiveEditor = true)]
+        [KSPEvent(guiName = "#LOC_USI_EnableWeightTransfer", active = true, guiActive = true, guiActiveEditor = true)]//Enable Weight Transfer
         public void EnableTransfer()
         {
             ToggleTransfer(true);

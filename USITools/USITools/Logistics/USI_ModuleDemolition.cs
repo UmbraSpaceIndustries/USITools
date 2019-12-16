@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -19,8 +20,8 @@ namespace USITools
         [KSPField] 
         public float Efficiency = 0.8f;
 
-        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap part",
-            unfocusedRange = 5f)]
+        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "#LOC_USI_Scrappart",
+            unfocusedRange = 5f)]//Scrap part
         public void ScrapPart()
         {
             _demoParts = new List<Part>();
@@ -34,8 +35,8 @@ namespace USITools
 
         private List<Part> _demoParts;
         
-        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap section",
-            unfocusedRange = 5f)]
+        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "#LOC_USI_Scrapsection",
+            unfocusedRange = 5f)]//Scrap section
         public void ScrapSection()
         {
             _demoParts = new List<Part>();
@@ -51,8 +52,8 @@ namespace USITools
             DestroyParts();
         }
 
-        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap vessel",
-            unfocusedRange = 5f)]
+        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "#LOC_USI_Scrapvessel",
+            unfocusedRange = 5f)]//Scrap vessel
         public void ScrapVessel()
         {
             _demoParts = new List<Part>();
@@ -97,8 +98,8 @@ namespace USITools
                     var res = PartResourceLibrary.Instance.GetDefinition(ResourceName);
                     double resAmount = part.mass/res.density*Efficiency;
                     ScreenMessages.PostScreenMessage(
-                        String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.partInfo.title,
-                            resAmount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
+                        String.Format(Localizer.Format("#LOC_USI_Tools_msg8","{0}","{1:0.00}","{2}"), part.partInfo.title,
+                            resAmount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);//You disassemble the "" into "" units of ""
                     PushResources(ResourceName, resAmount);
                 }
                 part.decouple();
@@ -153,7 +154,7 @@ namespace USITools
             }
             if (amount > 1f)
             {
-                ScreenMessages.PostScreenMessage(String.Format("{0:0} units of {1} were lost due to lack of recycle space", amount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(String.Format(Localizer.Format("#LOC_USI_Tools_msg9", "{0:0}","{1}"), amount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);//""" units of "" were lost due to lack of recycle space"
             }
         }
     }

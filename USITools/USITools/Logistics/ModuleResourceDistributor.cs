@@ -1,3 +1,4 @@
+using KSP.Localization;
 namespace USITools
 {
     [KSPModule("Resource Distributor")]
@@ -9,9 +10,7 @@ namespace USITools
         // Info about the module in the Editor part list
         public override string GetInfo()
         {
-            return "Distributes resouces to nearby vessels\n\n" +
-                "Range: " + ResourceDistributionRange + "m\n" +
-                "Required: Pilot";
+            return Localizer.Format("#LOC_USI_Tools_MRD_info1", ResourceDistributionRange);//"Distributes resouces to nearby vessels\n\n" + "Range: " +  + "m\n" + "Required: Pilot"
         }
     }
 }

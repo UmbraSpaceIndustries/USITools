@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -20,14 +21,14 @@ namespace USITools
         [KSPField]
         public float Efficiency = 0.8f;
 
-        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "Scrap part",
-            unfocusedRange = 5f)]
+        [KSPEvent(active = true, guiActiveUnfocused = true, externalToEVAOnly = true, guiName = "#LOC_USI_Scrappart",
+            unfocusedRange = 5f)]//Scrap part
         public void ScrapPart()
         {
             var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
             if (part.children.Count > 0)
             {
-                ScreenMessages.PostScreenMessage("You can only scrap parts without child parts", 5f,
+                ScreenMessages.PostScreenMessage(Localizer.Format("#LOC_USI_Tools_msg11"), 5f,//"You can only scrap parts without child parts"
                     ScreenMessageStyle.UPPER_CENTER);
                 return;
             }
@@ -38,7 +39,7 @@ namespace USITools
             if (!_blackList.Contains(part.partName))
             {
                 ScreenMessages.PostScreenMessage(
-                    String.Format("You disassemble the {0} into {1:0.00} units of {2}", part.name, resAmount,
+                    String.Format(Localizer.Format("#LOC_USI_Tools_msg12", "{0}","{1:0.00}","{2}"), part.name, resAmount,//"You disassemble the "" into "" units of """
                         ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
                 PushResources(ResourceName, resAmount);
             }
@@ -88,7 +89,7 @@ namespace USITools
             }
             if (amount > 1f)
             {
-                ScreenMessages.PostScreenMessage(String.Format("{0:0} units of {1} were lost due to lack of recycle space", amount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(String.Format(Localizer.Format("#LOC_USI_Tools_msg13", "{0:0}", "{1}"), amount, ResourceName), 5f, ScreenMessageStyle.UPPER_CENTER);//"{0:0} units of {1} were lost due to lack of recycle space"
             }
         }
     }
