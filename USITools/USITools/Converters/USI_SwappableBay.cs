@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -24,10 +25,10 @@ namespace USITools
         [KSPField(isPersistant = true)]
         public int currentLoadout = 0;
 
-        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "Recipe: ")]
+        [KSPField(guiActive = true, guiActiveEditor = true, guiName = "#LOC_USI_Recipe")]//Recipe: 
         public string curTemplate = "???";
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Install [None]", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Install [None]", unfocusedRange = 10f)]//
         public void LoadSetup()
         {
             if (!CheckResources())
@@ -37,13 +38,13 @@ namespace USITools
             currentLoadout = displayLoadout;
             NextSetup();
 
-            ScreenMessages.PostScreenMessage("Reconfiguration from " + oldTemplate + " to " + curTemplate + " completed.", 5f,
-                ScreenMessageStyle.UPPER_CENTER);
+            ScreenMessages.PostScreenMessage(Localizer.Format("#LOC_USI_Tools_msg7", oldTemplate,curTemplate), 5f,
+                ScreenMessageStyle.UPPER_CENTER);//"Reconfiguration from <<1>> to <<2>> completed."
 
             ConfigureLoadout();
         }
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Next Loadout", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1: Next Loadout", unfocusedRange = 10f)]//
         public void NextSetup()
         {
             if (_controller.Loadouts.Count < 2)
@@ -62,7 +63,7 @@ namespace USITools
             ChangeMenu();
         }
 
-        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1:  Prev. Loadout", unfocusedRange = 10f)]
+        [KSPEvent(active = true, guiActiveEditor = true, guiActiveUnfocused = true, guiName = "B1:  Prev. Loadout", unfocusedRange = 10f)]//
         public void PrevSetup()
         {
             if (_controller.Loadouts.Count < 2)
@@ -166,9 +167,9 @@ namespace USITools
 
         public void ChangeMenu()
         {
-            Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();
-            Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();
-            Fields["curTemplate"].guiName = (bayName + " Recipe").Trim();
+            Events["NextSetup"].guiName = (bayName + " Next " + _controller.typeName).Trim();//
+            Events["PrevSetup"].guiName = (bayName + " Prev. " + _controller.typeName).Trim();//
+            Fields["curTemplate"].guiName = (bayName + " Recipe").Trim();//
             curTemplate = _controller.Loadouts[currentLoadout].ConverterName;
             Events["LoadSetup"].guiName =
                 (bayName + " " + curTemplate + "=>" + _controller.Loadouts[displayLoadout].ConverterName).Trim();
@@ -188,8 +189,8 @@ namespace USITools
                     var kerbal = FlightGlobals.ActiveVessel.rootPart.protoModuleCrew[0];
                     if (!kerbal.HasEffect("RepairSkill"))
                     {
-                        ScreenMessages.PostScreenMessage("Only Kerbals with repair skills (e.g. engineers, mechanics) can reconfigure modules!", 5f,
-                            ScreenMessageStyle.UPPER_CENTER);
+                        ScreenMessages.PostScreenMessage(Localizer.Format("#LOC_USI_Tools_msg1"), 5f,
+                            ScreenMessageStyle.UPPER_CENTER);//"Only Kerbals with repair skills (e.g. engineers, mechanics) can reconfigure modules!"
                         return false;
                     }
                 }
@@ -208,7 +209,7 @@ namespace USITools
                     }
                     if (!foundRepairSkill)
                     {
-                        ScreenMessages.PostScreenMessage("A Kerbal with repair skills (e.g. engineer, mechanic) must be on board to reconfigure modules!", 5f,
+                        ScreenMessages.PostScreenMessage(Localizer.Format("#LOC_USI_Tools_msg2"), 5f,//"A Kerbal with repair skills (e.g. engineer, mechanic) must be on board to reconfigure modules!"
                             ScreenMessageStyle.UPPER_CENTER);
                         return false;
                     }
@@ -233,7 +234,7 @@ namespace USITools
                 }
                 if (!allResources)
                 {
-                    ScreenMessages.PostScreenMessage("Missing resources to change module:" + missingResources, 5f,
+                    ScreenMessages.PostScreenMessage( Localizer.Format("#LOC_USI_Tools_msg3") + missingResources, 5f,//"Missing resources to change module:"
                         ScreenMessageStyle.UPPER_CENTER);
                     return false;
                 }

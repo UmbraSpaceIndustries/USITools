@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using KSP.Localization;
 
 namespace USITools
 {
@@ -87,7 +88,7 @@ namespace USITools
 
             if (inputList.Count > 0)
             {
-                output.AppendLine("<color=#99FF00>Inputs:</color>");
+                output.AppendLine("<color=#99FF00>"+Localizer.Format("#LOC_USI_Tools_ASO_Info1") +"</color>");//Inputs:
                 foreach (var resource in inputList)
                 {
                     output
@@ -105,7 +106,7 @@ namespace USITools
             }
             if (outputList.Count > 0)
             {
-                output.AppendLine("<color=#99FF00>Outputs:</color>");
+                output.AppendLine("<color=#99FF00>"+Localizer.Format("#LOC_USI_Tools_ASO_Info2") +"</color>");//Outputs:
                 foreach (var resource in outputList)
                 {
                     output
@@ -123,7 +124,7 @@ namespace USITools
             }
             if (reqList.Count > 0)
             {
-                output.AppendLine("<color=#99FF00>Requirements:</color>");
+                output.AppendLine("<color=#99FF00>"+Localizer.Format("#LOC_USI_Tools_ASO_Info3") +"</color>");//Requirements:
                 foreach (var resource in reqList)
                 {
                     output

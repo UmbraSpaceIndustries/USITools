@@ -1,14 +1,15 @@
-﻿namespace USITools
+﻿using KSP.Localization;
+namespace USITools
 {
     public class USI_ConverterOptions : GameParameters.CustomParameterNode
     {
-        [GameParameters.CustomParameterUI("EVA Required", toolTip = "If enabled, a Kerbal must be on EVA to swap converter recipes.", autoPersistance = true)]
+        [GameParameters.CustomParameterUI("#LOC_USI_ConverterSwapRequiresEVA", toolTip = "#LOC_USI_ConverterSwapRequiresEVA_desc", autoPersistance = true)]//EVA Required//If enabled, a Kerbal must be on EVA to swap converter recipes.
         public bool ConverterSwapRequiresEVA = true;
 
-        [GameParameters.CustomParameterUI("Repair Skill Required", toolTip = "If enabled, a Kerbal with the Repair skill (engineers, mechanics) must be present to swap converter recipes.", autoPersistance = true)]
+        [GameParameters.CustomParameterUI("#LOC_USI_ConverterSwapRequiresRepairSkill", toolTip = "#LOC_USI_ConverterSwapRequiresRepairSkill_desc", autoPersistance = true)]//Repair Skill Required//If enabled, a Kerbal with the Repair skill (engineers, mechanics) must be present to swap converter recipes.
         public bool ConverterSwapRequiresRepairSkill = true;
 
-        [GameParameters.CustomFloatParameterUI("Cost Multiplier", toolTip = "Set to zero to disable converter swap costs.", autoPersistance = true, minValue = 0f, maxValue = 5f, stepCount = 10)]
+        [GameParameters.CustomFloatParameterUI("#LOC_USI_ConverterSwapCostMultiplier", toolTip = "#LOC_USI_ConverterSwapCostMultiplier_desc", autoPersistance = true, minValue = 0f, maxValue = 5f, stepCount = 10)]//Cost Multiplier//Set to zero to disable converter swap costs.
         public float ConverterSwapCostMultiplier = 1f;
 
         public static bool ConverterSwapRequiresRepairSkillEnabled
@@ -61,7 +62,7 @@
         {
             get
             {
-                return "Swappable Converters";
+                return Localizer.Format("#LOC_USI_ConverterSwapTitle");//"Swappable Converters"
             }
         }
 

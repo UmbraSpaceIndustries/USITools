@@ -1,4 +1,5 @@
-﻿namespace USITools
+﻿using KSP.Localization;
+namespace USITools
 {
     /// <summary>
     /// A converter loadout that boosts the efficiency of other converters.
@@ -29,8 +30,7 @@
             var resourceConsumption = base.GetInfo();
             int index = resourceConsumption.IndexOf("\n"); // Strip the first line containing the etag
             resourceConsumption = resourceConsumption.Substring(index + 1);
-            return "Boosts efficiency of converters benefiting from a " + EfficiencyTag + "\n\n" +
-                "Boost power: " + EfficiencyMultiplier.ToString() + resourceConsumption;
+            return Localizer.Format("#LOC_USI_Tools_EBSO_Info", EfficiencyTag,EfficiencyMultiplier.ToString() + resourceConsumption);//"Boosts efficiency of converters benefiting from a " +  + "\n\n" + "Boost power: " + 
         }
     }
 }
