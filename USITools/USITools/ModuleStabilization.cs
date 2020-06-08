@@ -7,7 +7,7 @@ namespace USITools
         public static EventData<Vessel,bool,bool> onStabilizationToggle = new EventData<Vessel,bool,bool>("onStabilizationToggle");
         private bool _stabilized;
 
-        public void Start()
+        public new void Start()
         {
             onStabilizationToggle.Add(StabilizeVessel);
         }
