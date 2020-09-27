@@ -36,6 +36,34 @@ namespace USITools
         [KSPField] 
         public float threshold = 0.0001f;
 
+        [KSPField(isPersistant =true)]
+        public bool dropEnabled = true;
+
+
+        [KSPEvent(guiActive = true, guiActiveEditor = true,  guiName = "Disable Auto-Drop")]
+        public void DropToggleEvent()
+        {
+            dropEnabled = !dropEnabled;
+            UpdateDropMenu();
+        }
+
+
+        protected void UpdateDropMenu()
+        {
+            if (dropEnabled)
+                Events["DropToggleEvent"].guiName = "Disable Auto-Drop";
+            else
+                Events["DropToggleEvent"].guiName = "Enable Auto-Drop";
+            MonoUtilities.RefreshContextWindows(part);
+        }
+
+
+        public override void OnStartFinished(StartState state)
+        {
+            base.OnStartFinished(state);
+            UpdateDropMenu();
+        }
+
         public override void OnUpdate()
         {
             if (!HighLogic.LoadedSceneIsFlight)
@@ -48,7 +76,7 @@ namespace USITools
                 {
                     var res = part.Resources[i];
 
-                    if (res.amount >= threshold)
+                    if (res.amount >= threshold || !dropEnabled)
                     {
                         drop = false;
                     }
