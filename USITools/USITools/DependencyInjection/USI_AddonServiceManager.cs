@@ -6,6 +6,8 @@ namespace USITools
     public class USI_AddonServiceManager : MonoBehaviour
     {
         public static USI_AddonServiceManager Instance { get; private set; }
+
+        public ServiceCollection ServiceCollection { get; private set; }
         public ServiceManager ServiceManager { get; private set; }
 
         void Awake()
@@ -21,9 +23,9 @@ namespace USITools
 
             // Setup dependency injection for USI classes
             //    ...when we have some to setup ^_^
-            var collection = new ServiceCollection();
+            ServiceCollection = new ServiceCollection();
 
-            ServiceManager = new ServiceManager(collection);
+            ServiceManager = new ServiceManager(ServiceCollection);
         }
     }
 }
