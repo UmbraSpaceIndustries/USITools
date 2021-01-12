@@ -154,7 +154,6 @@
     <Compile Include="EnginesAndTanks\USI_WiggleEngine.cs" />
     <Compile Include="DependencyInjection\ServiceManager.cs" />
     <Compile Include="DependencyInjection\ServiceCollection.cs" />
-    <Compile Include="USI_MultiLight.cs" />
     <Compile Include="USI_ToolbarWrapper.cs" />
   </ItemGroup>
   <ItemGroup>

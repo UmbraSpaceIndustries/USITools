@@ -1,15 +1,12 @@
-﻿using System;
-using UnityEngine;
-using Xunit;
+﻿using Xunit;
 
 namespace USITools.Tests.Unit
 {
     public class ServiceManager_Tests
     {
-        private IServiceCollection _transientServiceCollection;
-        private IServiceCollection _singletonServiceCollection;
-        private IServiceCollection _monobehaviourCollection;
-        private IServiceCollection _brokenServiceCollection;
+        private readonly IServiceCollection _transientServiceCollection;
+        private readonly IServiceCollection _singletonServiceCollection;
+        private readonly IServiceCollection _brokenServiceCollection;
 
         public ServiceManager_Tests()
         {
@@ -18,9 +15,6 @@ namespace USITools.Tests.Unit
 
             var mockSingletonServiceCollection = new MockSingletonServiceCollection();
             _singletonServiceCollection = mockSingletonServiceCollection.ServiceCollection;
-
-            var mockMonoBehaviourServiceCollection = new BrokenMockTransientMonoBehaviourCollection();
-            _monobehaviourCollection = mockMonoBehaviourServiceCollection.ServiceCollection;
 
             var mockBrokenServiceCollection = new BrokenMockTransientServiceCollection();
             _brokenServiceCollection = mockBrokenServiceCollection.ServiceCollection;
@@ -125,24 +119,6 @@ namespace USITools.Tests.Unit
             Assert.IsType<TestServiceWithoutInterface>(classDependency);
             Assert.IsAssignableFrom<ITestInterface>(interfaceDependency);
         }
-
-        /*
-         * We can't test any of the MonoBehaviour-related methods outside of Unity, unfortunately
-         */
-        //[Fact]
-        //public void Can_get_a_MonoBehaviour_instance()
-        //{
-        //    // Assign
-        //    ServiceManager serviceManager = new ServiceManager(_monobehaviourCollection);
-
-        //    // Act
-        //    var service = serviceManager.GetMonoBehaviour<ITestInterface>();
-
-        //    // Assert
-        //    Assert.NotNull(service);
-        //    Assert.IsType<TestMonoBehaviourImplementingInterface>(service);
-        //    Assert.IsAssignableFrom<MonoBehaviour>(service);
-        //}
 
         [Fact]
         public void Services_with_transient_dependencies_should_get_a_transient_instance()
