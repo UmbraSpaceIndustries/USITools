@@ -16,6 +16,39 @@ namespace USITools
             return Vector3d.Distance(posCur, posNext);
         }
 
+        public static bool AnyNearbyVessels(double range, Vessel referenceVessel)
+        {
+            try
+            {
+                if (FlightGlobals.Vessels == null ||
+                    FlightGlobals.Vessels.Count < 2 ||
+                    referenceVessel == null)
+                {
+                    return false;
+                }
+                var referencePosition = referenceVessel.GetWorldPos3D();
+                foreach (var vessel in FlightGlobals.Vessels)
+                {
+                    if (vessel.persistentId == referenceVessel.persistentId)
+                    {
+                        continue;
+                    }
+                    var distance
+                        = Vector3d.Distance(vessel.GetWorldPos3D(), referencePosition);
+                    if (distance <= range)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[USITools] LogisticsTools.AnyNearbyVessels: {ex.Message}");
+                return false;
+            }
+        }
+
         public static List<Vessel> GetNearbyVessels(float range, bool includeSelf, Vessel thisVessel, bool landedOnly = true)
         {
             try
