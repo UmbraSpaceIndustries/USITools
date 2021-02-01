@@ -15,7 +15,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
+    <DebugType>portable</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\KSP_DEV\GameData\000_USITools\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -102,13 +102,15 @@
     <Compile Include="DependencyInjection\DependencyInjectionExceptions.cs" />
     <Compile Include="DependencyInjection\Interfaces\IDependencyService.cs" />
     <Compile Include="DependencyInjection\USI_AddonServiceManager.cs" />
+    <Compile Include="Deployables\AbstractDeployModule.cs" />
+    <Compile Include="Deployables\USI_BasicDeployableModule.cs" />
+    <Compile Include="Deployables\USI_DeployableMeshModule.cs" />
     <Compile Include="EnginesAndTanks\USI_ModuleTorchDrive.cs" />
     <Compile Include="Converters\USI_SwapController.cs" />
     <Compile Include="DependencyInjection\Interfaces\IServiceCollection.cs" />
     <Compile Include="DependencyInjection\Interfaces\IServiceManager.cs" />
     <Compile Include="DependencyInjection\ServiceDefinition.cs" />
-    <Compile Include="UITools\Window.cs" />
-    <Compile Include="UITools\Utilities.cs" />
+    <Compile Include="Helpers\ResourceHelpers.cs" />
     <Compile Include="USI_DifficultyOptions.cs" />
     <Compile Include="Traits\AgronomySkill.cs" />
     <Compile Include="Airbags\USI_ModuleBounce.cs" />

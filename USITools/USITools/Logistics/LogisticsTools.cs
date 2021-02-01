@@ -79,6 +79,26 @@ namespace USITools
             }
         }
 
+        public static List<T> GetRegionalModules<T>(Vessel referenceVessel)
+            where T: class
+        {
+            var range = (float)LogisticsSetup.Instance.Config.MaintenanceRange;
+            var nearbyVessels = GetNearbyVessels(range, true, referenceVessel, false);
+            var moduleList = new List<T>();
+            foreach (var vessel in nearbyVessels)
+            {
+                foreach (var part in vessel.parts)
+                {
+                    var module = part.FindModuleImplementing<T>();
+                    if (module != null)
+                    {
+                        moduleList.Add(module);
+                    }
+                }
+            }
+            return moduleList;
+        }
+
         public static List<Part> GetRegionalWarehouses(Vessel vessel, string module)
         {
             var pList = new List<Part>();
