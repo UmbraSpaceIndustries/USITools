@@ -21,9 +21,13 @@ namespace USITools
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Setup dependency injection for USI classes
-            //    ...when we have some to setup ^_^
+            // Setup dependency injection for USI services
             ServiceCollection = new ServiceCollection();
+            ServiceCollection
+                .AddSingletonService<PartThumbnailService>()
+                .AddSingletonService<ShipThumbnailService>()
+                .AddSingletonService<TextureService>()
+                .AddSingletonService<WindowManager>();
 
             ServiceManager = new ServiceManager(ServiceCollection);
         }
