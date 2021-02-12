@@ -95,12 +95,12 @@ namespace USITools
         /// </remarks>
         /// <typeparam name="T"></typeparam>
         /// <param name="prefab">The prefab to register.</param>
-        public void RegisterPrefab<T>(GameObject prefab)
+        public WindowManager RegisterPrefab<T>(GameObject prefab)
         {
             var type = typeof(T);
             if (type == null || prefab == null || _prefabs.ContainsKey(type))
             {
-                return;
+                return this;
             }
             var component = prefab.GetComponent<T>();
             if (component == null)
@@ -109,6 +109,7 @@ namespace USITools
                     $"WindowManager.RegisterPrefab: Prefab does not contain a {type.Name} component.");
             }
             _prefabs.Add(type, prefab);
+            return this;
         }
 
         /// <summary>
@@ -120,19 +121,20 @@ namespace USITools
         /// </remarks>
         /// <typeparam name="T">The <see cref="IWindow"/> that controls this UI.</typeparam>
         /// <param name="prefab">The UI prefab.</param>
-        public void RegisterWindow<T>(GameObject prefab)
+        public WindowManager RegisterWindow<T>(GameObject prefab)
             where T : IWindow
         {
             var type = typeof(T);
             if (type == null || prefab == null || _windows.ContainsKey(type))
             {
-                return;
+                return this;
             }
             var obj = GameObject.Instantiate(prefab, Vector3.zero, Quaternion.identity);
             obj.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
             obj.SetActive(false);
 
             _windows.Add(type, obj);
+            return this;
         }
     }
 }
