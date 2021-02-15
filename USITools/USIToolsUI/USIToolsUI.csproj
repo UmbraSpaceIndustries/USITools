@@ -61,6 +61,7 @@
     <Compile Include="Interfaces\IWindow.cs" />
     <Compile Include="MonoBehaviours\AbstractWindow.cs" />
     <Compile Include="MonoBehaviours\DragWindow.cs" />
+    <Compile Include="MonoBehaviours\ToggleButtonBackgroundColorizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
