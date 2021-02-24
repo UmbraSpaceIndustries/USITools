@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using USITools.Helpers;
 
 namespace USITools
 {
@@ -43,15 +44,7 @@ namespace USITools
             if (string.IsNullOrEmpty(ResourceCosts))
                 return;
 
-            var resources = ResourceCosts.Split(',');
-            for (int i = 0; i < resources.Length; i += 2)
-            {
-                SwapCosts.Add(new ResourceRatio
-                {
-                    ResourceName = resources[i],
-                    Ratio = double.Parse(resources[i + 1])
-                });
-            }
+            SwapCosts = ResourceHelpers.DeserializeResourceRatios(ResourceCosts);
         }
 
         public override string GetInfo()
