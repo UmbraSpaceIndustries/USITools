@@ -16,6 +16,46 @@ namespace USITools
             return Vector3d.Distance(posCur, posNext);
         }
 
+        public static bool AnyNearbyPartModules<T>(double range, Vessel referenceVessel)
+            where T: PartModule
+        {
+            try
+            {
+                if (FlightGlobals.Vessels == null ||
+                    FlightGlobals.Vessels.Count < 2 ||
+                    referenceVessel == null)
+                {
+                    return false;
+                }
+                var referencePosition = referenceVessel.GetWorldPos3D();
+                foreach (var vessel in FlightGlobals.Vessels)
+                {
+                    if (vessel.persistentId == referenceVessel.persistentId)
+                    {
+                        continue;
+                    }
+                    var partModule = vessel.FindPartModuleImplementing<T>();
+                    if (partModule == null)
+                    {
+                        continue;
+                    }
+                    var distance
+                        = Vector3d.Distance(vessel.GetWorldPos3D(), referencePosition);
+                    if (distance <= range)
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(
+                    $"[USITools] {nameof(LogisticsTools)}.{nameof(AnyNearbyPartModules)}: {ex.Message}");
+                return false;
+            }
+        }
+
         public static bool AnyNearbyVessels(double range, Vessel referenceVessel)
         {
             try
@@ -46,6 +86,46 @@ namespace USITools
             {
                 Debug.LogError($"[USITools] LogisticsTools.AnyNearbyVessels: {ex.Message}");
                 return false;
+            }
+        }
+
+        public static List<T> GetNearbyPartModules<T>(
+            float range,
+            Vessel referenceVessel,
+            bool includeReference = false,
+            bool landedOnly = true)
+            where T: PartModule
+        {
+            try
+            {
+                var partModules = new List<T>();
+                var count = FlightGlobals.Vessels.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var vessel = FlightGlobals.Vessels[i];
+                    if (vessel.mainBody == referenceVessel.mainBody &&
+                        (vessel.Landed || !landedOnly))
+                    {
+                        if (!includeReference && vessel == referenceVessel)
+                        {
+                            continue;
+                        }
+                        if (GetRange(referenceVessel, vessel) <= range)
+                        {
+                            var modules = vessel.FindPartModulesImplementing<T>();
+                            if (modules != null && modules.Count > 0)
+                            {
+                                partModules.AddRange(modules);
+                            }
+                        }
+                    }
+                }
+                return partModules;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[USITools] {nameof(LogisticsTools)}.{nameof(GetNearbyPartModules)}: {ex.Message}");
+                return null;
             }
         }
 

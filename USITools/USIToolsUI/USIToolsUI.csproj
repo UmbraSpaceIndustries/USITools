@@ -57,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\DropdownOptionWithId.cs" />
     <Compile Include="Interfaces\IPrefabInstantiator.cs" />
     <Compile Include="Interfaces\IWindow.cs" />
     <Compile Include="MonoBehaviours\AbstractWindow.cs" />
