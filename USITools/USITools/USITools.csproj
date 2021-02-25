@@ -116,6 +116,8 @@
     <Compile Include="DependencyInjection\ServiceDefinition.cs" />
     <Compile Include="Helpers\ResourceHelpers.cs" />
     <Compile Include="Helpers\TimeFormatters.cs" />
+    <Compile Include="UI\Class1.cs" />
+    <Compile Include="UI\Class2.cs" />
     <Compile Include="UI\PartThumbnailService.cs" />
     <Compile Include="UI\ShipThumbnailService.cs" />
     <Compile Include="UI\TextureService.cs" />
