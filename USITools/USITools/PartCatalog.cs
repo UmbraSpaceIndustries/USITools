@@ -1,5 +1,6 @@
 ﻿using KSP.UI.Screens;
 using RUI.Icons.Selectable;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -22,65 +23,65 @@ namespace USITools
     //    }
     //}
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_ManufacturingFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Manufacturing Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "Manufacturing"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_ManufacturingFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Manufacturing Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "Manufacturing"; }
+    //        set { }
+    //    }
+    //}
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_LogisticsFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Logistics Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "Logistics"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_LogisticsFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Logistics Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "Logistics"; }
+    //        set { }
+    //    }
+    //}
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_ConstructionFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Construction Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "Construction"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_ConstructionFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Construction Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "Construction"; }
+    //        set { }
+    //    }
+    //}
 
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class USI_KolonizationFilter : BaseFilter
-    {
-        protected override string Manufacturer
-        {
-            get { return "USI - Kolonization Division"; }
-            set { }
-        }
-        protected override string categoryTitle
-        {
-            get { return "Kolonization"; }
-            set { }
-        }
-    }
+    //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+    //public class USI_KolonizationFilter : BaseFilter
+    //{
+    //    protected override string Manufacturer
+    //    {
+    //        get { return "USI - Kolonization Division"; }
+    //        set { }
+    //    }
+    //    protected override string categoryTitle
+    //    {
+    //        get { return "Kolonization"; }
+    //        set { }
+    //    }
+    //}
 
 
     //[KSPAddon(KSPAddon.Startup.MainMenu, true)]
@@ -98,6 +99,7 @@ namespace USITools
     //    }
     //}
 
+    [Obsolete("Use Community Category Kit instead", true)]
     public abstract class BaseFilter : MonoBehaviour
     {
         private readonly List<AvailablePart> parts = new List<AvailablePart>();

@@ -6,32 +6,84 @@
         [KSPField(isPersistant = true)]
         public bool isActive = false;
 
-
-        [KSPEvent(guiName = "Toggle Ground Tether", guiActive = true, externalToEVAOnly = true, guiActiveEditor = false, active = true, guiActiveUnfocused = true, unfocusedRange = 3.0f)]
-        public void ToggleDampen()
+        #region KSP actions and events
+        [KSPAction(guiName = "Disable ground tether")]
+        public void DisableDampenAction(KSPActionParam param)
         {
-            isActive = !isActive;
-            ModuleStabilization.onStabilizationToggle.Fire(part.vessel,isActive,true);
-            SyncDampeners();
+            if (isActive)
+            {
+                ToggleDampen(false);
+            }
         }
 
-        public void Start()
+        [KSPAction(guiName = "Enable ground tether")]
+        public void EnableDampenAction(KSPActionParam param)
         {
+            if (!isActive)
+            {
+                ToggleDampen(true);
+            }
+        }
+
+        [KSPAction(guiName = "Toggle ground tether")]
+        public void ToggleDampenAction(KSPActionParam param)
+        {
+            ToggleDampen(!isActive);
+        }
+
+        [KSPEvent(
+            guiName = "Ground Tether",
+            guiActive = true,
+            externalToEVAOnly = true,
+            guiActiveEditor = false,
+            active = true,
+            guiActiveUnfocused = true,
+            unfocusedRange = 3.0f)]
+        public void ToggleDampenEvent()
+        {
+            ToggleDampen(!isActive);
+        }
+        #endregion
+
+        public override void OnStart(StartState state)
+        {
+            base.OnStart(state);
+
             if (!HighLogic.LoadedSceneIsFlight)
                 return;
 
+            SetActive(isActive);
+
             SyncDampeners();
-            ModuleStabilization.onStabilizationToggle.Fire(part.vessel,isActive,false);
+            ModuleStabilization.onStabilizationToggle
+                .Fire(part.vessel, isActive, false);
+        }
+
+        public void SetActive(bool isActive)
+        {
+            this.isActive = isActive;
+
+            Events[nameof(ToggleDampenEvent)].guiName
+                = $"Ground tether: {(isActive ? "On" : "Off")}";
+            MonoUtilities.RefreshContextWindows(part);
         }
 
         private void SyncDampeners()
         {
-            var dList = vessel.FindPartModulesImplementing<USI_InertialDampener>();
-            var c = dList.Count;
-            for (int i = 0; i < c; ++i)
+            var dampeners = vessel.FindPartModulesImplementing<USI_InertialDampener>();
+            for (int i = 0; i < dampeners.Count; ++i)
             {
-                dList[i].isActive = isActive;
+                dampeners[i].SetActive(isActive);
             }
+        }
+
+        private void ToggleDampen(bool isActive)
+        {
+            SetActive(isActive);
+
+            ModuleStabilization.onStabilizationToggle
+                .Fire(part.vessel, isActive, true);
+            SyncDampeners();
         }
     }
 }
