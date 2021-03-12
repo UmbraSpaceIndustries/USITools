@@ -59,8 +59,11 @@ namespace USITools
             for (int i = 0; i < c; ++i)
             {
                 var r = vessel.parts[i].Rigidbody;
-                r.angularVelocity *= 0;
-                r.velocity *= 0;
+                if (r != null)
+                {
+                    r.angularVelocity *= 0;
+                    r.velocity *= 0;
+                }
             }
         }
     }
