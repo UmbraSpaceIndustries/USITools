@@ -25,6 +25,7 @@ namespace USITools
             ServiceCollection = new ServiceCollection();
             ServiceCollection
                 .AddSingletonService<PartThumbnailService>()
+                .AddSingletonService<PrefabManager>()
                 .AddSingletonService<ShipThumbnailService>()
                 .AddSingletonService<TextureService>()
                 .AddSingletonService<WindowManager>();

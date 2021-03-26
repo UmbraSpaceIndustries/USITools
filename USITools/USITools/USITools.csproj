@@ -116,6 +116,7 @@
     <Compile Include="DependencyInjection\ServiceDefinition.cs" />
     <Compile Include="Helpers\ResourceHelpers.cs" />
     <Compile Include="Helpers\TimeFormatters.cs" />
+    <Compile Include="UI\PrefabManager.cs" />
     <Compile Include="UI\Window.cs" />
     <Compile Include="UI\Utilities.cs" />
     <Compile Include="UI\PartThumbnailService.cs" />
