@@ -93,22 +93,62 @@ namespace USITools
         /// Prefabs can only be loaded from asset bundles once, so they need to be cached if
         /// we want to be able to instantiate them later. That's the purpose of this method.
         /// </remarks>
-        /// <typeparam name="T"></typeparam>
         /// <param name="prefab">The prefab to register.</param>
-        public WindowManager RegisterPrefab<T>(GameObject prefab)
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public WindowManager RegisterPrefab(GameObject prefab, Type type)
         {
-            var type = typeof(T);
             if (type == null || prefab == null || _prefabs.ContainsKey(type))
             {
                 return this;
             }
-            var component = prefab.GetComponent<T>();
+            var component = prefab.GetComponent(type);
             if (component == null)
             {
                 throw new Exception(
                     $"WindowManager.RegisterPrefab: Prefab does not contain a {type.Name} component.");
             }
             _prefabs.Add(type, prefab);
+            return this;
+        }
+
+        /// <summary>
+        /// Register a prefab for later use by <see cref="InstantiatePrefab{T}(Transform)"/>.
+        /// </summary>
+        /// <remarks>
+        /// This is meant for smaller, iterable UI prefabs placed inside the main window.
+        /// Use <see cref="RegisterWindow{T}(GameObject)"/> to register your main window.
+        /// Prefabs can only be loaded from asset bundles once, so they need to be cached if
+        /// we want to be able to instantiate them later. That's the purpose of this method.
+        /// </remarks>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="prefab">The prefab to register.</param>
+        public WindowManager RegisterPrefab<T>(GameObject prefab)
+        {
+            return RegisterPrefab(prefab, typeof(T));
+        }
+
+        /// <summary>
+        /// Register a UI window prefab and its controller.
+        /// </summary>
+        /// <remarks>
+        /// Window prefabs must contain a <see cref="MonoBehaviour"/> that implements <see cref="IWindow"/>
+        /// in order to be used with <see cref="WindowManager"/>.
+        /// </remarks>
+        /// <param name="prefab">The UI prefab.</param>
+        /// <param name="type">The <see cref="IWindow"/> that controls this UI.</param>
+        /// <returns></returns>
+        public WindowManager RegisterWindow(GameObject prefab, Type type)
+        {
+            if (type == null || prefab == null || _windows.ContainsKey(type))
+            {
+                return this;
+            }
+            var obj = GameObject.Instantiate(prefab, Vector3.zero, Quaternion.identity);
+            obj.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
+            obj.SetActive(false);
+
+            _windows.Add(type, obj);
             return this;
         }
 
@@ -124,17 +164,7 @@ namespace USITools
         public WindowManager RegisterWindow<T>(GameObject prefab)
             where T : IWindow
         {
-            var type = typeof(T);
-            if (type == null || prefab == null || _windows.ContainsKey(type))
-            {
-                return this;
-            }
-            var obj = GameObject.Instantiate(prefab, Vector3.zero, Quaternion.identity);
-            obj.transform.SetParent(MainCanvasUtil.MainCanvas.transform);
-            obj.SetActive(false);
-
-            _windows.Add(type, obj);
-            return this;
+            return RegisterWindow(prefab, typeof(T));
         }
     }
 }

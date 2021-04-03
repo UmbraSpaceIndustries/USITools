@@ -211,7 +211,7 @@ namespace USITools
 
         public virtual void Deploy()
         {
-            if (PartialDeployPercentage > 1d)
+            if (PartialDeployPercentage >= 1d)
             {
                 ExpandResourceCapacity();
                 EnableModules();
@@ -265,7 +265,7 @@ namespace USITools
                 }
                 else
                 {
-                    module.enabled = false;
+                    module.isEnabled = false;
                 }
             }
         }
@@ -276,11 +276,11 @@ namespace USITools
             {
                 if (module is BaseConverter)
                 {
-                    (module as BaseConverter).DisableModule();
+                    (module as BaseConverter).EnableModule();
                 }
                 else
                 {
-                    module.enabled = false;
+                    module.isEnabled = true;
                 }
             }
         }
@@ -341,6 +341,7 @@ namespace USITools
 
             foreach (var warehouse in warehouses)
             {
+                // TODO - change this so that it ignores localTransferEnabled for the active vessel
                 if (!warehouse.localTransferEnabled && resourceName != "ElectricCharge")
                 {
                     continue;

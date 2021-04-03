@@ -20,6 +20,10 @@ namespace USITools
             {
                 ShowAtPercentage = 1d;
             }
+            if (ShowAtPercentage < 0d)
+            {
+                ShowAtPercentage = 0d;
+            }
 
             if (HighLogic.LoadedSceneIsFlight)
             {
