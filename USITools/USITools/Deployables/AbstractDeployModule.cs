@@ -17,6 +17,7 @@ namespace USITools
         protected const string PAW_GROUP_NAME = "usi-deployable";
 
         protected readonly List<PartModule> _affectedModules = new List<PartModule>();
+        protected bool _isDeployedInEditor = false;
         protected bool _isInitialized = false;
         protected List<ResourceRatio> _resourceCosts;
 
@@ -174,7 +175,7 @@ namespace USITools
                 {
                     var warehouse = sourcePart.FindModuleImplementing<USI_ModuleResourceWarehouse>();
                     if (warehouse != null &&
-                        warehouse.localTransferEnabled &&
+                        (warehouse.vessel == vessel || warehouse.localTransferEnabled) &&
                         sourcePart.Resources.Contains(resourceName))
                     {
                         var resource = sourcePart.Resources[resourceName];
@@ -211,11 +212,12 @@ namespace USITools
 
         public virtual void Deploy()
         {
-            if (PartialDeployPercentage >= 1d)
+            if (HighLogic.LoadedSceneIsEditor || PartialDeployPercentage >= 1d)
             {
                 ExpandResourceCapacity();
                 EnableModules();
-                StartDeployed = true;
+                StartDeployed = true && HighLogic.LoadedSceneIsFlight;
+                _isDeployedInEditor = true;
                 RefreshPAW();
             }
         }
@@ -341,8 +343,9 @@ namespace USITools
 
             foreach (var warehouse in warehouses)
             {
-                // TODO - change this so that it ignores localTransferEnabled for the active vessel
-                if (!warehouse.localTransferEnabled && resourceName != "ElectricCharge")
+                if (warehouse.vessel != vessel &&
+                    !warehouse.localTransferEnabled &&
+                    resourceName != "ElectricCharge")
                 {
                     continue;
                 }
@@ -381,6 +384,11 @@ namespace USITools
 
         public override string GetInfo()
         {
+            if (_resourceCosts == null)
+            {
+                GetLocalizedDisplayNames();
+                GetResourceCosts();
+            }
             if (_resourceCosts == null || _resourceCosts.Count < 1)
             {
                 return base.GetInfo();
@@ -504,10 +512,7 @@ namespace USITools
             {
                 _isInitialized = true;
                 GetAffectedPartModules();
-                GetLocalizedDisplayNames();
-                GetResourceCosts();
-                RefreshPAW();
-                if (StartDeployed)
+                if (StartDeployed || HighLogic.LoadedSceneIsEditor)
                 {
                     Deploy();
                 }
@@ -523,6 +528,14 @@ namespace USITools
             }
         }
 
+        public override void OnAwake()
+        {
+            base.OnAwake();
+
+            GetLocalizedDisplayNames();
+            GetResourceCosts();
+        }
+
         public override void OnStart(StartState state)
         {
             base.OnStart(state);
@@ -532,26 +545,39 @@ namespace USITools
 
         protected virtual void RefreshPAW()
         {
-            if (_resourceCosts != null &&
-                _resourceCosts.Count > 0 &&
-                PartialDeployPercentage < 1d)
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                Actions[nameof(DeployAction)].active = false;
-                Actions[nameof(RetractAction)].active = false;
-                Actions[nameof(ToggleAction)].active = false;
+                if (_resourceCosts != null &&
+                    _resourceCosts.Count > 0 &&
+                    PartialDeployPercentage < 1d)
+                {
+                    Actions[nameof(DeployAction)].active = false;
+                    Actions[nameof(RetractAction)].active = false;
+                    Actions[nameof(ToggleAction)].active = false;
 
-                Events[nameof(DeployEvent)].guiActive = false;
-                Events[nameof(RetractEvent)].guiActive = false;
+                    Events[nameof(DeployEvent)].guiActive = false;
+                    Events[nameof(RetractEvent)].guiActive = false;
+                }
+                else
+                {
+                    Actions[nameof(PayAction)].active = false;
+                    Actions[nameof(DeployAction)].active = !StartDeployed;
+                    Actions[nameof(RetractAction)].active = StartDeployed;
+
+                    Events[nameof(PayEvent)].guiActive = false;
+                    Events[nameof(DeployEvent)].guiActive = !StartDeployed;
+                    Events[nameof(RetractEvent)].guiActive = StartDeployed;
+
+                    Fields[nameof(PartialDeployPercentage)].guiActive = false;
+                }
             }
             else
             {
-                Actions[nameof(PayAction)].active = false;
-                Actions[nameof(DeployAction)].active = !StartDeployed;
-                Actions[nameof(RetractAction)].active = StartDeployed;
-
                 Events[nameof(PayEvent)].guiActive = false;
-                Events[nameof(DeployEvent)].guiActive = !StartDeployed;
-                Events[nameof(RetractEvent)].guiActive = StartDeployed;
+                Events[nameof(DeployEvent)].guiActive = !_isDeployedInEditor;
+                Events[nameof(DeployEvent)].guiActiveEditor = !_isDeployedInEditor;
+                Events[nameof(RetractEvent)].guiActive = _isDeployedInEditor;
+                Events[nameof(RetractEvent)].guiActiveEditor = _isDeployedInEditor;
 
                 Fields[nameof(PartialDeployPercentage)].guiActive = false;
             }
@@ -561,11 +587,19 @@ namespace USITools
 
         public virtual void Retract()
         {
-            if (part.protoModuleCrew.Count > 0)
+            if (HighLogic.LoadedSceneIsFlight)
             {
-                var message = string.Format(PART_IS_CREWED_ERROR_MESSAGE, part.partInfo.title);
-                ScreenMessages.PostScreenMessage(message, 5f);
-                return;
+                if (part.protoModuleCrew.Count > 0)
+                {
+                    var message = string.Format(PART_IS_CREWED_ERROR_MESSAGE, part.partInfo.title);
+                    ScreenMessages.PostScreenMessage(message, 5f);
+                    return;
+                }
+                StartDeployed = false;
+            }
+            else
+            {
+                _isDeployedInEditor = false;
             }
             part.CrewCapacity = 0;
             if (ResourceMultiplier > 1d)
@@ -574,7 +608,6 @@ namespace USITools
             }
             DisableModules();
             SetControlSurfaceState(false);
-            StartDeployed = false;
             RefreshPAW();
         }
 

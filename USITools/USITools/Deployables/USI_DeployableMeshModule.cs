@@ -25,7 +25,7 @@ namespace USITools
                 ShowAtPercentage = 0d;
             }
 
-            if (HighLogic.LoadedSceneIsFlight)
+            if (HighLogic.LoadedSceneIsGame)
             {
                 if (string.IsNullOrEmpty(MeshName))
                 {

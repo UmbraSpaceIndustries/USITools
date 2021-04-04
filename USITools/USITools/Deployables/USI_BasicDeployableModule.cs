@@ -10,11 +10,24 @@ namespace USITools
     {
         protected List<USI_DeployableMeshModule> _meshes;
 
+        public override void Deploy()
+        {
+            base.Deploy();
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                SetMeshVisibility();
+            }
+        }
+
         protected override void DepositResources()
         {
             base.DepositResources();
 
             SetMeshVisibility();
+            if (PartialDeployPercentage >= 1d)
+            {
+                Deploy();
+            }
         }
 
         public override void OnStart(StartState state)
@@ -35,32 +48,50 @@ namespace USITools
 
         protected override void RefreshPAW()
         {
-            Actions[nameof(DeployAction)].active = false;
-            Actions[nameof(RetractAction)].active = false;
-            Actions[nameof(ToggleAction)].active = false;
-
-            Events[nameof(DeployEvent)].guiActive = false;
-            Events[nameof(DeployEvent)].guiActiveEditor = false;
-            Events[nameof(RetractEvent)].guiActive = false;
-            Events[nameof(RetractEvent)].guiActiveEditor = false;
-
-            if (PartialDeployPercentage >= 1d)
+            if (HighLogic.LoadedSceneIsEditor)
             {
-                Actions[nameof(PayAction)].active = false;
-                Events[nameof(PayEvent)].guiActive = false;
-                Fields[nameof(PartialDeployPercentage)].guiActive = false;
+                base.RefreshPAW();
             }
+            else
+            {
+                Actions[nameof(DeployAction)].active = false;
+                Actions[nameof(RetractAction)].active = false;
+                Actions[nameof(ToggleAction)].active = false;
 
-            MonoUtilities.RefreshContextWindows(part);
+                Events[nameof(DeployEvent)].guiActive = false;
+                Events[nameof(DeployEvent)].guiActiveEditor = false;
+                Events[nameof(RetractEvent)].guiActive = false;
+                Events[nameof(RetractEvent)].guiActiveEditor = false;
+
+                if (PartialDeployPercentage >= 1d)
+                {
+                    Actions[nameof(PayAction)].active = false;
+                    Events[nameof(PayEvent)].guiActive = false;
+                    Fields[nameof(PartialDeployPercentage)].guiActive = false;
+                }
+
+                MonoUtilities.RefreshContextWindows(part);
+            }
+        }
+
+        public override void Retract()
+        {
+            base.Retract();
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                SetMeshVisibility();
+            }
         }
 
         protected void SetMeshVisibility()
         {
-            if (_meshes != null && _meshes.Count > 0 && HighLogic.LoadedSceneIsFlight)
+            if (_meshes != null && _meshes.Count > 0)
             {
                 foreach (var mesh in _meshes)
                 {
-                    mesh.SetActive(mesh.ShowAtPercentage <= PartialDeployPercentage);
+                    mesh.SetActive(
+                        _isDeployedInEditor ||
+                        mesh.ShowAtPercentage <= PartialDeployPercentage);
                 }
             }
         }
