@@ -12,9 +12,9 @@ pipeline {
     stage("package") {
 	  steps {
 	  	unstash name: "artifacts"
-	  	powershell "Move-Item -Force ./artifacts/*.dll ./FOR_RELEASE/GameData/"
+	  	powershell "Move-Item -Force ./artifacts/*.dll ./FOR_RELEASE/GameData/OOO_USITools"
 	  	script {
-	  	  zip dir: "FOR_RELEASE/GameData", zipFile: "USITools.zip", archive: true
+	  	  zip dir: "FOR_RELEASE", zipFile: "USITools.zip", archive: true
 	  	}
 	  }
     }
