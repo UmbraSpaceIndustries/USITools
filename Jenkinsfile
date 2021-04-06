@@ -8,12 +8,13 @@ pipeline {
         stash includes: "artifacts/*.dll,FOR_RELEASE/**", name: "artifacts"
       }
     }
+
     stage("package") {
 	  steps {
 	  	unstash name: "artifacts"
 	  	bat "mv artifacts/*.dll FOR_RELEASE/GameData"
 	  	dir "FOR_RELEASE/GameData"
-	  	zip zipFile: "../USITools.zip", archive: true
+	  	// zip zipFile: "../USITools.zip", archive: true
 	  }
     }
   }
