@@ -12,6 +12,7 @@ pipeline {
     stage("package") {
 	  steps {
 	  	unstash name: "artifacts"
+	  	bat "dir"
 	  	bat "move artifacts/*.dll FOR_RELEASE/GameData"
 	  	dir "FOR_RELEASE/GameData"
 	  	script {
