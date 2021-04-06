@@ -12,9 +12,11 @@ pipeline {
     stage("package") {
 	  steps {
 	  	unstash name: "artifacts"
-	  	bat "mv artifacts/*.dll FOR_RELEASE/GameData"
+	  	bat "move artifacts/*.dll FOR_RELEASE/GameData"
 	  	dir "FOR_RELEASE/GameData"
-	  	// zip zipFile: "../USITools.zip", archive: true
+	  	script {
+	  	  zip zipFile: "../USITools.zip", archive: true
+	  	}
 	  }
     }
   }
