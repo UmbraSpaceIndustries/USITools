@@ -1,11 +1,20 @@
 pipeline {
-  agent { label 'windows' }
+  agent { label "windows" }
   stages {
-    stage('build') {
+    stage("build") {
       steps {
-        echo 'yo'
+        bat "dotnet build --output artifacts --configuration release --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
+        bat "dotnet build --output artifacts --configuration release --verbosity detailed ./USITools/USITools/USITools.csproj"
+        stash includes: "artifacts/*.dll,FOR_RELEASE/**", name: "artifacts"
       }
     }
-
+    stage("package") {
+	  steps {
+	  	unstash name: "artifacts"
+	  	bat "mv artifacts/*.dll FOR_RELEASE/GameData"
+	  	dir "FOR_RELEASE/GameData"
+	  	zip zipFile: "../USITools.zip", archive: true
+	  }
+    }
   }
 }
