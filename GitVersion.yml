@@ -1,0 +1,9 @@
+mode: ContinuousDeployment
+branches:
+  develop:
+    regex: ^main$
+    mode: ContinuousDeployment
+    tag: bleeding-edge
+ignore:
+  sha: []
+merge-message-formats: {}
