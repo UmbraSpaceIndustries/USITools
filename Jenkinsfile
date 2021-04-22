@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage("Calculate semver") {
       steps {
-        sh "gitversion /output buildserver"
+        bat "gitversion /output buildserver"
         script {
           def props = readProperties file: "gitversion.properties"
           env.GITVERSION_SEMVER = props.GitVersion_SemVer
