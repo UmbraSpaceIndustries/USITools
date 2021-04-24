@@ -1,6 +1,13 @@
 pipeline {
   agent { label "windows" }
   stages {
+    // Configure git
+    stage("Configure git") {
+      steps {
+        bat "git config user.email burt-macklin@jenkins"
+        bat 'git config user.name "Agent Burt Macklin"'
+      }
+    }
     // Determine the version number
     stage("Calculate semver") {
       steps {
@@ -55,12 +62,13 @@ pipeline {
       when { branch "main" }
       steps {
         powershell '''
-          echo "looking for tag $env:PUBLISH_TAG"
+          echo "Looking for tag $env:PUBLISH_TAG..."
           $tagFound = git tag -l "$env:PUBLISH_TAG"
           if ( $tagFound -ne $env:PUBLISH_TAG )
           {
-            echo "found tag"
+            echo "Tag not found. Creating tag..."
             git tag -a $env:PUBLISH_TAG -m "Unstable Release $env:GITVERSION_SEMVER"
+            echo "Pushing tag to GitHub..."
             git push --tags
           }
         '''
