@@ -37,7 +37,7 @@ pipeline {
       }
     }
     stage("Setup release environment") {
-      when { branch "main" }
+      when { branch "release" }
       steps {
         script {
           env.BUILD_CONFIG = "release"
