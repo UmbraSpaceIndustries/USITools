@@ -1,5 +1,8 @@
 pipeline {
   agent { label "windows" }
+  environment {
+    GITHUB_TOKEN = credentials("github-publish-token")
+  }
   stages {
     // Configure git
     stage("Configure git") {
@@ -15,6 +18,7 @@ pipeline {
         script {
           env.BUILD_CONFIG = "debug"
           env.TAG_PREFIX = "Unstable Release"
+          env.IS_PRERELEASE = "true"
         }
       }
     }
@@ -24,6 +28,7 @@ pipeline {
         script {
           env.BUILD_CONFIG = "debug"
           env.TAG_PREFIX = "Experimental Release"
+          env.IS_PRERELEASE = "true"
         }
       }
     }
@@ -33,6 +38,7 @@ pipeline {
         script {
           env.BUILD_CONFIG = "release"
           env.TAG_PREFIX = "Pre-Release"
+          env.IS_PRERELEASE = "true"
         }
       }
     }
@@ -42,6 +48,7 @@ pipeline {
         script {
           env.BUILD_CONFIG = "release"
           env.TAG_PREFIX = "Stable Release"
+          env.IS_PRERELEASE = "false"
         }
       }
     }
@@ -89,9 +96,24 @@ pipeline {
       }
     }
     // Push artifacts to GitHub
-    // stage("Push release artifacts to GitHub") {
-    //   // TODO - Figure out pushing to GitHub (probably going to have to automate creating new tags first tho)
-    //   steps {}
-    // }
+    stage("Push release artifacts to GitHub") {
+      steps {
+        powershell '''
+          $Url = "https://api.github.com/repos/tjdeckard/USITools/releases"
+          echo "GitHub URL is: $Url"
+          $Headers = @{
+            "Accept" = "application/vnd.github.v3+json"
+            "Token" = "$env:GITHUB_TOKEN"
+          }
+          echo "Headers: $Headers"
+          $Body = @{
+            tag_name = "$env:PUBLISH_TAG"
+            name = "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
+            prerelease = $env:IS_PRERELEASE
+          }
+          echo "Body: $Body"
+        '''
+      }
+    }
   }
 }
