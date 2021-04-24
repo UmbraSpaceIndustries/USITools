@@ -84,13 +84,13 @@ pipeline {
     stage("Tag commit") {
       steps {
         powershell '''
-          echo "Looking for tag $env:PUBLISH_TAG..."
+          Write-Output "Looking for tag $env:PUBLISH_TAG..."
           $tagFound = git tag -l "$env:PUBLISH_TAG"
           if ( $tagFound -ne $env:PUBLISH_TAG )
           {
-            echo "Tag not found. Creating tag..."
+            Write-Output "Tag not found. Creating tag..."
             git tag -a $env:PUBLISH_TAG -m "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
-            echo "Pushing tag to GitHub..."
+            Write-Output "Pushing tag to GitHub..."
             git push --tags
           }
         '''
@@ -112,12 +112,25 @@ pipeline {
             prerelease = ($env:IS_PRERELEASE -eq "true")
           }
           $Json = ConvertTo-Json $Body
-          $Response = Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Json
+          $Response = Invoke-WebRequest -Method Post -Uri $Url -Headers $Headers -ContentType "application/json" -Body $Json
+          if ( $Response.StatusCode -ne 200 ) {
+            Write-Output "Could not create GitHub Release"
+            Write-Output "Status Code: $Response.StatusCode"
+            Write-Output $Response.Content
+            throw $Response.StatusCode
+          }
 
           echo "Uploading artifacts to GitHub..."
-          $UploadUrl = $Response | Select -ExpandProperty "upload_url"
-          $UploadUrl = $UploadUrl -replace "\{.*\}$", "?name=$env:ARCHIVE_FILENAME"
-          $Response = Invoke-RestMethod -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME
+          $ReleaseMetadata = ConvertFrom-Json $Response.Content
+          $UploadUrl = $ReleaseMetadata | Select -ExpandProperty "upload_url"
+          $UploadUrl = $UploadUrl.Replace("{?name,label}", "?name=$env:ARCHIVE_FILENAME")
+          $Response = Invoke-WebRequest -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME
+          if ( $Response.StatusCode -ne 200 ) {
+            Write-Output "Could not upload artifacts to GitHub"
+            Write-Output "Status Code: $Response.StatusCode"
+            Write-Output $Response.Content
+            throw $Response.StatusCode
+          }
         '''
       }
     }
