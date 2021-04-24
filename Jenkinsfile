@@ -8,6 +8,43 @@ pipeline {
         bat 'git config user.name "Agent Burt Macklin"'
       }
     }
+    // Determine build & publish flags for branch
+    stage("Setup bleeding edge environment") {
+      when { branch "main" }
+      steps {
+        script {
+          env.BUILD_CONFIG = "debug"
+          env.TAG_PREFIX = "Unstable Release"
+        }
+      }
+    }
+    stage("Setup experimental environment") {
+      when { branch "experimental" }
+      steps {
+        script {
+          env.BUILD_CONFIG = "debug"
+          env.TAG_PREFIX = "Experimental Release"
+        }
+      }
+    }
+    stage("Setup pre-release environment") {
+      when { branch "prerelease" }
+      steps {
+        script {
+          env.BUILD_CONFIG = "release"
+          env.TAG_PREFIX = "Pre-Release"
+        }
+      }
+    }
+    stage("Setup release environment") {
+      when { branch "main" }
+      steps {
+        script {
+          env.BUILD_CONFIG = "release"
+          env.TAG_PREFIX = "Stable Release"
+        }
+      }
+    }
     // Determine the version number
     stage("Calculate semver") {
       steps {
@@ -19,37 +56,16 @@ pipeline {
         }
       }
     }
-    // Build stages for each branch
+    // Build
     stage("Build for bleeding edge") {
       when { branch "main" }
       steps {
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration debug --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration debug --verbosity detailed ./USITools/USITools/USITools.csproj"
-      }
-    }
-    stage("Build for experimental") {
-      when { branch "experimental" }
-      steps {
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration debug --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration debug --verbosity detailed ./USITools/USITools/USITools.csproj"
-      }
-    }
-    stage("Build for pre-release") {
-      when { branch "prerelease" }
-      steps {
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration release --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration release --verbosity detailed ./USITools/USITools/USITools.csproj"
-      }
-    }
-    stage("Build for release") {
-      when { branch "release" }
-      steps {
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration release --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
-        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration release --verbosity detailed ./USITools/USITools/USITools.csproj"
+        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration ${env.BUILD_CONFIG} --verbosity detailed ./USITools/USIToolsUI/USIToolsUI.csproj"
+        bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration ${env.BUILD_CONFIG} --verbosity detailed ./USITools/USITools/USITools.csproj"
       }
     }
     // Packaging
-    stage("Package for release") {
+    stage("Package artifacts") {
       steps {
         powershell "Copy-Item ./*.txt ./FOR_RELEASE/GameData/"
         script {
@@ -58,8 +74,7 @@ pipeline {
       }
     }
     // Tag commit, if necessary
-    stage("Tag commit for bleeding edge") {
-      when { branch "main" }
+    stage("Tag commit") {
       steps {
         powershell '''
           echo "Looking for tag $env:PUBLISH_TAG..."
@@ -67,7 +82,7 @@ pipeline {
           if ( $tagFound -ne $env:PUBLISH_TAG )
           {
             echo "Tag not found. Creating tag..."
-            git tag -a $env:PUBLISH_TAG -m "Unstable Release $env:GITVERSION_SEMVER"
+            git tag -a $env:PUBLISH_TAG -m "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
             echo "Pushing tag to GitHub..."
             git push --tags
           }
