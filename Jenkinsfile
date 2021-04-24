@@ -105,13 +105,15 @@ pipeline {
             "Accept" = "application/vnd.github.v3+json"
             "Token" = "$env:GITHUB_TOKEN"
           }
-          echo "Headers: $Headers"
+          echo "Headers:"
+          $Headers
           $Body = @{
             tag_name = "$env:PUBLISH_TAG"
             name = "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
             prerelease = $env:IS_PRERELEASE
           }
-          echo "Body: $Body"
+          echo "Body:"
+          $Body
         '''
       }
     }
