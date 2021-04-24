@@ -55,9 +55,11 @@ pipeline {
       when { branch "main" }
       steps {
         powershell '''
+          echo "looking for tag $env.PUBLISH_TAG"
           $tagFound = git tag -l "$env.PUBLISH_TAG"
           if ( $tagFound -ne $env.PUBLISH_TAG )
           {
+            echo "found tag"
             git tag -a $env.PUBLISH_TAG -m "Unstable Release $env.GITVERSION_SEMVER"
             git push --tags
           }
