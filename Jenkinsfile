@@ -112,7 +112,7 @@ pipeline {
             prerelease = ($env:IS_PRERELEASE -eq "true")
           }
           $Json = ConvertTo-Json $Body
-          $Response = Invoke-WebRequest -Method Post -Uri $Url -Headers $Headers -ContentType "application/json" -Body $Json
+          $Response = Invoke-WebRequest -Method Post -Uri $Url -Headers $Headers -ContentType "application/json" -Body $Json -UseBasicParsing
           if ( $Response.StatusCode -ne 200 ) {
             Write-Output "Could not create GitHub Release"
             Write-Output "Status Code: $Response.StatusCode"
@@ -124,7 +124,7 @@ pipeline {
           $ReleaseMetadata = ConvertFrom-Json $Response.Content
           $UploadUrl = $ReleaseMetadata | Select -ExpandProperty "upload_url"
           $UploadUrl = $UploadUrl.Replace("{?name,label}", "?name=$env:ARCHIVE_FILENAME")
-          $Response = Invoke-WebRequest -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME
+          $Response = Invoke-WebRequest -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME -UseBasicParsing
           if ( $Response.StatusCode -ne 200 ) {
             Write-Output "Could not upload artifacts to GitHub"
             Write-Output "Status Code: $Response.StatusCode"
