@@ -99,21 +99,18 @@ pipeline {
     stage("Push release artifacts to GitHub") {
       steps {
         powershell '''
+          echo "Creating release on GitHub..."
           $Url = "https://api.github.com/repos/tjdeckard/USITools/releases"
-          echo "GitHub URL is: $Url"
           $Headers = @{
             "Accept" = "application/vnd.github.v3+json"
-            "Token" = "$env:GITHUB_TOKEN"
+            "Authorization" = "token $env:GITHUB_TOKEN"
           }
-          echo "Headers:"
-          $Headers
           $Body = @{
             tag_name = "$env:PUBLISH_TAG"
             name = "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
             prerelease = $env:IS_PRERELEASE
           }
-          echo "Body:"
-          $Body
+          Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Body
         '''
       }
     }
