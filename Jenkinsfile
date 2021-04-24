@@ -116,7 +116,7 @@ pipeline {
 
           echo "Uploading artifacts to GitHub..."
           $UploadUrl = $Response | Select -ExpandProperty "upload_url"
-          $UploadUrl = $UploadUrl -replace "\{.*}$", "?name=$env:ARCHIVE_FILENAME"
+          $UploadUrl = $UploadUrl -replace "\{.*\}$", "?name=$env:ARCHIVE_FILENAME"
           $Response = Invoke-RestMethod -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME
         '''
       }
