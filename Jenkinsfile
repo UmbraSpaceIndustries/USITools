@@ -108,9 +108,10 @@ pipeline {
           $Body = @{
             tag_name = "$env:PUBLISH_TAG"
             name = "$env:TAG_PREFIX $env:GITVERSION_SEMVER"
-            prerelease = $env:IS_PRERELEASE
+            prerelease = ($env:IS_PRERELEASE -eq "true")
           }
-          Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Body
+          $Json = ConvertTo-Json $Body
+          Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Json
         '''
       }
     }
