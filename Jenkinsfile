@@ -75,7 +75,8 @@ pipeline {
       steps {
         powershell "Copy-Item ./*.txt ./FOR_RELEASE/GameData/"
         script {
-          zip dir: "FOR_RELEASE", zipFile: "USITools_${env.GITVERSION_SEMVER}.zip", archive: true
+          env.ARCHIVE_FILENAME = "USITools_${env.GITVERSION_SEMVER}.zip"
+          zip dir: "FOR_RELEASE", zipFile: "${env.ARCHIVE_FILENAME}", archive: true
         }
       }
     }
@@ -111,7 +112,12 @@ pipeline {
             prerelease = ($env:IS_PRERELEASE -eq "true")
           }
           $Json = ConvertTo-Json $Body
-          Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Json
+          $Response = Invoke-RestMethod -Method Post -Uri $Url -Headers $Headers -Body $Json
+
+          echo "Uploading artifacts to GitHub..."
+          $UploadUrl = $Response | Select -ExpandProperty "upload_url"
+          $UploadUrl = $UploadUrl -replace '\{\?name\}', "?name=$env:ARCHIVE_FILENAME"
+          $Response = Invoke-RestMethod -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME
         '''
       }
     }
