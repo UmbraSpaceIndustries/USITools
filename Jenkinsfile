@@ -16,10 +16,11 @@ pipeline {
       when { branch "main" }
       steps {
         script {
-          env.BUILD_CONFIG = "debug"
-          env.TAG_PREFIX = "Unstable Release"
-          env.IS_PRERELEASE = "true"
           env.ARTIFACT_CACHES = "bleeding-edge"
+          env.AUTO_PUBLISH = "true"
+          env.BUILD_CONFIG = "debug"
+          env.IS_PRERELEASE = "true"
+          env.TAG_PREFIX = "Unstable Release"
         }
       }
     }
@@ -27,10 +28,11 @@ pipeline {
       when { branch "experimental" }
       steps {
         script {
-          env.BUILD_CONFIG = "debug"
-          env.TAG_PREFIX = "Experimental Release"
-          env.IS_PRERELEASE = "true"
           env.ARTIFACT_CACHES = "experimental"
+          env.AUTO_PUBLISH = "false"
+          env.BUILD_CONFIG = "debug"
+          env.IS_PRERELEASE = "true"
+          env.TAG_PREFIX = "Experimental Release"
         }
       }
     }
@@ -38,10 +40,11 @@ pipeline {
       when { branch "prerelease" }
       steps {
         script {
-          env.BUILD_CONFIG = "release"
-          env.TAG_PREFIX = "Pre-Release"
-          env.IS_PRERELEASE = "true"
           env.ARTIFACT_CACHES = "bleeding-edge,prerelease"
+          env.AUTO_PUBLISH = "true"
+          env.BUILD_CONFIG = "release"
+          env.IS_PRERELEASE = "true"
+          env.TAG_PREFIX = "Pre-Release"
         }
       }
     }
@@ -49,10 +52,11 @@ pipeline {
       when { branch "release" }
       steps {
         script {
-          env.BUILD_CONFIG = "release"
-          env.TAG_PREFIX = "Stable Release"
-          env.IS_PRERELEASE = "false"
           env.ARTIFACT_CACHES = "bleeding-edge,prerelease,release"
+          env.AUTO_PUBLISH = "true"
+          env.BUILD_CONFIG = "release"
+          env.IS_PRERELEASE = "false"
+          env.TAG_PREFIX = "Stable Release"
         }
       }
     }
@@ -146,6 +150,9 @@ pipeline {
     }
     // Push artifacts to GitHub
     stage("Push release artifacts to GitHub") {
+      when {
+        environment name: "AUTO_PUBLISH", value: "true"
+      }
       steps {
         powershell '''
           echo "Creating release on GitHub..."
