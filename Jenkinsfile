@@ -19,6 +19,7 @@ pipeline {
           env.BUILD_CONFIG = "debug"
           env.TAG_PREFIX = "Unstable Release"
           env.IS_PRERELEASE = "true"
+          env.ARTIFACT_CACHES = "bleeding-edge"
         }
       }
     }
@@ -29,6 +30,7 @@ pipeline {
           env.BUILD_CONFIG = "debug"
           env.TAG_PREFIX = "Experimental Release"
           env.IS_PRERELEASE = "true"
+          env.ARTIFACT_CACHES = "experimental"
         }
       }
     }
@@ -39,6 +41,7 @@ pipeline {
           env.BUILD_CONFIG = "release"
           env.TAG_PREFIX = "Pre-Release"
           env.IS_PRERELEASE = "true"
+          env.ARTIFACT_CACHES = "bleeding-edge,prerelease"
         }
       }
     }
@@ -49,6 +52,7 @@ pipeline {
           env.BUILD_CONFIG = "release"
           env.TAG_PREFIX = "Stable Release"
           env.IS_PRERELEASE = "false"
+          env.ARTIFACT_CACHES = "bleeding-edge,prerelease,release"
         }
       }
     }
@@ -70,13 +74,57 @@ pipeline {
         bat "dotnet build --output FOR_RELEASE/GameData/000_USITools --configuration ${env.BUILD_CONFIG} --verbosity detailed ./USITools/USITools/USITools.csproj"
       }
     }
+    // Update artifact cache
+    stage("Cache artifacts") {
+      steps {
+        powershell '''
+          try {
+            Write-Output "Determining releases folder location..."
+            $DriveRoot = Split-Path -Path $env:WORKSPACE -Qualifier
+            $ReleaseFolder = "usi-releases"
+            $ReleasePath = Join-Path -Path $DriveRoot -ChildPath $ReleaseFolder
+            Write-Output "Releases folder location is: $ReleasePath"
+            New-Item -Path $DriveRoot -Name $ReleaseFolder -ItemType Directory -Force
+            Write-Output "Determining artifact folder locations..."
+            $CacheNames = $env:ARTIFACT_CACHES.Split(",")
+            $CacheNames.ForEach({
+              Write-Output "Working on cache for: $_..."
+              $CachePath = Join-Path -Path $ReleasePath -ChildPath $_
+              Write-Output "Branch folder location is: $CachePath"
+              New-Item -Path $ReleasePath -Name $_ -ItemType Directory -Force
+              Write-Output "Removing old artifacts..."
+              $NewArtifacts = Get-ChildItem -Path ./FOR_RELEASE/GameData/UmbraSpaceIndustries -Attributes Directory -Name
+              $NewArtifacts.ForEach({
+                $ArtifactPath = Join-Path -Path $CachePath -ChildPath $_
+                if (Test-Path -Path $ArtifactPath) {
+                  Remove-Item -Path $ArtifactPath -Recurse -Force
+                }
+              })
+              Write-Output "Caching new artifacts..."
+              Copy-Item -Path ./FOR_RELEASE/GameData/* -Destination $CachePath -Recurse
+            })
+          }
+          catch {
+            throw $_
+          }
+        '''
+      }
+    }
     // Packaging
     stage("Package artifacts") {
       steps {
-        powershell "Copy-Item ./*.txt ./FOR_RELEASE/GameData/"
+        powershell '''
+          Write-Output "Gathering artifacts to package..."
+          if (Test-Path -Path "./artifacts") {
+            Remove-Item -Path "./artifacts/*" -Recurse -Force
+          }
+          New-Item -Path . -Name "artifacts" -ItemType Directory -Force
+          Copy-Item -Path ./FOR_RELEASE/* -Destination ./artifacts -Recurse
+          Copy-Item -Path ./*.txt -Destination ./artifacts/GameData/
+        '''
         script {
           env.ARCHIVE_FILENAME = "USITools_${env.GITVERSION_SEMVER}.zip"
-          zip dir: "FOR_RELEASE", zipFile: "${env.ARCHIVE_FILENAME}", archive: true
+          zip dir: "artifacts", zipFile: "${env.ARCHIVE_FILENAME}", archive: true
         }
       }
     }
