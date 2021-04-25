@@ -124,7 +124,7 @@ pipeline {
           }
           New-Item -Path . -Name "artifacts" -ItemType Directory -Force
           Copy-Item -Path ./FOR_RELEASE/* -Destination ./artifacts -Recurse
-          Copy-Item -Path ./*.txt -Destination ./artifacts/GameData/
+          Copy-Item -Path ./*.txt -Destination ./artifacts/GameData/000_USITools
         '''
         script {
           env.ARCHIVE_FILENAME = "USITools_${env.GITVERSION_SEMVER}.zip"
@@ -156,7 +156,9 @@ pipeline {
       steps {
         powershell '''
           echo "Creating release on GitHub..."
-          $Url = "https://api.github.com/repos/tjdeckard/USITools/releases"
+          $RepoUrl = [uri]$env:GIT_URL
+          $RepoPath = $RepoUrl.LocalPath.Replace(".git", "")
+          $Url = "https://api.github.com/repos$RepoPath/releases"
           $Headers = @{
             "Accept" = "application/vnd.github.v3+json"
             "Authorization" = "token $env:GITHUB_TOKEN"
@@ -167,24 +169,32 @@ pipeline {
             prerelease = ($env:IS_PRERELEASE -eq "true")
           }
           $Json = ConvertTo-Json $Body
-          $Response = Invoke-WebRequest -Method Post -Uri $Url -Headers $Headers -ContentType "application/json" -Body $Json -UseBasicParsing
+          $Response = Invoke-WebRequest -Method Post -Uri $Url -Headers $Headers `
+              -ContentType "application/json" -Body $Json -UseBasicParsing
           if ( $Response.StatusCode -ge 300 ) {
             Write-Output "Could not create GitHub Release"
             Write-Output "Status Code: $Response.StatusCode"
             Write-Output $Response.Content
             throw $Response.StatusCode
+          } else {
+            Write-Output "GitHub API replied with status code: $($Response.StatusCode)"
+            Write-Output ($Response.Content | ConvertFrom-Json | ConvertTo-Json -Depth 100)
           }
 
           echo "Uploading artifacts to GitHub..."
           $ReleaseMetadata = ConvertFrom-Json $Response.Content
           $UploadUrl = $ReleaseMetadata | Select -ExpandProperty "upload_url"
           $UploadUrl = $UploadUrl.Replace("{?name,label}", "?name=$env:ARCHIVE_FILENAME")
-          $Response = Invoke-WebRequest -Method Post -Uri $UploadUrl -Headers $Headers -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME -UseBasicParsing
+          $Response = Invoke-WebRequest -Method Post -Uri $UploadUrl -Headers $Headers `
+              -ContentType "application/zip" -InFile $env:ARCHIVE_FILENAME -UseBasicParsing
           if ( $Response.StatusCode -ge 300 ) {
             Write-Output "Could not upload artifacts to GitHub"
             Write-Output "Status Code: $Response.StatusCode"
             Write-Output $Response.Content
             throw $Response.StatusCode
+          } else {
+            Write-Output "GitHub API replied with status code: $($Response.StatusCode)"
+            Write-Output ($Response.Content | ConvertFrom-Json | ConvertTo-Json -Depth 100)
           }
         '''
       }
