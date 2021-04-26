@@ -96,9 +96,11 @@ pipeline {
               Write-Output "Branch folder location is: $CachePath"
               New-Item -Path $ReleasePath -Name $_ -ItemType Directory -Force
               Write-Output "Removing old artifacts..."
+              $ArtifactPath = Join-Path -Path $CachePath -ChildPath "000_USITools"
+              Remove-Item -Path $ArtifactPath -Recurse -Force
               $NewArtifacts = Get-ChildItem -Path ./FOR_RELEASE/GameData/UmbraSpaceIndustries -Attributes Directory -Name
               $NewArtifacts.ForEach({
-                $ArtifactPath = Join-Path -Path $CachePath -ChildPath $_
+                $ArtifactPath = Join-Path -Path (Join-Path -Path $CachePath -ChildPath "UmbraSpaceIndustries") -ChildPath $_
                 if (Test-Path -Path $ArtifactPath) {
                   Remove-Item -Path $ArtifactPath -Recurse -Force
                 }
