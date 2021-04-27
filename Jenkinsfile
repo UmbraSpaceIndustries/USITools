@@ -125,7 +125,7 @@ pipeline {
           }
           New-Item -Path . -Name "artifacts" -ItemType Directory -Force
           Copy-Item -Path ./FOR_RELEASE/* -Destination ./artifacts -Recurse
-          Copy-Item -Path ./*.txt -Destination ./artifacts/GameData/000_USITools
+          Copy-Item -Path ./*.txt -Destination ./artifacts
         '''
         script {
           env.ARCHIVE_FILENAME = "USITools_${env.GITVERSION_SEMVER}.zip"
