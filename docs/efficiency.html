@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html ng-app="EffectivenessApp">
+<head>
+	<title>MKS efficiency</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <script src="http://code.angularjs.org/1.4.5/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.13.4/ui-bootstrap.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.css">
+
+    <link href = "css/styles.css" rel = "stylesheet"/> 
+    <script src= "javascripts/modulesConstants.js"> </script>
+    <script src= "javascripts/efficiency.js"> </script>
+
+</head>
+
+<body>
+
+
+	<!-- Phantom navbar -->
+	<div class="navbar navbar-inverse navbar-static-top">
+	    <div class="navbar-inner">
+	        <div class="container">
+	        </div>
+	    </div>
+	</div>
+
+	<!-- INPUT CREW -->
+	<div ng-controller="InputCtrl" >
+
+		<div class='container'>
+			<!-- Global base stats -->
+			For simplicity's sake all computed numbers assume a) a single vessel and b) full machinery available to all converters
+			<div class="base col-sm-12 col-md-12 col-xs-12 col-lg-12">
+					Total crew = {{ model.base.totalCrew }} <br/>
+					Happiness = {{ model.base.happiness | number:2 }}  <br/>
+	        		Loneliness = {{ model.base.loneliness }} (TODO) <br/>
+	        		Capacity = {{ model.base.crewCapacity }} <br/>
+	        		Workspace = {{ model.base.workSpace }} <br/>
+	        		Livingspace = {{ model.base.livingSpace }} <br/>
+	        		Effectiveness = {{ model.base.effectiveness }}  <br/>
+			</div>
+
+			<div class="col-sm-12 col-md-12 col-xs-12 col-lg-12">
+				Add another module: 
+				<select ng-model="type"
+        			ng-change="addModule(type.code)"
+        			ng-options="type as type.title for (val,type) in model.base.mm">
+        		</select>
+        	</div>
+
+			<!-- Each module prints its own stats -->
+			<div class = "stats col-sm-12 col-md-12 col-xs-12 col-lg-12" ng-repeat='module in model.base.modules'>
+
+				<div class="  col-sm-2 col-md-4 col-xs-4 col-lg-4" > 
+					<b>{{ module.title }}</b> <br/> 
+					Capacity = {{ module.crewCapacity }} <br/>
+	        		Workspace = {{ module.workSpace }} <br/>
+	        		Livingspace = {{ module.livingSpace }} <br/>
+	        		Module Effectiveness = {{ module.effectiveness | number:2 }} <br/>
+
+	        	</div>
+	        	
+	        	<div ng-repeat="profession in module.crew"  class="col-sm-2 col-md-2 col-xs-2 col-lg-2">  
+				<b>{{profession.profession}}</b>
+					<div ng-repeat="crew in profession.val track by $index" class=".starSpinBox">
+							{{$index}} Star 						
+								<input type="number" class="starSpinBox" min=0 ng-model="profession.val[$index]" ng-change="change()"> 
+							
+						 <br/>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+	</div> 
+
+</body>
+</html>

@@ -1,10 +1,10 @@
 {
      "NAME":"USI Tools",
-	 "URL":"https://raw.githubusercontent.com/BobPalmer/UmbraSpaceIndustries/master/FOR_RELEASE/GameData/000_USITools/USITools.version",
-	 "DOWNLOAD":"https://github.com/BobPalmer/UmbraSpaceIndustries/releases",
+	 "URL":"https://raw.githubusercontent.com/UmbraSpaceIndustries/USITools/master/FOR_RELEASE/GameData/000_USITools/USITools.version",
+	 "DOWNLOAD":"https://github.com/UmbraSpaceIndustries/USITools/releases",
      "GITHUB":{
-         "USERNAME":"BobPalmer",
-         "REPOSITORY":"UmbraSpaceIndustries",
+         "USERNAME":"UmbraSpaceIndustries",
+         "REPOSITORY":"USITools",
          "ALLOW_PRE_RELEASE":false
      },
      "VERSION":{
