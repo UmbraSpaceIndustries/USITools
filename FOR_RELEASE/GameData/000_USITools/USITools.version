@@ -1,22 +1,22 @@
 {
      "NAME":"USI Tools",
-	 "URL":"https://raw.githubusercontent.com/BobPalmer/UmbraSpaceIndustries/master/FOR_RELEASE/GameData/000_USITools/USITools.version",
-	 "DOWNLOAD":"https://github.com/BobPalmer/UmbraSpaceIndustries/releases",
+	 "URL":"https://raw.githubusercontent.com/UmbraSpaceIndustries/USITools/main/FOR_RELEASE/GameData/000_USITools/USITools.version",
+	 "DOWNLOAD":"https://github.com/UmbraSpaceIndustries/USITools/releases",
      "GITHUB":{
-         "USERNAME":"BobPalmer",
-         "REPOSITORY":"UmbraSpaceIndustries",
+         "USERNAME":"UmbraSpaceIndustries",
+         "REPOSITORY":"USITools",
          "ALLOW_PRE_RELEASE":false
      },
      "VERSION":{
-         "MAJOR":1,
-         "MINOR":4,
-         "PATCH":0,
+         "MAJOR":112,
+         "MINOR":0,
+         "PATCH":1,
          "BUILD":0
      },
      "KSP_VERSION":{
          "MAJOR":1,
-         "MINOR":11,
-         "PATCH":0
+         "MINOR":12,
+         "PATCH":3
      },
      "KSP_VERSION_MIN":{
          "MAJOR":1,
@@ -25,7 +25,7 @@
      },
      "KSP_VERSION_MAX":{
          "MAJOR":1,
-         "MINOR":11,
+         "MINOR":12,
          "PATCH":99
      }
  } 

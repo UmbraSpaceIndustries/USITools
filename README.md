@@ -32,10 +32,6 @@ This is a collection of interfaces and MonoBehaviours to facilitate the use of [
 
 Check out [this excellent tutorial](https://forum.kerbalspaceprogram.com/index.php?/topic/151354-unity-ui-creation-tutorial/) by DMagic for help creating Unity UI asset bundles for KSP.
 
-## USI_Converter and LIB
-
-Deprecated...?? These have probably been absorbed into USITools by now and just haven't been cleaned up.
-
 # Contributing
 
 Please make all pull requests to the DEVELOP branch, not master.
