@@ -189,7 +189,7 @@ namespace USITools
                     atmoModifier = (float)Math.Max(0, 1d - vessel.atmDensity);
                 var thrustAmount = (float) (currentThrust*pulseCurve.Evaluate(curveTime)) * atmoModifier;
 
-                part.GetComponent<Rigidbody>().AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
+                part.AddForceAtPosition(-t.forward * thrustAmount, t.position, ForceMode.Force);
                 part.AddThermalFlux(thrustAmount * heatMultiplier);
             }
         }
